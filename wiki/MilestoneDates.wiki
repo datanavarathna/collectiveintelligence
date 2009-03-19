@@ -1,0 +1,14 @@
+#summary Milestone Logs
+
+= Milestone Targets =
+
+Milestone 1
+Milestone 2
+
+= Details =
+
+Milestone 1
+  * 4/6, 4/7. 4/8
+
+Milestone 2
+  * 4/22, 4/23, 4/24
