@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="con" path="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="E:/scala-2.7.3/lib/specs-1.4.3.jar" sourcepath="E:/Programming/specs-1.4.3-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="E:/scala-2.7.3/lib/ScalaCheck-1.5.jar" sourcepath="E:/Programming/ScalaCheck-1.5-src.jar"/>
+	<classpathentry exported="true" kind="lib" path="E:/scala-2.7.3/lib/scalatest-0.9.5.jar" sourcepath="E:/Programming/scalatest-0.9.5/scalatest-0.9.5/src">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/E:/Programming/scalatest-0.9.5/scalatest-0.9.5/doc/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
