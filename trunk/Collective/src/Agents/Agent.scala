@@ -10,24 +10,21 @@ case class Move(agent: Actor, x: Measurement, y: Measurement)
 case class ObjectReading(angle: Measurement, distance: Measurement)
 case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement)
-case class identifiedObject(identifier1: Int, identifier2: Int, 
+case class IdentifiedObject(identifier1: Int, identifier2: Int, 
                             obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement)
 
 
-class Agent(val environment: Actor) extends Actor {
-	val topologicalElementGenerator: Actor
-    val relationshipIdentfier: Actor
-    val map: Actor
+class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val relationshipIdentfier: Actor, val map: Actor) extends Actor {
     
-    val relativeLocationX: Measurement
-    val relativeLocationY: Measurement
+    var relativeLocationX: Measurement = new Measurement(0,0)
+    var relativeLocationY: Measurement= new Measurement(0,0)
   
   def move(x: Int,y: Int){
 		environment ! MoveCommand(this,x,y)
 	}
 
-  def addToMapMethod(entries: identifiedObject*)
+  def addToMapMethod(entries: IdentifiedObject*)
   {
     map ! entries
   }
@@ -44,11 +41,11 @@ class Agent(val environment: Actor) extends Actor {
 			  case sensorReadings @ Seq(ObjectReading(angle,distance),_*) =>
 			    topologicalElementGenerator ! sensorReadings
 			    //pass to helper actor that calculates topological references and sends results as a message to parent actors
-			  case topologicalEntries @ Seq(TopologicalEntry(object1Type,object2Type,x,y),_*) =>
+			  case topologicalEntries @ Seq(TopologicalEntry, _*) =>
 			    relationshipIdentfier ! topologicalEntries
 			    //send to helper actor that identifies the objects, naming if necessary, messages to parent identify objects
-			  case relationships @ Seq(identifiedObject(identifier1,identfier2,object1Type,object2Type,x,y)) =>
-			    addToMapMethod(relationships)
+			  case relationships @  Seq(IdentifiedObject, _*) =>
+			    addToMapMethod(relationships.asInstanceOf[Seq[IdentifiedObject]]: _*)//asInstanceOf is a cast, need to test that works correctly
 			}
 		}
 
