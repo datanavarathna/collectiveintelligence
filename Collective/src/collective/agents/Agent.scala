@@ -1,4 +1,4 @@
-package Agents
+package collective.agents
 
 import scala.actors._
 import Actor._
@@ -17,8 +17,8 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
 
 class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val relationshipIdentfier: Actor, val map: Actor) extends Actor {
     
-    var relativeLocationX: Measurement = new Measurement(0,0)
-    var relativeLocationY: Measurement= new Measurement(0,0)
+  var relativeLocationX: Measurement = new Measurement(0,0)
+  var relativeLocationY: Measurement= new Measurement(0,0)
   
   def move(x: Int,y: Int){
 		environment ! MoveCommand(this,x,y)
