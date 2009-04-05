@@ -9,7 +9,7 @@
 
 After consulting with Dr. Seiter, I discovered that mutual exclusion among copies of the map might be as/more difficult than just building a distributed hash table.
 6.	Create methods for building and reading a topological map.
-7.	Implement a pathfinding algorithm, possibly D* (Stentz).
+7.	Implement a pathfinding algorithm, possibly D (Stentz).
 8.	Optionally, enable spanning the simulation across a network using java sockets, object streams, and object serialization.
 9.	Optionally, create a (possibly XML-based) implementation of the Momento pattern 
 Milestone 1: Tasks 1-4
