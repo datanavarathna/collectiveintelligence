@@ -51,7 +51,7 @@ Agent
    * Clicking on an agent color block sets the block to the default color and removes agent from agent list
    * Make grid squares actors that can receive messages about where an agent is and respond to the message
    * Initializer will initialize agent locations (agents don’t know the absolute locations) from grid coordinates
- 
+{{{ 
 case class Displacement(x: Measurement, y: Measurement)
 case class Move(agent: Actor, x: Measurement, y: Measurement)
 case class ObjectReading(angle: Measurement, distance: Measurement)
@@ -59,7 +59,7 @@ case class topologicalEntries
 case class identifiedObjects
 
 object Environment(minx,minY,maxX,maxY)
-	def move(x: Int, y: Int)
+	def move(x: Int, y: Int) }}}
    * stays within environment limits
    * updates global location of agent
    * tells grid square in old location that agent isn’t there
