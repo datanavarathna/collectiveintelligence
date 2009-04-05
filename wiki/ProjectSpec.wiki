@@ -10,7 +10,7 @@ DHT – Distributed Hash Table
    * Each agent calculates its relation to objects on the map
       * If an agent wants to know where another agent is, the first agent asks the second agent for its current relations to objects.
    * Calculations can be simplified by assuming each agent contains a compass and assign a global +X and global +Y direction. NOTE: There is no global origin.
-   * A vector from d1 to d2 is produced by subtracting the components of d2 from d1.
+   * A vector from d1 to d2 is produced by subtracting the components of d1 from d2.
 
    * Filter results of matches and only declare a match if only one is left, otherwise identification is not unique. Will need to be changed to handle the same object being assigned different names, so that a relationship between the names can be established.
 
@@ -65,6 +65,10 @@ object Environment(minx,minY,maxX,maxY)
    * tells grid square in old location that agent isn’t there
    * tells grid square in new location that agent is there
    * sends agent message of Displacement 
+   * Receives calls to sensors and sends messages to appropriate agents
+agent(environment: Actor def move(x: Int, y: Int):Unit
+environment ! Move(this,x,y)
+   * actor maintains a local map with an origin at starting position to assist in location tracking
 act(){
 	loop{
 react{
@@ -80,7 +84,3 @@ addToMapMethod[Seq[identifiedObjects]]
 		}
 	}
 }
-   * Receives calls to sensors and sends messages to appropriate agents
-agent(environment: Actor def move(x: Int, y: Int):Unit
-environment ! Move(this,x,y)
-   * actor maintains a local map with an origin at starting position to assist in location tracking
