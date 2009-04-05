@@ -78,7 +78,8 @@ class Measurement (val value: Double, val uncertainty:Double)
 {
 	import Measurement._
 	
-	def this(value:Double) = this(value,0) 
+	def this(value:Double) = this(value,0)
+	def this(value:Int) = this(value,0)
  
 	require(value != 0)
  
