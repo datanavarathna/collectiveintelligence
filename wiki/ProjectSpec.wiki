@@ -66,21 +66,27 @@ object Environment(minx,minY,maxX,maxY)
    * tells grid square in new location that agent is there
    * sends agent message of Displacement 
    * Receives calls to sensors and sends messages to appropriate agents
-agent(environment: Actor def move(x: Int, y: Int):Unit
-environment ! Move(this,x,y)
-   * actor maintains a local map with an origin at starting position to assist in location tracking
-act(){
-	loop{
-react{
+agent(environment: Actor)
+	def move(x: Int, y: Int):Unit
+            environment ! Move(this,x,y)
+        act()
+        {
+	      loop
+              {
+                   react
+                   {
 			case Displacement( x, y) => {
 							relativeLocationX += x
 							relativeLocationY += y }
 			case Seq[ObjectReading(angle,distance)] =>
-	pass to helper actor that calculates topological references and sends results as a message to parent actors
-	case Seq[topologicaEentries] =>
-	send to helper actor that identifies the objects, naming if necessary, messages to parent identify objects
-	case Seq[identifiedObjects] =>
-addToMapMethod[Seq[identifiedObjects]]
-		}
-	}
-}
+	                      pass to helper actor that calculates topological references
+                              and sends results as a message to parent actors
+	                case Seq[topologicalEntries] =>
+	                      send to helper actor that identifies the objects, naming if
+                              necessary, messages to parent identify objects
+	                case Seq[identifiedObjects] =>
+                              addToMapMethod[Seq[identifiedObjects]]
+		   }
+	       }
+         }
+   * actor maintains a local map with an origin at starting position to assist in location tracking
