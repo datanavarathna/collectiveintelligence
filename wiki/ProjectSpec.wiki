@@ -22,11 +22,11 @@ DHT – Distributed Hash Table
    * Data Accesses
 Range Search: 
 [(obstacle1Type, obstacle2Type),VectorFrom1to2(xMeasurement, yMeasurement)]
-	(identifier1,identifier2)
+=>	(identifier1,identifier2)
 **Must compare VectorFrom1to2 using equals command
 	Single Result Search
 	**can use a hashSearch
-(identifier1,identifier2) 
+(identifier1,identifier2) =>
        [(obstacle1Type, obstacle2Type),VectorFrom1to2(xMeasurement, yMeasurement)]
 
  
@@ -66,7 +66,7 @@ object Environment(minx,minY,maxX,maxY)
    * tells grid square in new location that agent is there
    * sends agent message of Displacement 
    * Receives calls to sensors and sends messages to appropriate agents
-{{{
+
 agent(environment: Actor)
 	def move(x: Int, y: Int):Unit
             environment ! Move(this,x,y)
