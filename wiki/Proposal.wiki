@@ -5,9 +5,7 @@
    # Objective 2: Create a simple, grid based environment.  The size(environment) >> agent sensor distance.
    # Objective 3: Create agents that can detect the environment around them and communicate with each other.  To simplify the initial model, any agent will be able to communicate directly with any other agent. Future work could replace this with a mesh network.
    # Objective 4: Create a GUI representation
-   # Objective 5: Create a primitive distributed file system (each agent keeps a synchronized copy of all knowledge). Future work could replace the primitive file system with a Prefix Hash Tree (Ramabhadran, Sriram) indexed distributed hash table, possibly using the Pyramid-technique (by Berchtold, Stephan) to linearize multi-dimensional data to allow for multi-dimensional queries.
-
-After consulting with Dr. Seiter, I discovered that mutual exclusion among copies of the map might be as/more difficult than just building a distributed hash table.
+   # Objective 5: Create a primitive distributed file system (each agent keeps a synchronized copy of all knowledge). Future work could replace the primitive file system with a Prefix Hash Tree (Ramabhadran, Sriram) indexed distributed hash table, possibly using the Pyramid-technique (by Berchtold, Stephan) to linearize multi-dimensional data to allow for multi-dimensional queries. After consulting with Dr. Seiter, I discovered that mutual exclusion among copies of the map might be as/more difficult than just building a distributed hash table.
    # Objective 6: Create methods for building and reading a topological map.
    # Objective 7: Implement a pathfinding algorithm, possibly D (Stentz).
    # Objective 8: Optionally, enable spanning the simulation across a network using java sockets, object streams, and object serialization.
