@@ -13,7 +13,7 @@ case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
 case class IdentifiedObject(identifier1: Int, identifier2: Int, 
                             obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement)
-
+case class UpdateSensor(sender: Agent)
 
 class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val relationshipIdentfier: Actor, val map: Actor) extends Actor {
     
@@ -35,9 +35,12 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 		{
 			react
 			{
-			  case Displacement( x, y) => {
+			  case Displacement( x, y) => 
+			  {
 				relativeLocationX += x
-				relativeLocationY += y }
+				relativeLocationY += y 
+				environment ! UpdateSensor(this)
+			  }
 			  case sensorReadings @ Seq(ObjectReading(angle,distance),_*) =>
 			    topologicalElementGenerator ! sensorReadings
 			    //pass to helper actor that calculates topological references and sends results as a message to parent actors
@@ -52,3 +55,83 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 	}
  }
 
+case class Coordinate(x: Int, y: Int){}
+
+class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) extends Actor{
+  def this( maxX: Int, maxY: Int) = this(0,0, maxX: Int, maxY: Int)
+  
+  import scala.collection.mutable.Map
+  
+  var world = Map.empty[Actor,Coordinate]
+  
+  def move(x: Int, y: Int){}
+  
+  def act()
+  {
+    loop 
+		{
+			react
+			{
+			  case MoveCommand(senderAgent,x,y) => 
+			  {
+				  if(world.contains(senderAgent))
+				  {
+					  var deltaX: Measurement = new Measurement(x)
+				  var deltaY: Measurement = new Measurement(y)
+					  var location = world(senderAgent)
+					  val oldX = location.x
+					  val oldY = location.y
+					  var newX = oldX
+					  var newY = oldY
+       
+					  if(oldX + x <= maxX)
+					  {
+						  newX = oldX + x
+					  }
+					  else
+					  {
+						  deltaX = maxX - oldX
+						  newX = maxX
+					  }
+
+					  if(oldX + x >= minX)
+						  newX = oldX + x
+						  else
+						  {
+							  deltaX = minX - oldX
+							  newX = minX
+						  }
+
+					  if(oldY + y <= maxY)
+						  newY = oldY + y
+						  else
+						  {
+							  deltaY = maxY - oldY
+							  newY = maxY
+						  }
+
+					  if(oldY + y >= minY)
+						  newY = oldY + y
+						  else
+						  {
+							  deltaY = minY - oldY
+							  newY = minY
+						  }
+       
+					  world - senderAgent
+					  world += (senderAgent -> Coordinate(newX,newY))
+					  senderAgent ! Displacement( deltaX, deltaY)
+				  }
+				  else
+				  {
+					  //throw error, should never happen
+				  }//end if map contains
+			  }//end case MoveCommand
+			  case UpdateSensor(senderAgent) => 
+			  {
+				  
+			  }
+			}//end react
+		}//end loop
+  }//end act
+}//end environment class
