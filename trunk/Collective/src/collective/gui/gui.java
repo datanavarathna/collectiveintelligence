@@ -1,3 +1,5 @@
+package collective.gui;
+
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import javax.swing.JFrame;

@@ -13,12 +13,14 @@ case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
 case class IdentifiedObject(identifier1: Int, identifier2: Int, 
                             obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement)
-case class UpdateSensor(sender: Agent)
+case class UpdateSensor(sender: Agent, range: Int, sensorDeltaAngle: Int, SensorDeltaRange: Int)
 
-class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val relationshipIdentfier: Actor, val map: Actor) extends Actor {
+class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val relationshipIdentfier: Actor, val map: Actor,
+            val sensorRange: Int, val sensorDeltaAngle: Int, val SensorDeltaRange: Int) extends Actor 
+{
     
   var relativeLocationX: Measurement = new Measurement(0,0)
-  var relativeLocationY: Measurement= new Measurement(0,0)
+  var relativeLocationY: Measurement = new Measurement(0,0)
   
   def move(x: Int,y: Int){
 		environment ! MoveCommand(this,x,y)
@@ -39,7 +41,7 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 			  {
 				relativeLocationX += x
 				relativeLocationY += y 
-				environment ! UpdateSensor(this)
+				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
 			  }
 			  case sensorReadings @ Seq(ObjectReading(angle,distance),_*) =>
 			    topologicalElementGenerator ! sensorReadings
@@ -49,20 +51,22 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 			    //send to helper actor that identifies the objects, naming if necessary, messages to parent identify objects
 			  case relationships @  Seq(IdentifiedObject, _*) =>
 			    addToMapMethod(relationships.asInstanceOf[Seq[IdentifiedObject]]: _*)//asInstanceOf is a cast, need to test that works correctly
-			}
-		}
+			}//end react
+		}//end loop
+	}//end act
+ }//end agent class
 
-	}
- }
-
-case class Coordinate(x: Int, y: Int){}
+case class Coordinate(x: Int, y: Int)
+case class Obstacle(obstacleType: Int, x: Int, y: Int)
 
 class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) extends Actor{
   def this( maxX: Int, maxY: Int) = this(0,0, maxX: Int, maxY: Int)
   
   import scala.collection.mutable.Map
+  import scala.collection.immutable.TreeMap
   
   var world = Map.empty[Actor,Coordinate]
+  var obstacles = Nil //new List[Obstacle]
   
   def move(x: Int, y: Int){}
   
@@ -77,7 +81,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 				  if(world.contains(senderAgent))
 				  {
 					  var deltaX: Measurement = new Measurement(x)
-				  var deltaY: Measurement = new Measurement(y)
+				      var deltaY: Measurement = new Measurement(y)
 					  var location = world(senderAgent)
 					  val oldX = location.x
 					  val oldY = location.y
@@ -127,9 +131,34 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 					  //throw error, should never happen
 				  }//end if map contains
 			  }//end case MoveCommand
-			  case UpdateSensor(senderAgent) => 
+			  case UpdateSensor(senderAgent, sensorRange, sensorDeltaAngle, sensorDeltaRange) => 
 			  {
-				  
+				 val detectedObstalces =  
+					 for (
+							 obstacle: Obstacle <- obstacles
+							 if(obstacle.x*obstacle.x* + obstacle.y*obstacle.y <= sensorRange)
+						) yield 
+						{
+						  
+						  if(world.contains(senderAgent))
+						  {
+							 val obstacleX = obstacle.x
+							 val obstacleY = obstacle.y 
+							 val agent = world(senderAgent)
+							 val vectorX = obstacleX - agent.x
+							 val vectorY = obstacleY - agent.Y
+							 val angle = new Measurement(Math.atan2(vectorX, vectorY))
+							 val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
+							 ObjectReading(angle, distance)
+						  }
+						  else
+						  {
+							 //throw error, should never happern
+						  }
+        
+						  
+						}//end for
+					senderAgent ! detectedObstalces
 			  }
 			}//end react
 		}//end loop
