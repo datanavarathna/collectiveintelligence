@@ -1,3 +1,5 @@
+package collective.gui;
+
 import javax.swing.JLabel;
 
 
