@@ -7,9 +7,9 @@ import java.util.ArrayList;
 public class ControlButtonListener implements java.awt.event.ActionListener {
 
 	
-	gui g;
+	GUI g;
 	
-	public ControlButtonListener( gui g ) {
+	public ControlButtonListener( GUI g ) {
 		this.g = g;
 	}
 	
@@ -59,7 +59,7 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 		
 		System.out.println("Created Agent Array. Size: " + as.size() );
 		System.out.println("Created Object Array. Size: " + os.size() );
-		
-		
+		System.out.println("Objects are Written to GUI. Ready for teh Bay Boy to werk.");
+		System.out.println("");
 	}
 }
