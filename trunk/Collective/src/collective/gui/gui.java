@@ -12,6 +12,8 @@ public class gui {
 	JFrame ctrl;
 	
 	ArrayList <GUIObject> objects;
+	ArrayList<ObjectSpecs> os;
+	ArrayList <AgentSpecs> as;
 	
 	ControlButtonListener cl;
 	ButtonListener bl;
@@ -29,6 +31,7 @@ public class gui {
 	private void setup( int x, int y, int windowX, int windowY ) {
 		
 		this.objects = new ArrayList<GUIObject>();
+		this.as      = null;
 		
 		this.x = x;
 		this.y = y;
@@ -40,12 +43,12 @@ public class gui {
 		this.ctrl.setLayout( new GridLayout ( 1, 5 ) ) ;
 		
 		this.bl = new ButtonListener();
-		this.cl = new ControlButtonListener();
+		this.cl = new ControlButtonListener( this );
 		
 		this.fill();
 		
 		this.frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-		this.ctrl.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		this.ctrl.setDefaultCloseOperation(  JFrame.EXIT_ON_CLOSE );
 		
 		this.frame.setSize(windowX, windowY);
 		this.ctrl.setSize(300, 75);
@@ -63,6 +66,11 @@ public class gui {
 			GUIObject o = new GUIObject( 0 );
 			
 			o.addActionListener( this.bl );
+			
+//			int index = ( this.y * y ) + x;
+			
+			o.a.setX(0);
+			o.a.setY(0);
 			
 			this.objects.add(o);
 			o.setStatus( 0 );

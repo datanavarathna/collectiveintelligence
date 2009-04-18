@@ -1,10 +1,18 @@
 package collective.gui;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 
 
 public class ControlButtonListener implements java.awt.event.ActionListener {
 
+	
+	gui g;
+	
+	public ControlButtonListener( gui g ) {
+		this.g = g;
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String a = e.getActionCommand();
@@ -31,6 +39,27 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 	}
 	
 	private void init() {
-		System.out.println("Create and Pass in the Agents to be created");
+		System.out.println("Creating Passable ArrayList of Agents!");
+		ArrayList<AgentSpecs>  as = new ArrayList<AgentSpecs>();
+		ArrayList<ObjectSpecs> os = new ArrayList<ObjectSpecs>();
+		
+		ArrayList<GUIObject>  go = this.g.objects;
+		
+		for ( int i = 0; i < go.size(); ++i ) {
+			if ( go.get(i).getStatus() == 1 ) {
+				as.add(go.get(i).a);
+			}
+			if ( go.get(i).getStatus() == 2 ) {
+				os.add(go.get(i).o);
+			}
+		}
+		
+		this.g.as = as;
+		this.g.os = os;
+		
+		System.out.println("Created Agent Array. Size: " + as.size() );
+		System.out.println("Created Object Array. Size: " + os.size() );
+		
+		
 	}
 }
