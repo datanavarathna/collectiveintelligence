@@ -8,9 +8,12 @@ public class gui {
 
 	int x, y;
 	JFrame frame;
-	ArrayList <GUIObject>objects = new ArrayList<GUIObject>();
+	ArrayList <GUIObject> objects;
 
 	public gui( int x, int y ) {
+		
+		this.objects = new ArrayList<GUIObject>();
+		
 		this.x = x;
 		this.y = y;
 
@@ -42,7 +45,7 @@ public class gui {
 		}
 	}
 
-	public GUIObject getByXY( int x, int y ) {
+	public synchronized GUIObject getByXY( int x, int y ) {
 		GUIObject o = null;
 		int index = ( this.y * y ) + x;
 //		System.out.println(index + " out of " + this.objects.size() );
@@ -52,7 +55,7 @@ public class gui {
 		return o;
 	}
 	
-	public void updateCellAgentStatus( int x, int y, boolean agentInSquare ) {
+	public synchronized void updateCellAgentStatus( int x, int y, boolean agentInSquare ) {
 		GUIObject o = this.getByXY( x, y );
 		if ( o != null ) {
 			if ( agentInSquare ) {
