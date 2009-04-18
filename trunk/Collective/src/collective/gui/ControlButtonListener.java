@@ -56,6 +56,7 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 		
 		this.g.as = as;
 		this.g.os = os;
+		this.g.primed = true;
 		
 		System.out.println("Created Agent Array. Size: " + as.size() );
 		System.out.println("Created Object Array. Size: " + os.size() );
