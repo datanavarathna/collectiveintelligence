@@ -8,10 +8,15 @@ import javax.swing.JButton;
 public class GUIObject extends JButton {
 	private static final long serialVersionUID = 1L;
 	int status;
+	AgentSpecs  a;
+	ObjectSpecs o;
 	
 	GUIObject( int status ) {
 		super("");
 		this.status = status;
+		this.a = new AgentSpecs();
+		this.o = new ObjectSpecs();
+		
 		this.updateText();
 	}
 	
@@ -23,10 +28,10 @@ public class GUIObject extends JButton {
 			this.setBackground(new Color(225,225,225));
 		} else if ( this.status == 1 ) {
 			labelText = "Agent Here";
-			this.setBackground(new Color(224,61,61));
+			this.setBackground(new Color(4,115,131));
 		} else if ( this.status == 2 ) {
 			labelText = "Object Here";
-			this.setBackground(new Color(4,115,131));
+			this.setBackground(new Color(224,61,61));
 		} else {
 			labelText = "";
 		}
