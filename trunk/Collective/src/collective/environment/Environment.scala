@@ -1,8 +1,10 @@
 package collective.environment
 
-import agents.*
+import collective.agents._
 import UncertaintyMath.Measurement
-
+import scala.actors._
+import Actor._
+//import agents.DataClasses
 class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) extends Actor{
   def this( maxX: Int, maxY: Int) = this(0,0, maxX: Int, maxY: Int)
   
@@ -12,8 +14,6 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
   var world = Map.empty[Actor,Coordinate]
   //var obstacles = Nil //new List[Obstacle]
   var obstacles: QuadTree = new QuadTree
-  
-  def move(x: Int, y: Int){}
   
   def act()
   {
