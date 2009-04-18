@@ -1,8 +1,8 @@
 package collective.agents
 
-import agents.DataClasses
 
-class QuadTree {
+
+abstract class QuadTree {
   var obstacles = Nil //new List[Obstacle]
   
   def contains(x: Int,y: Int):Boolean
@@ -16,7 +16,9 @@ class QuadTree {
 			for (
 					obstacle: Obstacle <- obstacles
 					if(obstacle.x*obstacle.x* + obstacle.y*obstacle.y <= sensorRange)
-			) yield {}
+			) yield {
+				obstacle
+			}
 			
 	}
 
