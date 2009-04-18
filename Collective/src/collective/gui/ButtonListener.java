@@ -17,7 +17,21 @@ public class ButtonListener implements ActionListener {
 	
 	private void ctrlClicked( ActionEvent e ) {
 		GUIObject go = (GUIObject) e.getSource();
-		System.out.println(go.getStatus());
+		
+		int status = go.getStatus();
+		int sStatus = 0;
+		
+		if ( status == 0 ) {
+			sStatus = 2;
+		} else if ( status == 1 ) {
+			sStatus = 0;
+		} else if ( status == 2 ) {
+			sStatus = 1;
+		} else {
+			sStatus = 0;
+		}
+		
+		go.setStatus( sStatus );
 	}
 	
 	private void clicked( ActionEvent e ) {
