@@ -33,7 +33,4 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 	private void init() {
 		System.out.println("Create and Pass in the Agents to be created");
 	}
-	
-	
-
 }
