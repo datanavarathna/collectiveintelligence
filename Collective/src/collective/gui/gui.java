@@ -17,27 +17,27 @@ public class gui {
 		this.frame = new JFrame("Collective Status Pane");
 		this.frame.setLayout( new GridLayout ( this.x, this.y ) ) ;
 		
-		mousey  ml = new mousey();
-		keyz0r  kz = new keyz0r();
+		ButtonListener bl = new ButtonListener();
 		
-		this.frame.addMouseListener(ml);
-		this.frame.addKeyListener(kz);
-		
-		this.fill();
+		this.fill( bl );
 		
 		this.frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		this.frame.setSize(600, 600);
 		frame.setVisible(true);
 	}
 
-	private void fill() {
+	private void fill( ButtonListener bl ) {
+		
 		int count = this.x * this.y;
 
 		for ( int i = 0; i < count; ++i ) {
-			GUIObject o = new GUIObject(true);
+			GUIObject o = new GUIObject( 0 );
+			
+			o.addActionListener(bl);
+			
 			this.objects.add(o);
-
-			o.setStatus(false);
+			o.setStatus( 0 );
+			
 			frame.getContentPane().add(o);
 		}
 	}
@@ -45,20 +45,24 @@ public class gui {
 	public GUIObject getByXY( int x, int y ) {
 		GUIObject o = null;
 		int index = ( this.y * y ) + x;
-		System.out.println(index + " out of " + this.objects.size() );
+//		System.out.println(index + " out of " + this.objects.size() );
 		if ( index <= this.objects.size() ) {
 			o = this.objects.get(index);
 		}
 		return o;
 	}
-
+	
 	public void updateCellAgentStatus( int x, int y, boolean agentInSquare ) {
 		GUIObject o = this.getByXY( x, y );
 		if ( o != null ) {
-			o.setStatus(agentInSquare);
+			if ( agentInSquare ) {
+				o.setStatus(1);
+			} else {
+				o.setStatus(0);
+			}
 			this.refresh();
 		} else {
-			System.out.println("Invalid Index!");
+			System.err.println("Invalid Index!");
 		}
 	}
 	public void refresh() {
@@ -67,7 +71,7 @@ public class gui {
 
 	public static void main ( String[] args ) {
 
-		gui g = new gui( 25, 25 );
+		gui g = new gui( 5, 5 );
 		
 		g.updateCellAgentStatus(0, 0, true);
 		g.updateCellAgentStatus(1, 1, true);
@@ -78,8 +82,8 @@ public class gui {
 		boolean foo = false;
 
 		while ( true ) {
-			System.out.println( "Online: " + g.getByXY(0, 0).getStatus() );
-			g.updateCellAgentStatus(0, 0, foo);
+//			System.out.println( "Online: " + g.getByXY(0, 0).getStatus() );
+//			g.updateCellAgentStatus(0, 0, foo);
 			foo = !foo;
 
 			try {

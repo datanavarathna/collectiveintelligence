@@ -1,32 +1,37 @@
 package collective.gui;
 
-import javax.swing.JLabel;
+import javax.swing.JButton;
 
 
-public class GUIObject extends JLabel {
+public class GUIObject extends JButton {
 	private static final long serialVersionUID = 1L;
-	boolean status;
+	int status;
 	
-	GUIObject( boolean status ) {
+	GUIObject( int status ) {
 		super("");
 		this.status = status;
 		this.updateText();
 	}
 	
 	private void updateText() {
-		String labelText;
+		String labelText = "";
 		
-		if ( this.status ) {
-			labelText = "Agent";
+		if ( this.status == 0 ) {
+			labelText = "";
+		} else if ( this.status == 1 ) {
+			labelText = "Agent Here";
+		} else if ( this.status == 2 ) {
+			labelText = "Object Here";
 		} else {
 			labelText = "";
 		}
+		
 		this.setText(labelText);
 	}
 	
-	public boolean getStatus() { return this.status; }
+	public int getStatus() { return this.status; }
 	
-	public void setStatus( boolean b ) {
+	public void setStatus( int b ) {
 		this.status = b;
 		this.updateText();
 	}
