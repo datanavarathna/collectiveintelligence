@@ -90,13 +90,19 @@ public class GUI {
 			
 			o.addActionListener( this.bl );
 			
-//			int index = ( this.y * y ) + x;
+			int x, y;
 			
-			o.a.setX(0);
-			o.a.setY(0);
+			x = ( i % this.y );
+			y = ( i / this.y );
+			
+			// index / y = y
+			// index % y = x
+			
+			o.a.setX(x);
+			o.a.setY(y);
 			
 			this.objects.add(o);
-			o.setStatus( 0 );
+			o.setStatus(0);
 			
 			frame.getContentPane().add(o);
 		}
@@ -117,6 +123,12 @@ public class GUI {
 		this.ctrl.getContentPane().add(jb);
 	}
 
+	public int getX() {
+		return x;
+	}
+	public int getY() {
+		return y;
+	}
 	public synchronized GUIObject getByXY( int x, int y ) {
 		GUIObject o = null;
 		int index = ( this.y * y ) + x;
