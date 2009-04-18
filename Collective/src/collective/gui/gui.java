@@ -85,7 +85,6 @@ public class gui {
 		jb.setText("kill");
 		jb.addActionListener(this.cl);
 		this.ctrl.getContentPane().add(jb);
-		
 	}
 
 	public synchronized GUIObject getByXY( int x, int y ) {
