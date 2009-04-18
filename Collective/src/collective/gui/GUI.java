@@ -18,6 +18,8 @@ public class GUI {
 	ControlButtonListener cl;
 	ButtonListener bl;
 	
+	boolean primed;
+	
 	public GUI() {
 		this.setup( 5, 5, 500, 500 );
 	}	
@@ -27,7 +29,6 @@ public class GUI {
 	public GUI( int x, int y, int windowX, int windowY ) {
 		this.setup( x, y, windowX, windowY );
 	}
-	
 	
 	
 	public ArrayList<ObjectSpecs> getOs() {
@@ -43,12 +44,16 @@ public class GUI {
 		this.as = as;
 	}
 
-	
+	public boolean isReadyForRuntime() {
+		return this.primed;
+	}
 	
 	private void setup( int x, int y, int windowX, int windowY ) {
 		
 		this.objects = new ArrayList<GUIObject>();
 		this.as      = null;
+		
+		this.primed  = false;
 		
 		this.x = x;
 		this.y = y;
