@@ -10,7 +10,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
   import scala.collection.immutable.TreeMap
   
   var world = Map.empty[Actor,Coordinate]
-  var obstacles = Nil //new List[Obstacle]
+  //var obstacles = Nil //new List[Obstacle]
+  var obstacles: QuadTree = new QuadTree
   
   def move(x: Int, y: Int){}
   
@@ -32,47 +33,47 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 					  var newX = oldX
 					  var newY = oldY
 
-					  obstacles match {
-					    case Obstacle(_,oldX,oldY) => {
+					  if(!obstacles.contains(x,y))//if target doesn't contain obstacle
+					  {
+						  if(oldX + x <= maxX)
+						  {
+							  newX = oldX + x
+						  }
+						  else
+						  {
+							  deltaX = maxX - oldX
+							  newX = maxX
+						  }
 
-					    }
-					    case _ => 
-					    {
-					    	if(oldX + x <= maxX)
-					    	{
-					    		newX = oldX + x
-					    	}
-					    	else
-					    	{
-					    		deltaX = maxX - oldX
-					    		newX = maxX
-					    	}
+						  if(oldX + x >= minX)
+							  newX = oldX + x
+							  else
+							  {
+								  deltaX = minX - oldX
+								  newX = minX
+							  }
 
-					    	if(oldX + x >= minX)
-					    		newX = oldX + x
-					    		else
-					    		{
-					    			deltaX = minX - oldX
-					    			newX = minX
-					    		}
+						  if(oldY + y <= maxY)
+							  newY = oldY + y
+							  else
+							  {
+								  deltaY = maxY - oldY
+								  newY = maxY
+							  }
 
-					    	if(oldY + y <= maxY)
-					    		newY = oldY + y
-					    		else
-					    		{
-					    			deltaY = maxY - oldY
-					    			newY = maxY
-					    		}
-
-					    	if(oldY + y >= minY)
-					    		newY = oldY + y
-					    		else
-					    		{
-					    			deltaY = minY - oldY
-					    			newY = minY
-					    		}
-					    }//end case _
-					  }//end match
+						  if(oldY + y >= minY)
+							  newY = oldY + y
+							  else
+							  {
+								  deltaY = minY - oldY
+								  newY = minY
+							  }
+					  }//end if target doesn't contain obstacle
+					  else
+					  {
+						  deltaX = new Measurement(0)
+						  deltaY = new Measurement(0)
+					  }
 					  world - senderAgent
 					  world += (senderAgent -> Coordinate(newX,newY))
 					  senderAgent ! Displacement( deltaX, deltaY)
@@ -84,15 +85,16 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 			  }//end case MoveCommand
 			  case UpdateSensor(senderAgent, sensorRange, sensorDeltaAngle, sensorDeltaRange) => 
 			  {
-				 val detectedObstalces =  
+				   
+					 /*			 
 					 for (
 							 obstacle: Obstacle <- obstacles
 							 if(obstacle.x*obstacle.x* + obstacle.y*obstacle.y <= sensorRange)
-						) yield 
-						{
-						  
-						  if(world.contains(senderAgent))
-						  {
+					 ) yield 
+					 {
+
+						 if(world.contains(senderAgent))
+						 {
 							 val obstacleX = obstacle.x
 							 val obstacleY = obstacle.y 
 							 val agent = world(senderAgent)
@@ -101,15 +103,29 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 							 val angle = new Measurement(Math.atan2(vectorX, vectorY))
 							 val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
 							 ObjectReading(angle, distance)
-						  }
-						  else
-						  {
+						 }
+						 else
+						 {
 							 //throw error, should never happern
-						  }
-        
-						  
-						}//end for
-					senderAgent ! detectedObstalces
+						 }
+
+
+					 }//end for
+					 */
+					 if(world.contains(senderAgent))
+					 {
+						 val agent = world(senderAgent)
+						 val detectedObstacles =					 
+							 for {obstacle: Obstacle <- obstacles.range(sensorRange, x: Int, y: Int)}
+						     {
+						    	 val vectorX = obstacle.x - agent.x
+						    	 val vectorY = obstacle.y - agent.y
+						    	 val angle = new Measurement(Math.atan2(vectorX, vectorY))
+						    	 val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
+						    	 ObjectReading(angle, distance)
+						     }
+						 senderAgent ! detectedObstacles
+					 }
 			  }
 			}//end react
 		}//end loop
