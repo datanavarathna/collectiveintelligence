@@ -35,7 +35,16 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 	}
 	
 	private void start() {
-		System.out.println("Starting Application!");
+		System.out.println("Checking For Badassary");
+		if ( this.g.loaded ) {
+			this.g.primed = true;
+			System.out.println("Tis all good in the hood. Primed and Ready for the Controller");
+			System.out.println("");
+		} else {
+			System.out.println("");
+			System.err.println("Dude! You need to Init the Lists before you can Run!");
+		}
+		System.out.println("");
 	}
 	
 	private void init() {
@@ -56,7 +65,8 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 		
 		this.g.as = as;
 		this.g.os = os;
-		this.g.primed = true;
+		
+		this.g.loaded = true;
 		
 		System.out.println("Created Agent Array. Size: " + as.size() );
 		System.out.println("Created Object Array. Size: " + os.size() );

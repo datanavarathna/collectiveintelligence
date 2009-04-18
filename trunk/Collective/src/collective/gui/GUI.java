@@ -19,6 +19,7 @@ public class GUI {
 	ButtonListener bl;
 	
 	boolean primed;
+	boolean loaded;
 	
 	public GUI() {
 		this.setup( 5, 5, 500, 500 );
@@ -104,7 +105,6 @@ public class GUI {
 		jb.setText("initialize");
 		jb.addActionListener(this.cl);
 		this.ctrl.getContentPane().add(jb);
-		
 		
 		jb = new JButton();
 		jb.setText("start");
