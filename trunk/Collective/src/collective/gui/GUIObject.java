@@ -1,5 +1,7 @@
 package collective.gui;
 
+import java.awt.Color;
+
 import javax.swing.JButton;
 
 
@@ -18,10 +20,13 @@ public class GUIObject extends JButton {
 		
 		if ( this.status == 0 ) {
 			labelText = "";
+			this.setBackground(new Color(225,225,225));
 		} else if ( this.status == 1 ) {
 			labelText = "Agent Here";
+			this.setBackground(new Color(224,61,61));
 		} else if ( this.status == 2 ) {
 			labelText = "Object Here";
+			this.setBackground(new Color(4,115,131));
 		} else {
 			labelText = "";
 		}
