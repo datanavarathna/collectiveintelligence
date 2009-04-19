@@ -18,7 +18,9 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
 case class UpdateSensor(sender: Agent, range: Int, sensorDeltaAngle: Int, SensorDeltaRange: Int) 
 
 case class Coordinate(x: Int, y: Int) 
-case class Obstacle(obstacleType: Int, x: Int, y: Int) 
+case class Obstacle(obstacleType: Int, x: Int, y: Int){
+	override def toString = " obstacleType="+obstacleType+" x="+x+" y="+y
+} 
 
 class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val relationshipIdentfier: Actor, val map: Actor,
             val sensorRange: Int, val sensorDeltaAngle: Int, val SensorDeltaRange: Int) extends Actor 
@@ -27,6 +29,13 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
   var relativeLocationX: Measurement = new Measurement(0.00000001,0)
   var relativeLocationY: Measurement = new Measurement(0.00000001,0)
   val randomGenerator: Random = new Random
+  
+  override def toString = {
+	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " SensorDeltaRange=" + SensorDeltaRange
+	result += " environment=" + environment + " topologicalElementGenerator=" + topologicalElementGenerator
+	result +=  " relationshipIdentfier=" + relationshipIdentfier + " map=" + map
+	result
+	}
   
   def move(x: Int,y: Int){
 		environment ! MoveCommand(this,x,y)
