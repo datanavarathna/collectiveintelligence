@@ -4,9 +4,9 @@ import scala.actors._
 import Actor._
 import agents._
 import collectivemap._
-//import gui.GUI
-//import gui.ObjectSpecs
-//import gui.AgentSpecs
+import gui.GUI
+import gui.ObjectSpecs
+import gui.AgentSpecs
 
 
 case class Obstacle(obstacleType: Int, x: Int, y: Int) 
@@ -38,7 +38,7 @@ object scalaGui extends Actor{
 		for( agentSpec <- javaAgentList)
 		{
 			val agent = new Agent(world, topologicalElementGenerator, relationshipIdentfier, map,
-                     agentSpec.getSensorRange(),agentSpec.getDeltaAngle(),agentSpec.getDeltaSensorRange())
+                     agentSpec.getSensorRange(),agentSpec.getDeltaAngle(),agentSpec.getSensorDeltaRange())
             AgentWithLocation(agent,agentSpec.getX(),agentSpec.getY())::agentList
   
 		}
