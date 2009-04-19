@@ -2,8 +2,6 @@ package collective.gui;
 
 import java.awt.GridLayout;
 import java.util.ArrayList;
-
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -52,7 +50,7 @@ public class ConfigGUI {
 		t.setVisible(true);
 		t.addActionListener( this.l );
 		
-		JLabel l = new JLabel("Make Babies");
+		JLabel l = new JLabel("Update Object");
 		l.setVisible(true);
 		this.p.add(l);
 	}
@@ -71,6 +69,7 @@ public class ConfigGUI {
 		t.setVisible(true);
 		t.setName("status");
 		t.addActionListener( this.l );
+		t.setText(String.valueOf(this.g.o.getType()));
 		this.p.add(t);
 		this.o.add(t);
 		
@@ -84,6 +83,7 @@ public class ConfigGUI {
 		
 		JTextField t = new JTextField();
 		t.setName("srange");
+		t.setText(String.valueOf(this.g.a.getSensorRange()));
 		t.setVisible(true);
 		t.addActionListener( this.l );
 		this.p.add(t);
@@ -95,6 +95,7 @@ public class ConfigGUI {
 		
 		t = new JTextField();
 		t.setName("sdeltrange");
+		t.setText(String.valueOf(this.g.a.getSensorDeltaRange()));
 		t.setVisible(true);
 		t.addActionListener( this.l );
 		this.p.add(t);
@@ -107,6 +108,7 @@ public class ConfigGUI {
 		t = new JTextField();
 		t.setVisible(true);
 		t.setName("dangle");
+		t.setText(String.valueOf(this.g.a.getDeltaAngle()));
 		t.addActionListener( this.l );
 		this.p.add(t);
 		this.o.add(t);
@@ -115,14 +117,11 @@ public class ConfigGUI {
 		l.setVisible(true);
 		this.p.add(l);
 		
-		t = new JTextField();
-		t.setVisible(true);
-		t.setName("magic");
-		t.addActionListener( this.l );
-		this.p.add(t);
-		this.o.add(t);
+		l = new JLabel("X: " + String.valueOf(this.g.a.getX()) );
+		l.setVisible(true);
+		this.p.add(l);
 		
-		l = new JLabel("Magic / More Magic");
+		l = new JLabel("Y: " + String.valueOf(this.g.a.getY()) );
 		l.setVisible(true);
 		this.p.add(l);
 	}

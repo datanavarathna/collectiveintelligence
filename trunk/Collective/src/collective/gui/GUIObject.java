@@ -45,4 +45,16 @@ public class GUIObject extends JButton {
 		this.status = b;
 		this.updateText();
 	}
+
+	public void updateAttr(String name, String text) throws NumberFormatException {
+		if ( name.equals("srange") ) {
+			this.a.setSensorRange(Integer.parseInt(text) );
+		} else if ( name.equals("sdeltrange") ) {
+			this.a.setSensorDeltaRange(Integer.parseInt(text) );
+		} else if ( name.equals("dangle") ) {
+			this.a.setDeltaAngle(Integer.parseInt(text));
+		} else if ( name.equals("status") ) {
+			this.o.setType(Integer.parseInt(text) );
+		}
+	}
 }

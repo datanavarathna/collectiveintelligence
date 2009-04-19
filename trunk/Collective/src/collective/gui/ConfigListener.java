@@ -20,6 +20,13 @@ public class ConfigListener implements ActionListener {
 			
 			for ( int i = 0; i < olist.size(); ++i ) {
 				System.out.println("Updating " + olist.get(i).getName() + " With " + olist.get(i).getText() );
+				try {
+					b.g.updateAttr(olist.get(i).getName(), olist.get(i).getText() );
+				} catch ( NumberFormatException e1 ) {
+					System.err.println("Caught an Error with " + olist.get(i).getName() );
+					System.err.println("Exception: " + e1 );
+					System.err.println("Not changing Values!");
+				}
 			}
 			
 			
