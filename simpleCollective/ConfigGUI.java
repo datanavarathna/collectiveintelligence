@@ -36,9 +36,7 @@ public class ConfigGUI {
 			this.objectConf();
 			this.addSubmitButton();
 		} else {
-			System.err.println("No Config for Nothing! DATA PUKE!");
-			// System.err.println("ALL NIGTHER!");
-			// System.err.println("THIS IS A COMMENT");
+			// System.err.println("Can't configure an empty Square.");
 		}
 	}
 
