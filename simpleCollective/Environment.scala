@@ -132,13 +132,23 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 			  }
 			  case obstacleList @ List(Obstacle(_,_,_), _*) =>
 			  {
-				println("Received obstacleList")//isn't printing
+				println("Received obstacleList")
+                for(obstacle <- obstacleList.asInstanceOf[List[Obstacle]])
+                {
+                    obstacles.add(obstacle)
+                    println("Added " + obstacle)
+                }
 			  }
 			  case agentListWithLocation @ List(AgentWithLocation(_,_,_), _*) =>
 			  {
-				println("Received agentListWithLocation")//isn't printing
+				println("Received agentListWithLocation")
+                for(AgentWithLocation(agent,x,y) <- agentListWithLocation.asInstanceOf[List[AgentWithLocation]])
+                {
+                    world += agent -> Coordinate(x,y)
+                    println("Added following to world: " + agent + " x="+x+" y="+y)
+                }
 			  }
-
+              case "Exit" => this.exit
               case catchAll => println("Catchall: " +catchAll)
 			}//end react
 		}//end loop

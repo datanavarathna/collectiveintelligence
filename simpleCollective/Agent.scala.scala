@@ -77,6 +77,7 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 				  addToMapMethod(relationships.asInstanceOf[Seq[IdentifiedObject]]: _*)//asInstanceOf is a cast, need to test that works correctly
 				  move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
+              case "Exit" => this.exit
 			}//end react
 		}//end loop
 	}//end act
