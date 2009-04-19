@@ -20,6 +20,10 @@ public class QuadTree{
     length = os.length;
   }
   
+  public void add(Object o){
+	  addAtBeg(o);
+  }
+  
   public void addAtBeg(Object o){
     QuadNode added = new QuadNode(o);
     added.next = head;
@@ -30,10 +34,10 @@ public class QuadTree{
     QuadNode ln = head;
     while(ln.next!=null){
     	ln = ln.next;
-    	if (ln.obj.equals(o))
+    	if (ln.obj.toString().equals(o.toString()))
         	return o;
     }
-    if(ln.obj.equals(o))
+    if(ln.obj.toString().equals(o.toString()))
     	return o;
     return null;
   }
@@ -50,17 +54,18 @@ public class QuadTree{
   
   public int remove(Object o){
 	  QuadNode ln = head;
-	  if(ln.obj.equals(o)){
+	  if(ln.obj.toString().equals(o.toString())){
 		  head = ln.next;
 		  ln.next = null;
 		  return 1;
 	  }
 	  while(ln.next!=null){
-	    if(ln.next.obj.equals(o)){
+	    if(ln.next.obj.toString().equals(o.toString())){
 	    	ln.next = ln.next.next;
 	    	return 1;
 	    }
 	    ln = ln.next;	
 	  }
+	  return 0;
   }
 }

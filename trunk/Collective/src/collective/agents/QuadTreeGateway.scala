@@ -1,8 +1,6 @@
 package collective.agents
-
-
-//import agents.QuadTree
-//import agents.ObstacleJava
+import agents.QuadTree
+import agents.ObstacleJava
 
 class QuadTreeGateway 
 {
