@@ -15,21 +15,13 @@ case class AgentWithLocation(agent: Agent, x: Int, y: Int){
 	override def toString = "AgentWithLocation: agent="+agent+" x="+x+" y="+y
 }
 
-object scalaGui extends Actor{
+class scalaGui extends Actor{
+
+
 
   def act()
   {
-    loop
-		{
-			react
-			{
-                case "Exit" => this.exit
-            }
-        }
-  }
-  
-	def main(args : Array[String]) = {
-		println ("Running")
+        println ("Running")
 		val topologicalElementGenerator: Actor = new TopologicalElementGenerator
 		val relationshipIdentfier: Actor = new RelationshipIdentfier
 		val map: Actor = new CollectiveMap
@@ -54,7 +46,7 @@ object scalaGui extends Actor{
 			obstacleList = tempObstacle::obstacleList
 		}
 		println(obstacleList)
-		val world: Environment = new Environment( 0, 0, guiInstance.getX(), guiInstance.getY())
+		val world: Environment = new Environment( 0, 0, guiInstance.getX(), guiInstance.getY(), this)
 		world.start()
 		for( agentSpec <- javaAgentList)
 		{
@@ -71,6 +63,15 @@ object scalaGui extends Actor{
 		world ! obstacleList
 		println ("Transmitting agentList")
 		world ! agentList
-		//call guiInstance updateCellAgentStatus( int x, int y, boolean agentInSquare ) 
-	}
+        loop
+		{
+			react
+			{
+                case "Exit" => this.exit
+                case AgentUpdate(x, y, present) =>{
+                        guiInstance.updateCellAgentStatus(x, y, present)
+                    }
+            }
+        }
+  }
 }

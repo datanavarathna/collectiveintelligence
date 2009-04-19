@@ -3,8 +3,12 @@ import Measurement._
 import scala.actors._
 import Actor._
 
-class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) extends Actor{
-  def this( maxX: Int, maxY: Int) = this(0,0, maxX: Int, maxY: Int)
+case class AgentUpdate(x: Int, y: Int, present: Boolean){
+    override def toString = " x=" +x+ " y=" +y+ "present=" + present
+}
+
+class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,val scalaGui: Actor) extends Actor{
+  def this( maxX: Int, maxY: Int,scalaGui: Actor) = this(0,0, maxX, maxY,scalaGui)
 
   import scala.collection.mutable.Map
   import scala.collection.immutable.TreeMap
@@ -77,6 +81,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 					  }
 					  world - senderAgent
 					  world += (senderAgent -> Coordinate(newX,newY))
+                      scalaGui ! AgentUpdate(oldX,oldY,false)//agent left oldX,oldY
+                      scalaGui ! AgentUpdate(newX,newY,true)//agent went to newX,newY
 					  senderAgent ! Displacement( deltaX, deltaY)
 				  }
 				  else
@@ -144,8 +150,9 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 				println("Received agentListWithLocation")
                 for(AgentWithLocation(agent,x,y) <- agentListWithLocation.asInstanceOf[List[AgentWithLocation]])
                 {
-                    world += agent -> Coordinate(x,y)
+                    world += (agent -> Coordinate(x,y))
                     println("Added following to world: " + agent + " x="+x+" y="+y)
+                    agent.start
                 }
 			  }
               case "Exit" => this.exit

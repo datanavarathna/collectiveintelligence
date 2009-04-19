@@ -66,6 +66,7 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 				relativeLocationX += x
 				relativeLocationY += y 
 				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
+                move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
 			  case sensorReadings @ Seq(ObjectReading(angle,distance),_*) =>
 			    topologicalElementGenerator ! sensorReadings
@@ -75,7 +76,7 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 			    //send to helper actor that identifies the objects, naming if necessary, messages to parent identify objects
 			  case relationships @  Seq(IdentifiedObject, _*) => {
 				  addToMapMethod(relationships.asInstanceOf[Seq[IdentifiedObject]]: _*)//asInstanceOf is a cast, need to test that works correctly
-				  move(randomPositiveNegative1(),randomPositiveNegative1())
+				  //move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
               case "Exit" => this.exit
 			}//end react

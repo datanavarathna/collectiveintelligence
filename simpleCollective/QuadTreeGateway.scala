@@ -57,7 +57,7 @@ class QuadTreeGateway
 			val o2 = new ObstacleJava()
 			o2.x = x
 			o2.y = y
-			val outp = qT.remove(o2).asInstanceOf[Boolean]
+			val outp = qT.contains(o2).asInstanceOf[Boolean]
 			outp
 	}
 
