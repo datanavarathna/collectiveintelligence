@@ -1,3 +1,5 @@
+package collective.agents;
+
 public class QuadTree{
   QuadNode head = null;
   int length = 0;

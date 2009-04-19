@@ -84,8 +84,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
   
   var world = Map.empty[Actor,Coordinate]
   //var obstacles = Nil //new List[Obstacle]
-  import agents.QuadTree
-  var obstacles: QuadTree = new QuadTree
+  import agents.QuadTreeGateway
+  var obstacles: QuadTreeGateway = new QuadTreeGateway
   
   def act()
   {
