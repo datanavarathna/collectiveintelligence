@@ -59,10 +59,12 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 			if ( go.get(i).getStatus() == 1 ) {
 				as.add(go.get(i).a);
 //				System.out.println("Agent at " + go.get(i).a.getX() + " " + go.get(i).a.getY() );
+//				System.out.println("Sensor Range: " + go.get(i).a.getSensorRange() );
 			}
 			if ( go.get(i).getStatus() == 2 ) {
 				os.add(go.get(i).o);
 //				System.out.println("Object at " + go.get(i).o.getX() + " " + go.get(i).o.getY() );
+//				System.out.println("Object Status: " + go.get(i).o.getType() );
 			}
 		}
 		
