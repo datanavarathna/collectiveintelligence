@@ -52,5 +52,6 @@ object scalaGui extends Actor{
 		
 		world ! obstacleList
 		world ! agentList
+		//call guiInstance updateCellAgentStatus( int x, int y, boolean agentInSquare ) 
 	}
 }

@@ -200,6 +200,14 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
 						 senderAgent ! detectedObstacles
 					 }
 			  }
+			  case obstacleList @ Seq(Obstacle, _*) => 
+			  {
+				println("Received obstacleList")//isn't printing
+			  }
+			  case agentListWithLocation @ Seq(AgentWithLocation, _*) => 
+			  {
+				println("Received agentListWithLocation")//isn't printing
+			  }
 			}//end react
 		}//end loop
   }//end act
