@@ -1,11 +1,11 @@
-
+package collective.gui;
 
 public class AgentSpecs {
 	
 	int sensorRange;
 	int sensorDeltaRange;
 	int deltaAngle;
-	//int deltaSensorRange;
+	int deltaSensorRange;
 	
 	int x;
 	int y;
@@ -13,9 +13,10 @@ public class AgentSpecs {
 	public AgentSpecs(){
 		this.x = 0;
 		this.y = 0;
-		this.sensorRange      = 0;
-		this.sensorDeltaRange = 0;
-		this.deltaAngle       = 0;
+		
+		this.sensorRange      = 5;
+		this.sensorDeltaRange = 1;
+		this.deltaAngle       = 1;
 	}
 	
 	public int getSensorRange() {
@@ -49,8 +50,4 @@ public class AgentSpecs {
 		this.y = y;
 	}
 	
-	@Override
-	public String toString() {
-		return " x="+x+" y="+y+" "+" sensorRange="+sensorRange+" sensorDeltaRange="+sensorDeltaRange+" deltaAngle="+deltaAngle;
-	}
 }
