@@ -37,7 +37,7 @@ public class ConfigGUI {
 			this.addSubmitButton();
 		} else {
 			System.err.println("No Config for Nothing! DATA PUKE!");
-			System.err.println("ALL NIGTHER!");
+			// System.err.println("ALL NIGTHER!");
 			// System.err.println("THIS IS A COMMENT");
 		}
 	}
