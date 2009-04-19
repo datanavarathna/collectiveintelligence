@@ -58,7 +58,7 @@ class QuadTreeGateway
 
 	def contains( x: Int, y: Int): Boolean =
 	{
-			val o2 = new ObstacleJava()
+			o2 = new ObstacleJava()
 			o2.Otype = obstacleType
 			o2.x = x
 			o2.y = y
