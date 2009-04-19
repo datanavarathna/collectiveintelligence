@@ -12,7 +12,7 @@ import Actor._
 
 //case class Obstacle(obstacleType: Int, x: Int, y: Int) 
 case class AgentWithLocation(agent: Agent, x: Int, y: Int){
-	override def toString = " agent="+agent+" x="+x+" y="+y
+	override def toString = "AgentWithLocation: agent="+agent+" x="+x+" y="+y
 }
 
 object scalaGui extends Actor{
