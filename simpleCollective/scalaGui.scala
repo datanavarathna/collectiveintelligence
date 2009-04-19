@@ -11,7 +11,9 @@ import Actor._
 
 
 //case class Obstacle(obstacleType: Int, x: Int, y: Int) 
-case class AgentWithLocation(agent: Agent, x: Int, y: Int)
+case class AgentWithLocation(agent: Agent, x: Int, y: Int){
+	override def toString = " agent="+agent+" x="+x+" y="+y
+}
 
 object scalaGui extends Actor{
 
@@ -41,8 +43,11 @@ object scalaGui extends Actor{
 		for((objectSpec: ObjectSpecs) <- javaObstacleList)
 		{
 			println("objectSpec="+objectSpec)
-			obstacleList = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())::obstacleList
+			val tempObstacle = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())
+			println(tempObstacle)
+			obstacleList = tempObstacle::obstacleList
 		}
+		println(obstacleList)
 		val world: Environment = new Environment( 0, 0, guiInstance.getX(), guiInstance.getY())
 		world.start()
 		for( agentSpec <- javaAgentList)
@@ -50,9 +55,12 @@ object scalaGui extends Actor{
 			println("agentSpec="+agentSpec)
 			val agent = new Agent(world, topologicalElementGenerator, relationshipIdentfier, map,
                      agentSpec.getSensorRange(),agentSpec.getDeltaAngle(),agentSpec.getSensorDeltaRange())
-            AgentWithLocation(agent,agentSpec.getX(),agentSpec.getY())::agentList
+			println(agent)
+			val tempAgentWithLocation = AgentWithLocation(agent,agentSpec.getX(),agentSpec.getY())
+            agentList=tempAgentWithLocation::agentList
   
 		}
+		println(agentList)
 		println ("Transmitting obstacleList")
 		world ! obstacleList
 		println ("Transmitting agentList")
