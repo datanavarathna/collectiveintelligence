@@ -3,6 +3,7 @@
 public class ObjectSpecs {
 	int x;
 	int y;
+	int type;
 	public int getX() {
 		return x;
 	}
@@ -27,11 +28,15 @@ public class ObjectSpecs {
 		this.type = type;
 	}
 
-	int type;
 	
 	ObjectSpecs() {
 		this.x    = 0;
 		this.y    = 0;
 		this.type = 1;
+	}
+
+	@Override
+	public String toString() {
+		return " x="+x+" y="+y+" "+" type="+type;
 	}
 }
