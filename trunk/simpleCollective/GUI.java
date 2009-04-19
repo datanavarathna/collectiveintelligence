@@ -95,9 +95,6 @@ public class GUI {
 			x = ( i % this.y );
 			y = ( i / this.y );
 			
-			// index / y = y
-			// index % y = x
-			
 			o.a.setX(x);
 			o.a.setY(y);
 			
@@ -132,7 +129,7 @@ public class GUI {
 	public synchronized GUIObject getByXY( int x, int y ) {
 		GUIObject o = null;
 		int index = ( this.y * y ) + x;
-//		System.out.println(index + " out of " + this.objects.size() );
+		// System.out.println(index + " out of " + this.objects.size() );
 		if ( index <= this.objects.size() ) {
 			o = this.objects.get(index);
 		}
@@ -153,7 +150,8 @@ public class GUI {
 			}
 			this.refresh();
 		} else {
-			System.err.println("Invalid Index!");
+			System.err.println("OK. An External Object has Told updateCellAgentStatus to modify");
+			System.err.println("Debug: X: " + x + ", Y: " + y );
 		}
 	}
 	

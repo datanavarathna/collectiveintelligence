@@ -10,8 +10,8 @@ public class ConfigListener implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-//		System.out.println(e.getActionCommand());
-//		System.out.println(e.getSource());
+		//	System.out.println(e.getActionCommand());
+		//	System.out.println(e.getSource());
 		
 		if (e.getSource() instanceof ConfigGUIButton ) {
 			ConfigGUIButton b = (ConfigGUIButton) e.getSource();
@@ -32,7 +32,7 @@ public class ConfigListener implements ActionListener {
 			c.p.dispose();
 			
 		} else {
-			System.out.println("Unknown Signal. Ignoring.");
+			// System.out.println("Unknown Signal. Ignoring.");
 		}
 	}
 
