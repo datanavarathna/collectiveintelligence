@@ -15,7 +15,7 @@ public class QuadTree{
   public QuadTree(Object[] os){
     for(int i = os.length-1; i >= 0; i++){
       QuadNode added = new QuadNode(os[i]);
-      added.next = head;
+      added.next = root;
     }
     length = os.length;
   }
@@ -26,12 +26,12 @@ public class QuadTree{
   
   public void addAtBeg(Object o){
     QuadNode added = new QuadNode(o);
-    added.next = head;
+    added.next = root;
     length++;
   }
   
   public Object find(Object o){
-    QuadNode ln = head;
+    QuadNode ln = root;
     while(ln.next!=null){
     	ln = ln.next;
     	if (ln.obj.toString().equals(o.toString()))
@@ -42,9 +42,14 @@ public class QuadTree{
     return null;
   }
   
+  public boolean contains(Object o)
+  {
+	  return find(o) != null;
+  }
+  
   public Object[] returnAll(){
 	  Object[] op = new Object[length];
-	  QuadNode ln = head;
+	  QuadNode ln = root;
 	  for(int i = 0; i < length; i++){
 		  op[i]=ln;
 		  ln = ln.next;
@@ -53,9 +58,9 @@ public class QuadTree{
   }
   
   public Boolean remove(Object o){
-	  QuadNode ln = head;
+	  QuadNode ln = root;
 	  if(ln.obj.toString().equals(o.toString())){
-		  head = ln.next;
+		  root = ln.next;
 		  ln.next = null;
 		  return true;
 	  }
