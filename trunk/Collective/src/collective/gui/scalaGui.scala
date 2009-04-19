@@ -4,9 +4,9 @@ import scala.actors._
 import Actor._
 import agents._
 import collectivemap._
-import gui.GUI
-import gui.ObjectSpecs
-import gui.AgentSpecs
+//import gui.GUI
+//import gui.ObjectSpecs
+//import gui.AgentSpecs
 
 
 case class Obstacle(obstacleType: Int, x: Int, y: Int) 
@@ -24,19 +24,21 @@ object scalaGui extends Actor{
 		{
 			Thread.sleep(300)
 		}
-		var obstacleList = Nil
-		var agentList = Nil
+		var obstacleList = Nil.asInstanceOf[List[Obstacle]]
+		var agentList = Nil.asInstanceOf[List[Obstacle]]
+		val javaObstacleList: List[ObjectSpecs] = guiInstance.getOs().toArray().toList.asInstanceOf[List[ObjectSpecs]]
+		val javaAgentList: List[AgentSpecs] = guiInstance.getAs().toArray().toList.asInstanceOf[List[AgentSpecs]]
 		//guiInstance.getOS().foreach((objectSpec: ObjectSpecs) => obstacleList = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())::obstacleList)
-		for(objectSpec <- guiInstance.getOs())
+		for((objectSpec: ObjectSpecs) <- javaObstacleList)
 		{
 			obstacleList = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())::obstacleList
 		}
 		val world: Environment = new Environment( 0, 0, guiInstance.getX(), guiInstance.getY())
 		
-		for( agentSpec <- guiInstance.getOs())
+		for( agentSpec <- javaAgentList)
 		{
 			val agent = new Agent(world, topologicalElementGenerator, relationshipIdentfier, map,
-                     agentSpec.getSensorRange(),agentSpec.getDeltaAngle(),getDeltaSensorRange())
+                     agentSpec.getSensorRange(),agentSpec.getDeltaAngle(),agentSpec.getDeltaSensorRange())
             AgentWithLocation(agent,agentSpec.getX(),agentSpec.getY())::agentList
   
 		}
