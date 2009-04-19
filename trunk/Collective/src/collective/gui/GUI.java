@@ -163,7 +163,7 @@ public class GUI {
 
 	public static void main ( String[] args ) {
 
-		GUI g = new GUI( 5, 5, 100, 100 );
+		GUI g = new GUI( 15, 15, 100, 100 );
 		
 		g.setGUISize(600, 600);
 		
