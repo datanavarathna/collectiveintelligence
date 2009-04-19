@@ -1,14 +1,14 @@
 package collective.agents;
 
 public class QuadTree{
-  QuadNode head = null;
+  QuadNode root = null;
   int length = 0;
   public QuadTree(){
     
   }
   
   public QuadTree(Object o){
-    head = new QuadNode(o);
+    root = new QuadNode(o);
     length = 1;
   }
   
@@ -52,20 +52,20 @@ public class QuadTree{
 	  return op;
   }
   
-  public int remove(Object o){
+  public Boolean remove(Object o){
 	  QuadNode ln = head;
 	  if(ln.obj.toString().equals(o.toString())){
 		  head = ln.next;
 		  ln.next = null;
-		  return 1;
+		  return true;
 	  }
 	  while(ln.next!=null){
 	    if(ln.next.obj.toString().equals(o.toString())){
 	    	ln.next = ln.next.next;
-	    	return 1;
+	    	return true;
 	    }
 	    ln = ln.next;	
 	  }
-	  return 0;
+	  return false;
   }
 }
