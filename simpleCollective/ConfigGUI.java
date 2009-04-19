@@ -34,7 +34,7 @@ public class ConfigGUI {
 		} else if ( this.g.getStatus() == 2 ) {
 			this.objectConf();
 		} else {
-			System.err.println("No Config for Nothing :X PUKE!");
+			System.err.println("No Config");
 		}
 		
 		this.addSubmitButton();

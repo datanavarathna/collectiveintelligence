@@ -41,7 +41,7 @@ object scalaGui extends Actor{
 			obstacleList = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())::obstacleList
 		}
 		val world: Environment = new Environment( 0, 0, guiInstance.getX(), guiInstance.getY())
-		
+		world.start()
 		for( agentSpec <- javaAgentList)
 		{
 			val agent = new Agent(world, topologicalElementGenerator, relationshipIdentfier, map,
