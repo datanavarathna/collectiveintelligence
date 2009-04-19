@@ -1,8 +1,8 @@
 package collective.gui;
 
 public class AgentSpecs {
-	int sensorRange;
 	
+	int sensorRange;
 	int sensorDeltaRange;
 	int deltaAngle;
 	int deltaSensorRange;
@@ -16,7 +16,6 @@ public class AgentSpecs {
 		this.sensorRange      = 0;
 		this.sensorDeltaRange = 0;
 		this.deltaAngle       = 0;
-		this.deltaSensorRange = 0;
 	}
 	
 	public int getSensorRange() {
@@ -36,12 +35,6 @@ public class AgentSpecs {
 	}
 	public void setDeltaAngle(int deltaAngle) {
 		this.deltaAngle = deltaAngle;
-	}
-	public int getDeltaSensorRange() {
-		return deltaSensorRange;
-	}
-	public void setDeltaSensorRange(int deltaSensorRange) {
-		this.deltaSensorRange = deltaSensorRange;
 	}
 	public int getX() {
 		return x;

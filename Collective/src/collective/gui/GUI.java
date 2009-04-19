@@ -124,10 +124,10 @@ public class GUI {
 	}
 
 	public int getX() {
-		return x;
+		return this.x;
 	}
 	public int getY() {
-		return y;
+		return this.y;
 	}
 	public synchronized GUIObject getByXY( int x, int y ) {
 		GUIObject o = null;
@@ -167,11 +167,11 @@ public class GUI {
 		
 		g.setGUISize(600, 600);
 		
-		g.updateCellAgentStatus(0, 0, true);
-		g.updateCellAgentStatus(1, 1, true);
-		g.updateCellAgentStatus(2, 2, true);
-		g.updateCellAgentStatus(3, 3, true);
-		g.updateCellAgentStatus(4, 4, true);
+//		g.updateCellAgentStatus(0, 0, true);
+//		g.updateCellAgentStatus(1, 1, true);
+//		g.updateCellAgentStatus(2, 2, true);
+//		g.updateCellAgentStatus(3, 3, true);
+//		g.updateCellAgentStatus(4, 4, true);
 
 		boolean foo = false;
 
@@ -186,5 +186,8 @@ public class GUI {
 				System.out.println(e);
 			}
 		}
+	}
+	public void close() {
+
 	}
 }

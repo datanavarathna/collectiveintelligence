@@ -11,10 +11,17 @@ public class ButtonListener implements ActionListener {
 			clicked(e);
 		} else if ( e.getModifiers() == 18 ) {
 			ctrlClicked(e);
+		} else if ( e.getModifiers() == 17 ) {
+			configNode((GUIObject)e.getSource());
 		}
 		
 	}
 	
+	private void configNode(GUIObject source) {
+		ConfigGUI g = new ConfigGUI( source );
+		g.show( 500, 200 );
+	}
+
 	private void ctrlClicked( ActionEvent e ) {
 		GUIObject go = (GUIObject) e.getSource();
 		
