@@ -1,0 +1,10 @@
+= The GUI Interface =
+
+== Functions ==
+  # Left Click  -  Cycle Node
+  # Ctrl + Left Click  -  Cycle Node Backwards
+  # Shift + Left Click  -  Configure Node
+
+== Interesting Tidbits ==
+  * Shift + Left Click will configure a given node's status. If the node is an Agent Type, it will display the Agent Configure options. If the object is a Obstacle, the config menu will reflect this.
+  * Configuration is persistent through the instance, if you turn an object location from an agent to an obstacle, the agent data will be retained in the event of returning to another type.
