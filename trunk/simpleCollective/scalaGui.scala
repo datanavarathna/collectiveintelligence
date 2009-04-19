@@ -19,7 +19,13 @@ object scalaGui extends Actor{
 
   def act()
   {
-    
+    loop
+		{
+			react
+			{
+                case "Exit" => this.exit
+            }
+        }
   }
   
 	def main(args : Array[String]) = {

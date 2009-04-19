@@ -17,5 +17,6 @@ object Test
         environment.start
         environment ! agentList
         environment ! obstacleList
+        environment ! "Exit"
     }
 }
