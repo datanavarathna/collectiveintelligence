@@ -3,7 +3,8 @@
 object Test
 {
     def main(args : Array[String]) = {
-		val environment = new Environment(10,10)
+		/*
+        val environment = new Environment(10,10)
         var obstacleList = List(Obstacle(1,1,1),Obstacle(1,2,2))
 
         val topologicalElementGenerator = new TopologicalElementGenerator
@@ -18,5 +19,8 @@ object Test
         environment ! agentList
         environment ! obstacleList
         environment ! "Exit"
+        */
+       (new scalaGui).start
+       println("Done")
     }
 }

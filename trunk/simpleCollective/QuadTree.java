@@ -32,14 +32,16 @@ public class QuadTree{
   
   public Object find(Object o){
     QuadNode ln = root;
-    while(ln.next!=null){
-    	ln = ln.next;
-    	if (ln.obj.toString().equals(o.toString()))
-        	return o;
-    }
-    if(ln.obj.toString().equals(o.toString()))
-    	return o;
-    return null;
+    if(root!=null){
+        while(ln.next!=null){
+            ln = ln.next;
+            if ((ln.obj != null) && ln.obj.toString().equals(o.toString()))
+                return o;
+        }
+        if((ln.obj != null) && ln.obj.toString().equals(o.toString()))
+                return o;
+   }
+   return null;
   }
   
   public boolean contains(Object o)
