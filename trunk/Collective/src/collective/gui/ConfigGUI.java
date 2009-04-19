@@ -1,6 +1,7 @@
 package collective.gui;
 
 import java.awt.GridLayout;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -14,12 +15,15 @@ public class ConfigGUI {
 	
 	ConfigListener l;
 	
+	ArrayList<JTextField> o;
+	
 	int x;
 	int y;
 	
 	ConfigGUI( GUIObject g ) {
 		this.g = g;
 		this.l = new ConfigListener();
+		this.o = new ArrayList<JTextField>();
 	}
 	
 	public void show( int x, int y ) {
@@ -41,11 +45,12 @@ public class ConfigGUI {
 	}
 
 	private void addSubmitButton() {
-		JButton t = new JButton();
+		ConfigGUIButton t = new ConfigGUIButton( "" ,this.g, this );
+		
+		this.p.add(t);
 		t.setText("Update");
 		t.setVisible(true);
 		t.addActionListener( this.l );
-		this.p.add(t);
 		
 		JLabel l = new JLabel("Make Babies");
 		l.setVisible(true);
@@ -67,6 +72,7 @@ public class ConfigGUI {
 		t.setName("status");
 		t.addActionListener( this.l );
 		this.p.add(t);
+		this.o.add(t);
 		
 		JLabel l = new JLabel("Status");
 		l.setVisible(true);
@@ -81,6 +87,7 @@ public class ConfigGUI {
 		t.setVisible(true);
 		t.addActionListener( this.l );
 		this.p.add(t);
+		this.o.add(t);
 		
 		JLabel l = new JLabel("Sensor Range");
 		l.setVisible(true);
@@ -91,6 +98,7 @@ public class ConfigGUI {
 		t.setVisible(true);
 		t.addActionListener( this.l );
 		this.p.add(t);
+		this.o.add(t);
 		
 		l = new JLabel("Sensor Delta Range");
 		l.setVisible(true);
@@ -101,6 +109,7 @@ public class ConfigGUI {
 		t.setName("dangle");
 		t.addActionListener( this.l );
 		this.p.add(t);
+		this.o.add(t);
 		
 		l = new JLabel("Delta Angle");
 		l.setVisible(true);
@@ -111,6 +120,7 @@ public class ConfigGUI {
 		t.setName("magic");
 		t.addActionListener( this.l );
 		this.p.add(t);
+		this.o.add(t);
 		
 		l = new JLabel("Magic / More Magic");
 		l.setVisible(true);
