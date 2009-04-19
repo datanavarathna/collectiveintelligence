@@ -13,7 +13,8 @@ case class Obstacle(obstacleType: Int, x: Int, y: Int)
 case class AgentWithLocation(agent: Agent, x: Int, y: Int)
 
 object scalaGui extends Actor{
-	def main(args: Array[String]) {
+
+	def main(args : Array[String]) = {
 		println ("Running")
 		val topologicalElementGenerator: Actor = new TopologicalElementGenerator
 		val relationshipIdentfier: Actor = new RelationshipIdentfier
