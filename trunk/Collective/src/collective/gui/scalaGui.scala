@@ -4,9 +4,12 @@ import scala.actors._
 import Actor._
 import agents._
 import collectivemap._
-import gui.GUI
-import gui.ObjectSpecs
-import gui.AgentSpecs
+import collectivemap.CollectiveMap
+import collectivemap.RelationshipIdentfier
+import collectivemap.TopologicalElementGenerator
+//import gui.GUI
+//import gui.ObjectSpecs
+//import gui.AgentSpecs
 
 
 case class Obstacle(obstacleType: Int, x: Int, y: Int) 
@@ -14,6 +17,11 @@ case class AgentWithLocation(agent: Agent, x: Int, y: Int)
 
 object scalaGui extends Actor{
 
+  def act()
+  {
+    
+  }
+  
 	def main(args : Array[String]) = {
 		println ("Running")
 		val topologicalElementGenerator: Actor = new TopologicalElementGenerator
@@ -26,7 +34,7 @@ object scalaGui extends Actor{
 			Thread.sleep(300)
 		}
 		var obstacleList = Nil.asInstanceOf[List[Obstacle]]
-		var agentList = Nil.asInstanceOf[List[Obstacle]]
+		var agentList = Nil.asInstanceOf[List[AgentWithLocation]]
 		val javaObstacleList: List[ObjectSpecs] = guiInstance.getOs().toArray().toList.asInstanceOf[List[ObjectSpecs]]
 		val javaAgentList: List[AgentSpecs] = guiInstance.getAs().toArray().toList.asInstanceOf[List[AgentSpecs]]
 		//guiInstance.getOS().foreach((objectSpec: ObjectSpecs) => obstacleList = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())::obstacleList)
