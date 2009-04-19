@@ -7,12 +7,12 @@ package tests;
 import org.scalatest.junit.JUnit3Suite
 import org.scalatest.prop.Checkers
 import org.scalacheck.Prop._
-
+import org.scalatest.Suite
 
 import UncertaintyMath._
 
 //class MeasurementTest extends Spec with Checkers
-class MeasurementTestSuite extends JUnit3Suite with Checkers
+class MeasurementTestSuite extends /*JUnit3Suite with */ Suite with  Checkers
 {
 	
   //@Test
