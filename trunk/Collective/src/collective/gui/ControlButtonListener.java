@@ -31,7 +31,8 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 	
 	private void kill() {
 		System.out.println("God said I need to kill.");
-		System.out.println("Shutting down Process. Aborting Children");
+		System.out.println("Shutting down Process. Aborting Children With Gusto");
+		this.g.close();
 	}
 	
 	private void start() {
