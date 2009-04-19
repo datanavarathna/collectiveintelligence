@@ -33,24 +33,29 @@ object scalaGui extends Actor{
 		}
 		var obstacleList = Nil.asInstanceOf[List[Obstacle]]
 		var agentList = Nil.asInstanceOf[List[AgentWithLocation]]
-		val javaObstacleList: List[ObjectSpecs] = guiInstance.getOs().toArray().toList.asInstanceOf[List[ObjectSpecs]]
-		val javaAgentList: List[AgentSpecs] = guiInstance.getAs().toArray().toList.asInstanceOf[List[AgentSpecs]]
+		val javaObstacleList: List[ObjectSpecs] = guiInstance.getOs().toList.asInstanceOf[List[ObjectSpecs]]
+		println("JavaObstacleList="+javaObstacleList)
+		val javaAgentList: List[AgentSpecs] = guiInstance.getAs().toList.asInstanceOf[List[AgentSpecs]]
+		println("javaAgentList="+javaAgentList)
 		//guiInstance.getOS().foreach((objectSpec: ObjectSpecs) => obstacleList = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())::obstacleList)
 		for((objectSpec: ObjectSpecs) <- javaObstacleList)
 		{
+			println("objectSpec="+objectSpec)
 			obstacleList = Obstacle(objectSpec.getType(),objectSpec.getX(),objectSpec.getY())::obstacleList
 		}
 		val world: Environment = new Environment( 0, 0, guiInstance.getX(), guiInstance.getY())
 		world.start()
 		for( agentSpec <- javaAgentList)
 		{
+			println("agentSpec="+agentSpec)
 			val agent = new Agent(world, topologicalElementGenerator, relationshipIdentfier, map,
                      agentSpec.getSensorRange(),agentSpec.getDeltaAngle(),agentSpec.getSensorDeltaRange())
             AgentWithLocation(agent,agentSpec.getX(),agentSpec.getY())::agentList
   
 		}
-		
+		println ("Transmitting obstacleList")
 		world ! obstacleList
+		println ("Transmitting agentList")
 		world ! agentList
 		//call guiInstance updateCellAgentStatus( int x, int y, boolean agentInSquare ) 
 	}

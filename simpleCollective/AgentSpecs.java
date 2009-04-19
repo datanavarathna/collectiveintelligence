@@ -5,7 +5,7 @@ public class AgentSpecs {
 	int sensorRange;
 	int sensorDeltaRange;
 	int deltaAngle;
-	int deltaSensorRange;
+	//int deltaSensorRange;
 	
 	int x;
 	int y;
@@ -49,4 +49,8 @@ public class AgentSpecs {
 		this.y = y;
 	}
 	
+	@Override
+	public String toString() {
+		return " x="+x+" y="+y+" "+" sensorRange="+sensorRange+" sensorDeltaRange="+sensorDeltaRange+" deltaAngle="+deltaAngle;
+	}
 }
