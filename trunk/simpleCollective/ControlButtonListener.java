@@ -1,4 +1,4 @@
-
+package collective.gui;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -24,25 +24,26 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 		} else if ( a.equals("start" ) ) {
 			this.start();
 		} else {
-			System.err.println("Controller command not understood.");
-			System.err.println("No action performed.");
+			System.err.println("Controller rcvd a command that I done");
+			System.err.println("gone and not understood. I am doin nothing.");
 		}
 	}
 	
 	private void kill() {
-		System.out.println("Shutting down Process.");
+		System.out.println("God said I need to kill.");
+		System.out.println("Shutting down Process. Aborting Children With Gusto");
 		this.g.close();
 	}
 	
 	private void start() {
-		System.out.println("Checking");
+		System.out.println("Checking For Badassary");
 		if ( this.g.loaded ) {
 			this.g.primed = true;
-			System.out.println("Primed and Ready for the Controller");
+			System.out.println("Tis all good in the hood. Primed and Ready for the Controller");
 			System.out.println("");
 		} else {
 			System.out.println("");
-			System.err.println("You need to Init the Lists before you can Run!");
+			System.err.println("Dude! You need to Init the Lists before you can Run!");
 		}
 		System.out.println("");
 	}
@@ -74,7 +75,9 @@ public class ControlButtonListener implements java.awt.event.ActionListener {
 		
 		System.out.println("Created Agent Array. Size: " + as.size() );
 		System.out.println("Created Object Array. Size: " + os.size() );
-		System.out.println("Objects are Written to GUI.");
+		System.out.println("Objects are Written to GUI. Ready for teh Bay Boy to werk.");
 		System.out.println("");
+		
+		
 	}
 }

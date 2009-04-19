@@ -1,4 +1,4 @@
-
+package collective.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,10 +25,11 @@ public class ConfigListener implements ActionListener {
 				} catch ( NumberFormatException e1 ) {
 					System.err.println("Caught an Error with " + olist.get(i).getName() );
 					System.err.println("Exception: " + e1 );
-					System.err.println("Not changing Values!");
+					System.err.println("This Exception can be ignored, but I'm Not changing Values!");
 				}
 			}
 			
+			c.p.dispose();
 			
 		} else {
 			System.out.println("Unknown Signal. Ignoring.");

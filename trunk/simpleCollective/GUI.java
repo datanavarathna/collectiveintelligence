@@ -1,4 +1,4 @@
-
+package collective.gui;
 
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -31,16 +31,15 @@ public class GUI {
 		this.setup( x, y, windowX, windowY );
 	}
 	
-	public ObjectSpecs[] getOs() {
-		ObjectSpecs[] osArray = new ObjectSpecs[os.size()];
-		return os.toArray(osArray);
+	
+	public ArrayList<ObjectSpecs> getOs() {
+		return os;
 	}
 	public void setOs(ArrayList<ObjectSpecs> os) {
 		this.os = os;
 	}
-	public AgentSpecs[] getAs() {
-		AgentSpecs[] asArray = new AgentSpecs[as.size()];
-		return as.toArray(asArray);
+	public ArrayList<AgentSpecs> getAs() {
+		return as;
 	}
 	public void setAs(ArrayList<AgentSpecs> as) {
 		this.as = as;
@@ -164,21 +163,13 @@ public class GUI {
 
 	public static void main ( String[] args ) {
 
-		GUI g = new GUI( 15, 15, 100, 100 );
+		GUI g = new GUI( 25, 25, 100, 100 );
 		
 		g.setGUISize(600, 600);
-		
-//		g.updateCellAgentStatus(0, 0, true);
-//		g.updateCellAgentStatus(1, 1, true);
-//		g.updateCellAgentStatus(2, 2, true);
-//		g.updateCellAgentStatus(3, 3, true);
-//		g.updateCellAgentStatus(4, 4, true);
-
 		boolean foo = false;
 
 		while ( true ) {
-//			System.out.println( "Online: " + g.getByXY(0, 0).getStatus() );
-//			g.updateCellAgentStatus(0, 0, foo);
+
 			foo = !foo;
 
 			try {
