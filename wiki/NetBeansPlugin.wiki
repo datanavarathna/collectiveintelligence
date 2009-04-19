@@ -24,3 +24,12 @@ Know Issues of Scala plugin Beta
 
     **If java classes are not being recognized in a scala file, clean and build the project, close the files, then open the files again and the syntax errors should disappear.
 
+
+How to Set Main Class and Run
+
+Scala Plugin does not support run/debug single Scala file yet, but, you can change and set project's Main class to run/debug it:
+
+   1. Set project's Main class in project's properties dialog,input the full qualified name of this class, for example: scalaproject1.RunMe
+   2. Make sure the main method return UNIT type 
+
+Documentation for Scala JUnit Integration is at http://blogtrader.net/page/dcaoyuan/entry/scala_for_netbeans_screenshot_121
