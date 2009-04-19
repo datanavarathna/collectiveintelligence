@@ -46,6 +46,7 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
   
 	def act()
 	{
+		println("Agent running")
 		move(randomPositiveNegative1(),randomPositiveNegative1())
 		loop 
 		{
@@ -90,7 +91,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int) e
   
   def act()
   {
-    loop 
+    println("Environment running")
+	loop 
 		{
 			react
 			{
