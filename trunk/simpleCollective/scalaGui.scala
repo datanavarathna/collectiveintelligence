@@ -46,7 +46,7 @@ class scalaGui extends Actor{
 			obstacleList = tempObstacle::obstacleList
 		}
 		println(obstacleList)
-		val world: Environment = new Environment( 0, 0, guiInstance.getX(), guiInstance.getY(), this)
+		val world: Environment = new Environment( guiInstance.getX()-1, guiInstance.getY()-1, this)
 		world.start()
 		for( agentSpec <- javaAgentList)
 		{

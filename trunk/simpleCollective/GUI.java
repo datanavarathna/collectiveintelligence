@@ -32,15 +32,18 @@ public class GUI {
 	}
 	
 	
-	public ArrayList<ObjectSpecs> getOs() {
-		return os;
-	}
+	public ObjectSpecs[] getOs() {
+                 ObjectSpecs[] osArray = new ObjectSpecs[os.size()];
+                 return os.toArray(osArray);
+    }
+
 	public void setOs(ArrayList<ObjectSpecs> os) {
 		this.os = os;
 	}
-	public ArrayList<AgentSpecs> getAs() {
-		return as;
-	}
+	public AgentSpecs[] getAs() {
+                 AgentSpecs[] asArray = new AgentSpecs[as.size()];
+                 return as.toArray(asArray);
+    }
 	public void setAs(ArrayList<AgentSpecs> as) {
 		this.as = as;
 	}
