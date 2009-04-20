@@ -160,7 +160,13 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                     agent.start
                 }
 			  }
-              case "Exit" => this.exit
+              case "Exit" => {
+                   for(agent <- world.keySet){
+                       agent ! "Exit"
+                   }
+                   scalaGui ! "Exit"
+                   this.exit
+              }
               case catchAll => println("Catchall: " +catchAll)
 			}//end react
 		}//end loop
