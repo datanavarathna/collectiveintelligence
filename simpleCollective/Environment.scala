@@ -20,14 +20,14 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 
   def act()
   {
-    println("Environment running")
+    println("Environment("+minX+"-"+maxX+","+minY+"-"+maxY+") running")
 	loop
 		{
 			react
 			{
 			  case MoveCommand(senderAgent,x,y) =>
 			  {
-				  println("MoveCommand")
+				  //println("MoveCommand")
                   if(world.contains(senderAgent))
 				  {
 					  var deltaX: Measurement = new Measurement(x)
@@ -42,7 +42,13 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 					  {
 						  if(oldX + x <= maxX)
 						  {
-							  newX = oldX + x
+							  if(oldX + x >= minX)
+                                newX = oldX + x
+                              else
+                              {
+							    deltaX = minX - oldX
+							    newX = minX
+						      }
 						  }
 						  else
 						  {
@@ -50,35 +56,34 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 							  newX = maxX
 						  }
 
-						  if(oldX + x >= minX)
-							  newX = oldX + x
-							  else
-							  {
-								  deltaX = minX - oldX
-								  newX = minX
-							  }
-
 						  if(oldY + y <= maxY)
-							  newY = oldY + y
-							  else
-							  {
-								  deltaY = maxY - oldY
-								  newY = maxY
-							  }
-
-						  if(oldY + y >= minY)
-							  newY = oldY + y
+                          {
+							  if(oldY + y >= minY)
+							     newY = oldY + y
 							  else
 							  {
 								  deltaY = minY - oldY
 								  newY = minY
 							  }
+                          }
+						  else
+						  {
+								  deltaY = maxY - oldY
+								  newY = maxY
+						  }
 					  }//end if target doesn't contain obstacle
 					  else
 					  {
 						  deltaX = new Measurement(0)
 						  deltaY = new Measurement(0)
 					  }
+                      if(newY > maxY || newY < minY || newX > maxX || newX < minX)
+                      {
+                          println("minX="+minX+" maxX="+maxX+" minY="+minY+" maxY="+maxY)
+                          println("oldX="+oldX+" oldY="+oldY)
+                          println("newX="+newX+" newY="+newY)
+                          println("x="+x+" y="+y)
+                      }
 					  world - senderAgent
 					  world += (senderAgent -> Coordinate(newX,newY))
                       scalaGui ! AgentUpdate(oldX,oldY,false)//agent left oldX,oldY
@@ -92,7 +97,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 			  }//end case MoveCommand
 			  case UpdateSensor(senderAgent, sensorRange, sensorDeltaAngle, sensorDeltaRange) =>
 			  {
-				   println("UpdateSensor")
+				   //println("UpdateSensor")
 					 /*
 					 for (
 							 obstacle: Obstacle <- obstacles
