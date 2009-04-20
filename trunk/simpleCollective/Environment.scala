@@ -92,7 +92,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 			  }//end case MoveCommand
 			  case UpdateSensor(senderAgent, sensorRange, sensorDeltaAngle, sensorDeltaRange) =>
 			  {
-				   println("UpdateSenosor")
+				   println("UpdateSensor")
 					 /*
 					 for (
 							 obstacle: Obstacle <- obstacles

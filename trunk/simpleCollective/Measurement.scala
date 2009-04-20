@@ -22,10 +22,13 @@ object Measurement {
 
 	def ln(that:Measurement): Measurement = 
 	{
-		new Measurement( 
-				ln(that.value),
-				that.uncertainty/that.value
-		)
+		val newUncertainty = {
+            if(that.value != 0)
+                that.uncertainty/that.value
+            else
+                that.uncertainty
+        }
+        new Measurement(ln(that.value),newUncertainty)
 	}
  
 	def sqrt(that:Measurement): Measurement =
@@ -81,7 +84,7 @@ class Measurement (val value: Double, val uncertainty:Double)
 	def this(value:Double) = this(value,0)
 	def this(value:Int) = this(value,0)
  
-	require(value != 0)
+	//require(value != 0)
  
 	def canEqual(other: Any): Boolean = { other.isInstanceOf[Measurement] }
 	override def equals(other:Any):Boolean = 
@@ -135,53 +138,89 @@ class Measurement (val value: Double, val uncertainty:Double)
 	def * (that:Int): Measurement = 
 	{
 		val newValue: Double = this.value * that
-		new Measurement( newValue,
-				newValue * this.uncertainty/this.value
-		)
+        val newUncertainty: Double = {
+            if(this.value != 0)
+                newValue * this.uncertainty/this.value
+            else
+                this.uncertainty
+        }
+		new Measurement( newValue, newUncertainty)
 	}
 	def * (that:Measurement): Measurement = 
 	{
 		val newValue: Double = this.value * that.value
-		new Measurement( newValue,
-				newValue * quadratureAddition(this.uncertainty/this.value,
-						that.uncertainty/this.value)
-		)
+        val newUncertainty: Double = {
+            if(this.value != 0)
+                newValue * quadratureAddition(
+                    this.uncertainty/this.value,
+					that.uncertainty/this.value
+              )
+            else{
+                if(this.uncertainty > that.uncertainty)
+                    this.uncertainty
+                else
+                    that.uncertainty
+            }
+        }
+		new Measurement( newValue,newUncertainty)
 	}
 	def / (that:Int): Measurement = 
 	{
 		val newValue: Double = this.value / that
-		new Measurement( newValue,
-				newValue * this.uncertainty/this.value
-		)
+		val newUncertainty: Double = {
+            if(this.value != 0)
+                newValue * this.uncertainty/this.value
+            else
+                this.uncertainty
+        }
+		new Measurement( newValue, newUncertainty)
 	}
 	def / (that:Measurement): Measurement = 
 	{
 		val newValue: Double = this.value / that.value
-		new Measurement( newValue,
-				newValue * quadratureAddition
-				(
-						this.uncertainty/this.value,
-						that.uncertainty/this.value
-				)
-		)
+		val newUncertainty: Double = {
+            if(this.value != 0)
+                newValue * quadratureAddition(
+                    this.uncertainty/this.value,
+					that.uncertainty/this.value
+              )
+            else{
+                if(this.uncertainty > that.uncertainty)
+                    this.uncertainty
+                else
+                    that.uncertainty
+            }
+        }
+		new Measurement( newValue,newUncertainty)
 	}
 
 	def ^(power:Double): Measurement = 
 	{
 		val newValue: Double = pow(this.value,power)
-		new Measurement( newValue,
-				newValue*power*this.uncertainty/this.value
-		)
+        val newUncertainty: Double = {
+            if(this.value != 0)
+                newValue*power*this.uncertainty/this.value
+            else
+                this.uncertainty
+        }
+		new Measurement( newValue,newUncertainty)
 	}
 	def ^(power:Measurement): Measurement = 
 	{
 	    //correct if d(x^b)=(x^b)[(b/x)dx + ln(x)db]
 	    val newValue: Double = pow(this.value,power.value)
-		new Measurement( newValue,
-				newValue *  
-				( power.value*this.uncertainty/this.value +
-						ln(this.value)*power.uncertainty )      
-		)
+        val newUncertainty: Double = {
+            if(this.value != 0)
+                newValue *  ( power.value*this.uncertainty/this.value +
+						ln(this.value)*power.uncertainty )
+            else{
+                if(this.uncertainty > power.uncertainty)
+                    this.uncertainty
+                else
+                    power.uncertainty
+            }
+        }
+		new Measurement( newValue,newUncertainty)
 	}
 }
 
