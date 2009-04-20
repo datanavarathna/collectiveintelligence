@@ -25,7 +25,7 @@ class scalaGui extends Actor{
 		val topologicalElementGenerator: Actor = new TopologicalElementGenerator
 		val relationshipIdentfier: Actor = new RelationshipIdentfier
 		val map: Actor = new CollectiveMap
-		val guiInstance: GUI = new GUI()
+		val guiInstance: GUI = new GUI(25,25,600,600)//blockX,blockY,windoxX,windowY
 		
 		while(!guiInstance.isReadyForRuntime())
 		{
