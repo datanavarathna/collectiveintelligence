@@ -15,6 +15,8 @@ case class AgentWithLocation(agent: Agent, x: Int, y: Int){
 	override def toString = "AgentWithLocation: agent="+agent+" x="+x+" y="+y
 }
 
+case class javaGui(gui:GUI)
+
 class scalaGui extends Actor{
 
 
@@ -26,7 +28,11 @@ class scalaGui extends Actor{
 		val relationshipIdentfier: Actor = new RelationshipIdentfier
 		val map: Actor = new CollectiveMap
 		val guiInstance: GUI = new GUI(25,25,600,600)//blockX,blockY,windoxX,windowY
-		
+
+        topologicalElementGenerator.start
+        relationshipIdentfier.start
+        map.start
+
 		while(!guiInstance.isReadyForRuntime())
 		{
 			Thread.sleep(300)
@@ -63,14 +69,26 @@ class scalaGui extends Actor{
 		world ! obstacleList
 		println ("Transmitting agentList")
 		world ! agentList
+        val guiAlivePoller = new GuiAlivePoller(this)
+        println("Create guiAlivePoller")
+        guiAlivePoller.start
+        guiAlivePoller ! javaGui(guiInstance)
         loop
 		{
 			react
 			{
-                case "Exit" => this.exit
+                case "Exit" => {
+                    world ! "Exit"
+                    topologicalElementGenerator ! "Exit"
+                    relationshipIdentfier ! "Exit"
+                    map ! "Exit"
+                    guiAlivePoller ! "Exit"
+                    println("scalaGui Exiting")
+                    this.exit
+                }
                 case AgentUpdate(x, y, present) =>{
                         guiInstance.updateCellAgentStatus(x, y, present)
-                    }
+                }
             }
         }
   }

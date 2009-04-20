@@ -56,7 +56,10 @@ public class GUI {
 		return this.primed;
 	}
 	
-	public boolean isRunning() { return this.running; }
+	public boolean isRunning() { 
+        System.out.println("Is running?");
+        return this.running;
+    }
 
 	private void setup( int x, int y, int windowX, int windowY ) {
 		
@@ -193,11 +196,13 @@ public class GUI {
 	}
 
 	public void smite() {
+        System.out.println("Smite");
 		this.frame.dispose();
 		this.ctrl.dispose();
 	}
 
 	public void close() {
+        System.out.println("Close");
 		this.running = false;
 	}
 }
