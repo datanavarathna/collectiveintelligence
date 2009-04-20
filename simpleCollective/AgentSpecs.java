@@ -1,4 +1,4 @@
-package collective.gui;
+
 
 public class AgentSpecs {
 	
