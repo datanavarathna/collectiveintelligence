@@ -19,7 +19,7 @@ public class ConfigListener implements ActionListener {
 			ArrayList<JTextField> olist = c.o;
 			
 			for ( int i = 0; i < olist.size(); ++i ) {
-				System.out.println("Updating " + olist.get(i).getName() + " With " + olist.get(i).getText() );
+				// System.out.println("Updating " + olist.get(i).getName() + " With " + olist.get(i).getText() );
 				try {
 					b.g.updateAttr(olist.get(i).getName(), olist.get(i).getText() );
 				} catch ( NumberFormatException e1 ) {
