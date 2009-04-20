@@ -188,6 +188,12 @@ public class GUI {
 			}
 		}
 	}
+
+	public void smite() {
+		this.frame.dispose();
+		this.ctrl.dispose();
+	}
+
 	public void close() {
 		this.running = false;
 	}
