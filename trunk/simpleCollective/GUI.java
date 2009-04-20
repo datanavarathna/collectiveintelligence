@@ -150,8 +150,8 @@ public class GUI {
 			}
 			this.refresh();
 		} else {
-			System.err.println("OK. An External Object has Told updateCellAgentStatus to modify");
-			System.err.println("Debug: X: " + x + ", Y: " + y );
+			System.err.println( "OK. An External Object has Told updateCellAgentStatus to modify" );
+			System.err.println( "Debug: X: " + x + ", Y: " + y );
 		}
 	}
 	
