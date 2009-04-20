@@ -146,10 +146,14 @@ public class GUI {
 	public synchronized void updateCellAgentStatus( int x, int y, boolean agentInSquare ) {
 		GUIObject o = this.getByXY( x, y );
 		if ( o != null ) {
-			if ( agentInSquare ) {
-				o.setStatus(1);
+			if ( o.getStatus() != 1 && o.getStatus() != 0 ) {
+				System.err.println("Trying to Destroy an Object! Oh NOES!");
 			} else {
-				o.setStatus(0);
+				if ( agentInSquare ) {
+					o.setStatus(1);
+				} else {
+					o.setStatus(0);
+				}
 			}
 			this.refresh();
 		} else {
