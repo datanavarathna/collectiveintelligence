@@ -1,4 +1,4 @@
-package collective.gui;
+
 
 import javax.swing.JButton;
 
