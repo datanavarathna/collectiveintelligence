@@ -25,7 +25,7 @@ public class GUI {
 	public GUI() {
 		this.setup( 5, 5, 500, 500 );
 	}
-	public ~GUI() {
+	protected void finalize ()  {
 		System.out.println("GUI Destructed");
 	}	
 	public GUI( int x, int y ) {
