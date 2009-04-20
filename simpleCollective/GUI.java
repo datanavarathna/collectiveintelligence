@@ -185,6 +185,6 @@ public class GUI {
 		}
 	}
 	public void close() {
-
+		this.primed = false;
 	}
 }
