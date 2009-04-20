@@ -20,7 +20,8 @@ public class GUI {
 	
 	boolean primed;
 	boolean loaded;
-	
+	boolean running;	
+
 	public GUI() {
 		this.setup( 5, 5, 500, 500 );
 	}	
@@ -52,13 +53,16 @@ public class GUI {
 		return this.primed;
 	}
 	
+	public boolean isRunning() { return this.running; }
+
 	private void setup( int x, int y, int windowX, int windowY ) {
 		
 		this.objects = new ArrayList<GUIObject>();
 		this.as      = null;
 		
 		this.primed  = false;
-		
+		this.running = true;
+
 		this.x = x;
 		this.y = y;
 
@@ -185,6 +189,6 @@ public class GUI {
 		}
 	}
 	public void close() {
-		this.primed = false;
+		this.running = false;
 	}
 }
