@@ -24,6 +24,9 @@ public class GUI {
 
 	public GUI() {
 		this.setup( 5, 5, 500, 500 );
+	}
+	public ~GUI() {
+		System.out.println("GUI Destructed");
 	}	
 	public GUI( int x, int y ) {
 		this.setup( x, y, 500, 500 );
