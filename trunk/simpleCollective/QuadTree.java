@@ -55,7 +55,7 @@ public class QuadTree{
 	  Object[] op = new Object[length];
 	  QuadNode ln = root;
 	  for(int i = 0; i < length; i++){
-		  op[i]=ln;
+		  op[i]=ln.obj;
 		  ln = ln.next;
 	  }
 	  return op;
