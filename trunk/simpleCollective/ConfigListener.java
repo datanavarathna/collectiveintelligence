@@ -29,6 +29,8 @@ public class ConfigListener implements ActionListener {
 				}
 			}
 			
+			System.out.println("Object ( " + b.getSuperparentGUI().a.getX() + ", " + b.getSuperparentGUI().a.getY() + " ) Write Complete.");
+			
 			c.p.dispose();
 			
 		} else {
