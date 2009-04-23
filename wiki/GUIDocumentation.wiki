@@ -1,4 +1,4 @@
-# Using the GUI
+#summary GUI Documentation
 
 = The GUI Interface =
 
