@@ -1,5 +1,5 @@
+#summary Quarks of the Framework
 #labels Scala,Mainmethod
-# Quarks of the Framework
 
 = Introduction =
 Main methods only work in non-comapnion objects.
