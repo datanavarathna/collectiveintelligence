@@ -1,3 +1,5 @@
+#Using the GUI
+
 = The GUI Interface =
 
 == Functions ==
