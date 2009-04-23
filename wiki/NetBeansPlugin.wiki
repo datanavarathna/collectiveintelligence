@@ -1,5 +1,5 @@
-#summary One-sentence summary of this page.
 #labels Scala,CollectiveIntelligence,Netbeans,IDE
+#Getting the NetBeans Plugin working with Scala
 
 = Introduction =
 
