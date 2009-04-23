@@ -1,4 +1,4 @@
-#Using the GUI
+# Using the GUI
 
 = The GUI Interface =
 
