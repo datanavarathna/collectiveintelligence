@@ -1,5 +1,5 @@
-#summary One-sentence summary of this page.
 #labels Scala,Mainmethod
+#Quarks of the Framework
 
 = Introduction =
 Main methods only work in non-comapnion objects.
