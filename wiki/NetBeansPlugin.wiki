@@ -1,5 +1,5 @@
+#summary Getting the NetBeans Plugin working with Scala
 #labels Scala,CollectiveIntelligence,Netbeans,IDE
-#Getting the NetBeans Plugin working with Scala
 
 = Introduction =
 
