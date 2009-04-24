@@ -1,14 +1,14 @@
 class QuadTreeGateway
 {
 	private val qT = new QuadTree()
-	def add(o: Obstacle): Boolean =
+
+    def add(o: Obstacle): Boolean =
 	{
 			val o2 = new ObstacleJava();
 			o2.x = o.x;
 			o2.y = o.y;
 			o2.Otype = o.obstacleType;
-			qT.add(o2)
-			true
+			qT.add(o2).asInstanceOf[Boolean]
 	}
 
 	def add(obstacleType: Int, x: Int, y: Int): Boolean =
@@ -17,8 +17,7 @@ class QuadTreeGateway
 			o2.Otype = obstacleType
 			o2.x = x
 			o2.y = y
-			qT.add(o2)
-			true
+			qT.add(o2).asInstanceOf[Boolean]
 	}
 
 	def remove(o: Obstacle): Boolean =

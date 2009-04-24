@@ -20,7 +20,71 @@ object Test
         environment ! obstacleList
         environment ! "Exit"
         */
-       (new scalaGui).start
+
+      //Test Quad Tree
+
+      val quadTree = new QuadTreeGateway
+      if(quadTree.add(Obstacle(1, 0, 0)))
+        println("Added obstacle at (0,0)")
+      else
+        println("Failed to register add")
+      if(quadTree.contains(0,0))
+        println("Correctly found (0,0)")
+      else
+        println("Failed")
+      if(quadTree.add(Obstacle(1, 1, 1)))
+        println("Added obstacle at (1,1)")
+      else
+        println("Failed to register add")
+      if(quadTree.add(Obstacle(1, 8, 3)))
+        println("Added obstacle at (8,3)")
+      else
+        println("Failed to register add")
+      if(quadTree.add(Obstacle(1, 7, 2)))
+        println("Added obstacle at (7,2)")
+      else
+        println("Failed to register add")
+      
+      if(quadTree.contains(1,1))
+        println("Correctly found (1,1)")
+      else
+        println("Failed")
+      if(quadTree.contains(8,3))
+        println("Correctly found (8,3)")
+      else
+        println("Failed")
+      if(quadTree.contains(7,2))
+        println("Correctly found (7,2)")
+      else
+        println("Failed to find (7,2)")
+      if(!quadTree.contains(2,2))
+        println("Correctly failed to find an obstacle at (2,2)")
+      else
+        println("Failed")
+      if(quadTree.range(2,0,0)==List(Obstacle(1,0,0),Obstacle(1,1,1)))
+        println("Correctly found Obstacles with radius 2 of 0,0")
+      else
+        println("Failed")
+      //println("Should only contain 0,0 and 1,1")
+      //println(quadTree.range(2,0,0))
+      if(quadTree.range(9,0,0)==List(Obstacle(1,0,0),Obstacle(1,1,1),Obstacle(1, 8, 3),Obstacle(1, 7, 2)))
+        println("Correctly found Obstacles with radius 9 of 0,0")
+      else
+        println("Failed")
+      if(quadTree.range(4,3,3)==List(Obstacle(1,0,0),Obstacle(1,1,1),Obstacle(1, 7, 2)))
+        println("Correctly found Obstacles with radius 4 of 3,3")
+      else
+        println("Failed" + quadTree.range(4,3,3))
+      if(quadTree.range(1,3,3)==List())
+        println("Correctly found no Obstacles within radius 1 of 3,3")
+      else
+        println("Failed")
+      //passed all tests
+
+        
+      //run program
+       //(new scalaGui).start
        println("Done")
+       
     }
 }
