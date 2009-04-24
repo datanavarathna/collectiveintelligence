@@ -21,8 +21,9 @@ public class QuadTree{
     length = os.length;
   }
 
-  public void add(Object o){
+  public boolean add(Object o){
 	  addAtBeg(o);
+      return contains(o);
   }
 
   public void addAtBeg(Object o){
@@ -35,6 +36,8 @@ public class QuadTree{
   public Object find(Object o){
     QuadNode ln = root;
     if(root!=null){
+        if(root.toString().equals(o.toString()))
+            return 0;
         while(ln.next!=null){
             ln = ln.next;
             if ((ln.obj != null) && ln.obj.toString().equals(o.toString()))

@@ -38,7 +38,12 @@ public class GUI {
 	
 	public ObjectSpecs[] getOs() {
                  ObjectSpecs[] osArray = new ObjectSpecs[os.size()];
-                 return os.toArray(osArray);
+                 osArray = os.toArray(osArray);
+                 System.out.println("getOS");
+                 for(ObjectSpecs objectSpec : osArray)
+                     System.out.print(objectSpec);
+                 System.out.println();
+                 return osArray;
     }
 
 	public void setOs(ArrayList<ObjectSpecs> os) {
@@ -110,7 +115,11 @@ public class GUI {
 			
 			o.a.setX(x);
 			o.a.setY(y);
-			
+
+			o.o.setX(x);
+			o.o.setY(y);
+
+
 			this.objects.add(o);
 			o.setStatus(0);
 			
@@ -158,7 +167,8 @@ public class GUI {
 		if ( o != null ) {
 			if ( o.getStatus() != 1 && o.getStatus() != 0 ) {
 				System.err.println("Trying to Destroy an Object! Oh NOES!");
-			} else {
+    			System.err.println( "Debug: X: " + x + ", Y: " + y );
+            } else {
 				if ( agentInSquare ) {
 					o.setStatus(1);
 				} else {

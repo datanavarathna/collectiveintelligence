@@ -27,7 +27,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 			{
 			  case MoveCommand(senderAgent,x,y) =>
 			  {
-				  //println("MoveCommand")
+				  
                   if(world.contains(senderAgent))
 				  {
 					  var deltaX: Measurement = new Measurement(x)
@@ -37,10 +37,12 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 					  val oldY = location.y
 					  var newX = oldX
 					  var newY = oldY
-
-					  if(!obstacles.contains(x,y))//if target doesn't contain obstacle
+                      
+                      println("MoveCommand(" +(oldX + x)+","+(oldY + y)+")")
+					  if(!obstacles.contains(oldX + x,oldY + y))//if target doesn't contain obstacle
 					  {
-						  if(oldX + x <= maxX)
+
+                          if(oldX + x <= maxX)
 						  {
 							  if(oldX + x >= minX)
                                 newX = oldX + x
@@ -76,7 +78,13 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 					  {
 						  deltaX = new Measurement(0)
 						  deltaY = new Measurement(0)
+                          
+                          println("Obstacle at (" +(oldX + x)+ "," +(oldY + y)+ ")")
+                          println("Agent was at ("+oldX+","+oldY +")")
+                          println("Agent moved to ("+newX+" ,"+newY+")")
+                          
 					  }
+                      //trying to go off the edge
                       if(newY > maxY || newY < minY || newX > maxX || newX < minX)
                       {
                           println("minX="+minX+" maxX="+maxX+" minY="+minY+" maxY="+maxY)
@@ -146,9 +154,12 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 				println("Received obstacleList")
                 for(obstacle <- obstacleList.asInstanceOf[List[Obstacle]])
                 {
-                    obstacles.add(obstacle)
-                    println("Added " + obstacle)
+                    if(obstacles.add(obstacle))
+                        println("Added " + obstacle)
+                    else
+                        println("Failed to add " + obstacle)
                 }
+                println("Obstacles: " + obstacles)
 			  }
 			  case agentListWithLocation @ List(AgentWithLocation(_,_,_), _*) =>
 			  {
@@ -159,6 +170,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                     println("Added following to world: " + agent + " x="+x+" y="+y)
                     agent.start
                 }
+                println("Agents in World: " + world)
 			  }
               case "Exit" => {
                    println("Envinronment Exiting")
