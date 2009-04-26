@@ -83,7 +83,7 @@ object Test
 
         
       //run program
-       //(new scalaGui).start
+       (new scalaGui).start
        println("Done")
        
     }
