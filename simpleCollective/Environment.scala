@@ -38,7 +38,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 					  var newX = oldX
 					  var newY = oldY
                       
-                      println("MoveCommand(" +(oldX + x)+","+(oldY + y)+")")
+                      //println("MoveCommand(" +(oldX + x)+","+(oldY + y)+")")
 					  if(!obstacles.contains(oldX + x,oldY + y))//if target doesn't contain obstacle
 					  {
 
@@ -79,9 +79,9 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 						  deltaX = new Measurement(0)
 						  deltaY = new Measurement(0)
                           
-                          println("Obstacle at (" +(oldX + x)+ "," +(oldY + y)+ ")")
-                          println("Agent was at ("+oldX+","+oldY +")")
-                          println("Agent moved to ("+newX+" ,"+newY+")")
+                          //println("Obstacle at (" +(oldX + x)+ "," +(oldY + y)+ ")")
+                          //println("Agent was at ("+oldX+","+oldY +")")
+                          //println("Agent moved to ("+newX+" ,"+newY+")")
                           
 					  }
                       //trying to go off the edge
@@ -173,7 +173,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                 println("Agents in World: " + world)
 			  }
               case "Exit" => {
-                   println("Envinronment Exiting")
+                   println("Environment Exiting")
                    for(agent <- world.keySet){
                        agent ! "Exit"
                    }
