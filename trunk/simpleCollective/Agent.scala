@@ -6,6 +6,7 @@ import Measurement._
 //import agents.DataClasses
 import scala.util.Random
 
+case class Pheromone(locationX: Int,LocationY: Int,targetX: Int, targetY: Int)
 case class MoveCommand(sender: Agent, x: Int, y: Int ) 
 case class Displacement(x: Measurement, y: Measurement) 
 case class Move(agent: Actor, x: Measurement, y: Measurement) 
@@ -29,6 +30,8 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
   var relativeLocationX: Measurement = new Measurement(0.00000001,0)
   var relativeLocationY: Measurement = new Measurement(0.00000001,0)
   val randomGenerator: Random = new Random
+  var lastDisplacementX: Int = 0
+  var lastDisplacementY: Int = 0
   
   override def toString = {
 	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " SensorDeltaRange=" + SensorDeltaRange
@@ -42,10 +45,13 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 	}
 
   def randomPositiveNegative1(): Int = {
-	  if (randomGenerator.nextBoolean)
+	  /*
+      if (randomGenerator.nextBoolean)
 	    return -1
 	  else
 	    return 1
+       */
+      return randomGenerator.nextInt(3) - 1
   }
   
   def addToMapMethod(entries: IdentifiedObject*)
@@ -63,7 +69,9 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 			{
 			  case Displacement( x, y) => 
 			  {
-				relativeLocationX += x
+                lastDisplacementX = x.value.toInt
+                lastDisplacementY = y.value.toInt
+                relativeLocationX += x
 				relativeLocationY += y 
 				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
                 move(randomPositiveNegative1(),randomPositiveNegative1())
