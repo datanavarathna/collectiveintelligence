@@ -13,10 +13,10 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
   import scala.collection.mutable.Map
   import scala.collection.immutable.TreeMap
 
-  var world = Map.empty[Actor,Coordinate]
+  private var world = Map.empty[Actor,Coordinate]
   //var obstacles = Nil //new List[Obstacle]
   //import agents.QuadTreeGateway
-  var obstacles: QuadTreeGateway = new QuadTreeGateway
+  private var obstacles: QuadTreeGateway = new QuadTreeGateway
 
   def act()
   {

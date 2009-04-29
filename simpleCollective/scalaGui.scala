@@ -24,13 +24,9 @@ class scalaGui(squareX: Int, squareY: Int, windowX: Int, windowY: Int) extends A
   def act()
   {
         println ("Running")
-		val topologicalElementGenerator: Actor = new TopologicalElementGenerator
-		val relationshipIdentfier: Actor = new RelationshipIdentfier
 		val map: Actor = new CollectiveMap
 		val guiInstance: GUI = new GUI(squareX,squareY,windowX,windowY)//blockX,blockY,windoxX,windowY
 
-        topologicalElementGenerator.start
-        relationshipIdentfier.start
         map.start
 
 		while(!guiInstance.isReadyForRuntime())
@@ -57,7 +53,7 @@ class scalaGui(squareX: Int, squareY: Int, windowX: Int, windowY: Int) extends A
 		for( agentSpec <- javaAgentList)
 		{
 			println("agentSpec="+agentSpec)
-			val agent = new Agent(world, topologicalElementGenerator, relationshipIdentfier, map,
+			val agent = new Agent(world, map,
                      agentSpec.getSensorRange(),agentSpec.getDeltaAngle(),agentSpec.getSensorDeltaRange())
 			println(agent)
 			val tempAgentWithLocation = AgentWithLocation(agent,agentSpec.getX(),agentSpec.getY())
@@ -79,8 +75,6 @@ class scalaGui(squareX: Int, squareY: Int, windowX: Int, windowY: Int) extends A
 			{
                 case "Exit" => {
                     world ! "Exit"
-                    topologicalElementGenerator ! "Exit"
-                    relationshipIdentfier ! "Exit"
                     map ! "Exit"
                     guiAlivePoller ! "Exit"
                     println("scalaGui Exiting")
