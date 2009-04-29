@@ -23,15 +23,19 @@ case class Obstacle(obstacleType: Int, x: Int, y: Int){
 	override def toString = "Obstacle: obstacleType="+obstacleType+" x="+x+" y="+y
 } 
 
-class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val relationshipIdentfier: Actor, val map: Actor,
+class Agent(val environment: Actor, val map: Actor,
             val sensorRange: Int, val sensorDeltaAngle: Int, val SensorDeltaRange: Int) extends Actor 
 {
-    
-  var relativeLocationX: Measurement = new Measurement(0.00000001,0)
-  var relativeLocationY: Measurement = new Measurement(0.00000001,0)
-  val randomGenerator: Random = new Random
-  var lastDisplacementX: Int = 0
-  var lastDisplacementY: Int = 0
+  private val topologicalElementGenerator: Actor = new TopologicalElementGenerator(map)
+  private val relationshipIdentfier: Actor = new RelationshipIdentfier(map)
+  topologicalElementGenerator.start
+  relationshipIdentfier.start
+
+  private var relativeLocationX: Measurement = new Measurement(0.00000001,0)
+  private var relativeLocationY: Measurement = new Measurement(0.00000001,0)
+  private val randomGenerator: Random = new Random
+  private var lastDisplacementX: Int = 0
+  private var lastDisplacementY: Int = 0
   
   override def toString = {
 	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " SensorDeltaRange=" + SensorDeltaRange
@@ -54,9 +58,9 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
       return randomGenerator.nextInt(3) - 1
   }
   
-  def addToMapMethod(entries: IdentifiedObject*)
+  def addToMapMethod(entries: IdentifiedObject *)
   {
-    map ! entries
+    entries.foreach(entry => map ! Add(entry))
   }
   
 	def act()
@@ -76,18 +80,20 @@ class Agent(val environment: Actor, val topologicalElementGenerator: Actor, val 
 				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
                 move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
-			  case sensorReadings @ Seq(ObjectReading(angle,distance),_*) =>
+			  case sensorReadings @ List(ObjectReading(angle,distance),_*) =>
 			    topologicalElementGenerator ! sensorReadings
 			    //pass to helper actor that calculates topological references and sends results as a message to parent actors
-			  case topologicalEntries @ Seq(TopologicalEntry, _*) =>
+			  case topologicalEntries @ List(TopologicalEntry, _*) =>
 			    relationshipIdentfier ! topologicalEntries
 			    //send to helper actor that identifies the objects, naming if necessary, messages to parent identify objects
-			  case relationships @  Seq(IdentifiedObject, _*) => {
+			  case relationships @  List(IdentifiedObject, _*) => {
 				  addToMapMethod(relationships.asInstanceOf[Seq[IdentifiedObject]]: _*)//asInstanceOf is a cast, need to test that works correctly
 				  //move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
               case "Exit" => {
                  println("Agent Exiting")
+                 topologicalElementGenerator ! "Exit"
+                 relationshipIdentfier ! "Exit"
                  this.exit
               }
 			}//end react
