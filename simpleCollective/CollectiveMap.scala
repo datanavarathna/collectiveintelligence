@@ -11,6 +11,7 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
 */
 case class Add(identifiedObject: IdentifiedObject)
 case class Contains(entries: TopologicalEntry *)
+case class TargetDisplacement(x: Measurement, y: Measurement)
 
 class TopologicalElementGenerator(val map: Actor) extends Actor{
 	def act()
@@ -55,6 +56,34 @@ class RelationshipIdentfier(val map: Actor) extends Actor{
 	}//end act
 }
 
+class GoalFinder(val agent: Actor, val map: Actor) extends Actor
+{
+     def act()
+	{
+		println("GoalFinder Running")
+		loop
+		{
+			react
+			{
+              case Goal(goal) => {
+                 //find goal
+                 val xDisplacementToGoal = new Measurement(0)//temporary
+                 val yDisplacementToGoal = new Measurement(0)//temporary
+                 var foundGoal: Boolean = true
+                 if(foundGoal)
+                    agent ! TargetDisplacement(xDisplacementToGoal,yDisplacementToGoal)
+                 else
+                    agent ! GoalNotFound()
+              }
+              case "Exit" => {
+                 println("RelationshipIdentfier Exiting")
+                 this.exit
+              }
+			}//end react
+		}//end loop
+	}//end act
+}
+
 class CollectiveMap extends Actor{
 	var updateTime = System.currentTimeMillis()
     private var primitiveDataStructure: List[IdentifiedObject] = Nil.asInstanceOf[List[IdentifiedObject]]
@@ -73,6 +102,8 @@ class CollectiveMap extends Actor{
         return primitiveDataStructure//really return the part of the data structure that matches all the topological entry constrains
     }
 
+    //if the map is empty, objects need to be assigned random identifiers and added to map
+
     def act()
 	{
 		println("CollectiveMap Running")
@@ -87,6 +118,8 @@ class CollectiveMap extends Actor{
               case Contains(entries) => {
                    reply(matches(entries))
               }
+              case "lastUpdate" =>
+                  reply(System.currentTimeMillis()-updateTime)
               case "Exit" => {
                  println("CollectiveMap Exiting")
                  this.exit
