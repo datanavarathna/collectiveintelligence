@@ -23,19 +23,29 @@ case class Obstacle(obstacleType: Int, x: Int, y: Int){
 	override def toString = "Obstacle: obstacleType="+obstacleType+" x="+x+" y="+y
 } 
 
+case class Goal(goal:Obstacle)
+case class GoalNotFound()
+
 class Agent(val environment: Actor, val map: Actor,
             val sensorRange: Int, val sensorDeltaAngle: Int, val SensorDeltaRange: Int) extends Actor 
 {
   private val topologicalElementGenerator: Actor = new TopologicalElementGenerator(map)
   private val relationshipIdentfier: Actor = new RelationshipIdentfier(map)
+  private val mapUpdatePoller: Actor = new MapUpdatePoller(this,map)
+  private val goalFinder: Actor = new GoalFinder(this,map)
   topologicalElementGenerator.start
   relationshipIdentfier.start
+  mapUpdatePoller.start
 
   private var relativeLocationX: Measurement = new Measurement(0.00000001,0)
   private var relativeLocationY: Measurement = new Measurement(0.00000001,0)
   private val randomGenerator: Random = new Random
   private var lastDisplacementX: Int = 0
   private var lastDisplacementY: Int = 0
+
+  private var exploreMode: Boolean = true
+  private var goal: Obstacle = _
+  private var goalSet: Boolean = false
   
   override def toString = {
 	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " SensorDeltaRange=" + SensorDeltaRange
@@ -66,7 +76,8 @@ class Agent(val environment: Actor, val map: Actor,
 	def act()
 	{
 		println("Agent running")
-		move(randomPositiveNegative1(),randomPositiveNegative1())
+        if(exploreMode)
+            move(randomPositiveNegative1(),randomPositiveNegative1())
 		loop 
 		{
 			react
@@ -78,7 +89,8 @@ class Agent(val environment: Actor, val map: Actor,
                 relativeLocationX += x
 				relativeLocationY += y 
 				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
-                move(randomPositiveNegative1(),randomPositiveNegative1())
+                if(exploreMode)
+                  move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
 			  case sensorReadings @ List(ObjectReading(angle,distance),_*) =>
 			    topologicalElementGenerator ! sensorReadings
@@ -89,7 +101,26 @@ class Agent(val environment: Actor, val map: Actor,
 			  case relationships @  List(IdentifiedObject, _*) => {
 				  addToMapMethod(relationships.asInstanceOf[Seq[IdentifiedObject]]: _*)//asInstanceOf is a cast, need to test that works correctly
 				  //move(randomPositiveNegative1(),randomPositiveNegative1())
+                  if(exploreMode)
+                    move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
+              case Goal(goal) => {
+                      this.goal = goal
+                      goalSet = true
+              }
+              case "Stop Exploring" => {
+                    exploreMode = false
+                    if(goalSet){
+                        goalFinder.start
+                        goalFinder ! Goal(goal)
+                    }
+                    else
+                        println("You never sent me a goal")
+              }
+              case TargetDisplacement(xDisplacementToGoal,yDisplacementToGoal) => {
+                      //drive to goal, avoiding obstacles
+              }
+              case GoalNotFound() => exploreMode = true
               case "Exit" => {
                  println("Agent Exiting")
                  topologicalElementGenerator ! "Exit"
