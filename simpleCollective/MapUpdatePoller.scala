@@ -2,7 +2,7 @@ import scala.actors._
 import Actor._
 
 class MapUpdatePoller(agent: Actor, val map: Actor) extends Actor {
-    val lastUpdateThreshold = 5000 //milliseconds
+    val lastUpdateThreshold : Long = 5000 //milliseconds
     map ! "lastUpdate"
 
     def act()
@@ -11,10 +11,14 @@ class MapUpdatePoller(agent: Actor, val map: Actor) extends Actor {
         loop
 		{
 			Thread.sleep(300)
-            if((map ! "lastUpdate") > lastUpdateThreshold)
-                agent ! "Stop Exploring"
+            map ! "lastUpdate"
+            
             react
 			{
+              case TimeSinceLastUpdate(lastUpdate) => {
+                   if(lastUpdate > lastUpdateThreshold)
+                        agent ! "Stop Exploring"
+              }
               case "Exit" => {
                  println("MapUpdatePoller Exiting")
                  this.exit
