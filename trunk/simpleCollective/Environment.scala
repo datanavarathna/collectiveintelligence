@@ -13,7 +13,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
   import scala.collection.mutable.Map
   import scala.collection.immutable.TreeMap
 
-  private var world = Map.empty[Actor,Coordinate]
+  private var world = Map.empty[Actor,Coordinate]//key,value
   //var obstacles = Nil //new List[Obstacle]
   //import agents.QuadTreeGateway
   private var obstacles: QuadTreeGateway = new QuadTreeGateway
@@ -142,9 +142,34 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 						    	 val vectorY = obstacle.y - agent.y
 						    	 val angle = new Measurement(Math.atan2(vectorX, vectorY))
 						    	 val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
-						    	 ObjectReading(angle, distance)
+						    	 ObjectReading(angle, distance, obstacle.obstacleType)
 						     }
 						 senderAgent ! detectedObstacles
+
+                         var detectedAgents: List[AgentReading] = Nil
+                         val agentIterator = world.keys
+                         while (agentIterator.hasNext)
+                         {
+                             val agentInMap = agentIterator.next
+
+                             world.get(agentInMap) match {
+                                 case Some(coordinate) => {
+                                     if(Math.sqrt(coordinate.x*coordinate.x + coordinate.y*coordinate.y) <= sensorRange)
+                                     {
+                                        val vectorX = coordinate.x - agent.x
+                                        val vectorY = coordinate.y - agent.y
+                                        val angle = new Measurement(Math.atan2(vectorX, vectorY))
+                                        val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
+                                        detectedAgents = AgentReading(angle, distance)::detectedAgents
+                                     } //end if in sensor range
+                                     senderAgent ! detectedAgents
+                                 }
+                                 case None => {
+                                      println("Error: Value not found for key " + agentInMap + "in map")
+                                 }
+                             }
+                             
+                         }//end while
 					 }
                      else
                         println("senderAgent not recognized")

@@ -12,6 +12,7 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
 case class Add(identifiedObject: IdentifiedObject)
 case class Contains(entries: TopologicalEntry *)
 case class TargetDisplacement(x: Measurement, y: Measurement)
+case class TimeSinceLastUpdate(time: Long)
 
 class TopologicalElementGenerator(val map: Actor) extends Actor{
 	def act()
@@ -21,7 +22,7 @@ class TopologicalElementGenerator(val map: Actor) extends Actor{
 		{
 			react
 			{
-              case sensorReadings @ List(ObjectReading(_,_),_*) =>{
+              case sensorReadings @ List(ObjectReading,_*) =>{
                       //convert to topological entries and reply(entries)
               }
 
@@ -76,7 +77,7 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
                     agent ! GoalNotFound()
               }
               case "Exit" => {
-                 println("RelationshipIdentfier Exiting")
+                 println("Goalfinder Exiting")
                  this.exit
               }
 			}//end react
@@ -119,7 +120,7 @@ class CollectiveMap extends Actor{
                    reply(matches(entries))
               }
               case "lastUpdate" =>
-                  reply(System.currentTimeMillis()-updateTime)
+                  reply(TimeSinceLastUpdate(System.currentTimeMillis()-updateTime))
               case "Exit" => {
                  println("CollectiveMap Exiting")
                  this.exit
