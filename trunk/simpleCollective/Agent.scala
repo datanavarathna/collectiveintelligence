@@ -181,6 +181,7 @@ class Agent(val environment: Actor, val map: Actor,
                  topologicalElementGenerator ! "Exit"
                  relationshipIdentfier ! "Exit"
                  goalFinder ! "Exit"
+                 mapUpdatePoller ! "Exit"
                  this.exit
               }
 			}//end react
