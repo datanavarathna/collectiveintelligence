@@ -21,6 +21,14 @@ object Test
         environment ! "Exit"
         */
 
+        //Test Measurement equality
+        var temp1 = new Measurement(-1)
+        var temp2 = new Measurement(-1)
+        if(temp1 != temp2)
+            println(temp1 +" != " + temp2 +"failed")
+        if(temp1 == temp2)
+            println(temp1 +" == " + temp2 +"correct")
+
       //Test atan
       var x = 0
       var y = 0

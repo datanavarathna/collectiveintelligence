@@ -57,6 +57,8 @@ class Agent(val environment: Actor, val map: Actor,
   private val randomGenerator: Random = new Random
   private var lastDisplacementX: Int = 0
   private var lastDisplacementY: Int = 0
+  private var locationDuringPlanX: Measurement = relativeLocationX
+  private var locationDuringPlanY: Measurement = relativeLocationY
 
   private var exploreMode: Boolean = true
   private var goal: Obstacle = _
@@ -64,6 +66,8 @@ class Agent(val environment: Actor, val map: Actor,
 
   private var detectedAgents: List[AgentReading] = Nil
   private var pathToGoal: List[Coordinate] = Nil
+  private var xFromLastTarget: Int = 0
+  private var yFromLastTarget: Int = 0
 
   import scala.collection.mutable.Set
   import scala.collection.mutable.Map
@@ -83,6 +87,34 @@ class Agent(val environment: Actor, val map: Actor,
 		environment ! MoveCommand(this,x,y)
 	}
 
+  def idealMove(x: Int,y: Int) {
+      if(visibleObstacles.contains(Displacement(x,y)))
+      {
+         var x2 = 0
+         if(visibleObstacles.contains(Displacement(x2,y)))
+         {
+                var y2 = 0
+                if(visibleObstacles.contains(Displacement(x,y2)))
+                {
+                   x2 = -x
+                   if(visibleObstacles.contains(Displacement(x2,y)))
+                   {
+                      y2 = -y
+                      move(x,y2)
+                   }//if obstacle 4th attempt
+                   else
+                      move (x2,y)
+                }//if obstacle in 3rd attempt
+                else
+                    move(x,y2)
+         }//if obstacle in 2nd attempt
+         else
+            move(x2,y)
+      }//if obstacle at 1st attempt
+      else
+        move(x,y)
+  }
+
   def PolarToCartesian(angle: Measurement, distance: Measurement): Displacement =  {
       Displacement(distance * cos(angle), distance * sin(angle))
   }
@@ -96,7 +128,17 @@ class Agent(val environment: Actor, val map: Actor,
        */
       return randomGenerator.nextInt(3) - 1
   }
-  
+
+  def flattenToOne(num: Double): Int =
+  {
+    if(num > 0)
+        return 1
+    else if (num < 0)
+        return -1
+    else
+        return 0
+  }
+
   def addToMapMethod(entries: IdentifiedObject *)
   {
     entries.foreach(entry => map ! Add(entry))
@@ -126,6 +168,26 @@ class Agent(val environment: Actor, val map: Actor,
 
           }
       }
+      val target:Coordinate = pathToGoal.head
+      val currentX = relativeLocationX - locationDuringPlanX
+      val currentY = relativeLocationY - locationDuringPlanY
+      val toTargetX = (target.x + xFromLastTarget) - currentX
+      val toTargetY = (target.y + yFromLastTarget) - currentY
+      idealMove(flattenToOne(toTargetX.value),flattenToOne(toTargetY.value))
+      if(visibleObstacles.contains(Displacement(toTargetX,toTargetY)))//see a marker
+      {
+          pathToGoal = pathToGoal.tail
+          if(pathToGoal.isEmpty)//see goal
+          {
+              //move as close to goal as possible
+
+              println("Found goal")
+              this.exit
+          }
+
+      }//end if see marker
+      //else
+      //move toward target without running into anything
   }
 
 	def act()
@@ -214,6 +276,8 @@ class Agent(val environment: Actor, val map: Actor,
               }
               case path @ List(Coordinate, _*) => {
                       pathToGoal = path.asInstanceOf[List[Coordinate]]
+                      locationDuringPlanX = relativeLocationX
+                      locationDuringPlanY = relativeLocationY
               }
               case "Stop Exploring" => {
                     exploreMode = false
