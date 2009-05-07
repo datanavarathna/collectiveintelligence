@@ -17,6 +17,8 @@
      * Note that all "matching" is based on the compareTo method.
      * @author Mark Allen Weiss
      */
+import java.util.ArrayList;
+
     public class CollectiveMapTree
     {
         /**
@@ -34,7 +36,7 @@
          */
         public void add( IdentifiedObjectJava x )
         {
-            root = add( x, root );
+            root = insert( x, root );
         }
 
         /**
@@ -73,7 +75,6 @@
 		                else {
 		                    al.add(t.element);
 		                    al = multipleFind(x,t.left,al);
-		                    al = multipleFind(x,t,left.al);
 		                    return al;
 						}
 
@@ -291,7 +292,7 @@
         /** Which contains method is being used */
         boolean firstOrSecond;
 
-
+/*
             // Test program
         public static void main( String [ ] args )
         {
@@ -313,5 +314,5 @@
             for( int i = 1; i < NUMS; i++ )
                  if( ((MyInteger)(t.find( new MyInteger( i ) ))).intValue( ) != i )
                      System.out.println( "Find error1!" );
-    }
+    }*/
 }

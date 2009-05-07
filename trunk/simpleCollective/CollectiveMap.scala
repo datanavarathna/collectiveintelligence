@@ -1,6 +1,6 @@
 import scala.actors._
 import Actor._
-//import java.util._
+import java.util.ArrayList
 
 /*//The following commented code is for reference only
 case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
@@ -136,12 +136,12 @@ class CollectiveMap extends Actor{
 	o2.deltaY = new MeasurementJava();
 	o2.deltaY.meas = relationship.deltaY.value;
         o2.deltaY.uncertainty = relationship.deltaY.uncertainty;
-        var ArrayList<IdentifiedObject> al = collective.relationshipSearch(o2);        
+        var al  = collective.relationshipSearch(o2);
         var i = 0;
         while(i < al.size()){
-        	var IdentifiedObject io = IdentifiedObjectJavatoIdentifiedObject(ArrayList.Item(i));
+        	var io: IdentifiedObject = IdentifiedObjectJavatoIdentifiedObject(al.Item(i));
         	primativeDataStructure.add(io);
-        	i++;
+        	i += 1;
         }
         return primitiveDataStructure;
     }
