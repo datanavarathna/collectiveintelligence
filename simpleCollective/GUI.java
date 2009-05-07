@@ -62,7 +62,7 @@ public class GUI {
 	}
 	
 	public boolean isRunning() { 
-        System.out.println("Is running?");
+        //System.out.println("Is running?");
         return this.running;
     }
 

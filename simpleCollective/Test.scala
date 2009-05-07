@@ -21,6 +21,27 @@ object Test
         environment ! "Exit"
         */
 
+      //Test atan
+      var x = 0
+      var y = 0
+      println("("+x+","+y+")")
+      println(Math.atan2(y,x))
+      x = 1
+      y = 0
+      println("("+x+","+y+")")
+      println(Math.atan2(y,x))
+      x = 0
+      y = 1
+      println("("+x+","+y+")")
+      println(Math.atan2(y,x))
+      x = -1
+      y = 0
+      println("("+x+","+y+")")
+      println(Math.atan2(y,x))
+      x = 0
+      y = -1
+      println("("+x+","+y+")")
+      println(Math.atan2(y,x))
       //Test Quad Tree
 
       val quadTree = new QuadTreeGateway

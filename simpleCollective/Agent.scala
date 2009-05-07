@@ -69,6 +69,8 @@ class Agent(val environment: Actor, val map: Actor,
   import scala.collection.mutable.Map
   private var visibleAgents = Set.empty[Displacement]
   private var visibleObstacles = Map.empty[Displacement,Int]//key,value obstacleType: Int
+  private var visibleAgentsCurrent: Boolean = false
+  private var visibleObstaclesCurrent: Boolean = false
   
   override def toString = {
 	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " SensorDeltaRange=" + SensorDeltaRange
@@ -101,7 +103,29 @@ class Agent(val environment: Actor, val map: Actor,
   }
 
   def planMovement() {
-      
+      println("Planning Movement")
+      if(!visibleAgentsCurrent)
+      {
+        for(displacement <- visibleAgents){
+            visibleAgents -= displacement
+            visibleAgents += Displacement(displacement.x+lastDisplacementX,displacement.y+lastDisplacementY)
+        }
+      }
+      if(!visibleObstaclesCurrent)
+      {
+          for(displacement <- visibleObstacles.keySet){
+              visibleObstacles.get(displacement) match {
+                  case Some(obstacleType) => {
+                          visibleObstacles -= displacement
+                            visibleObstacles += Pair(
+                                Displacement(displacement.x+lastDisplacementX,
+                                             displacement.y+lastDisplacementY),obstacleType)
+                  }
+                  case None => println("Map does not contain a value for key: " + displacement)
+              }
+
+          }
+      }
   }
 
 	def act()
@@ -117,32 +141,57 @@ class Agent(val environment: Actor, val map: Actor,
 			{
 			  case Displacement( x, y) => 
 			  {
+                if(x != new Measurement(0,.005) && y != new Measurement(0,.005))
+                    println("Agent moved: (" + x + "," + y + ")")
                 lastDisplacementX = x.value.toInt
                 lastDisplacementY = y.value.toInt
                 relativeLocationX += x
 				relativeLocationY += y 
+                visibleAgentsCurrent = false
+                visibleObstaclesCurrent = false
 				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
                 if(exploreMode)
-                  move(randomPositiveNegative1(),randomPositiveNegative1())
+                    move(randomPositiveNegative1(),randomPositiveNegative1())
+                else if(!pathToGoal.isEmpty)
+                    planMovement
 			  }
 			  case sensorReadings @ List(ObjectReading,_*) => {
                 topologicalElementGenerator ! sensorReadings
 			    //pass to helper actor that calculates topological references and sends results as a message to parent actors
                 visibleObstacles.clear//empties the map
                 //add detect obstacles to the map
-                for(ObjectReading(angle,distance,obstacleType) <- sensorReadings.asInstanceOf[List[ObjectReading]])
+                for(objectReading <- sensorReadings.asInstanceOf[List[ObjectReading]])
                 {
-                    visibleObstacles += Pair(PolarToCartesian(angle,distance), obstacleType)
+                    val displacement = PolarToCartesian(objectReading.angle,objectReading.distance)
+                    if(displacement != Displacement(0,0)){
+                        visibleObstacles += Pair(displacement, objectReading.obstacleType)
+                        //println("Angle: " + objectReading.angle + " Distance: " + objectReading.distance)
+                        //println("Displacement generated: " + displacement)
+                    }
                 }
+                visibleObstaclesCurrent = true
+                if(!visibleObstacles.isEmpty)
+                    println(visibleObstacles)
               }
               case sensorReadings @ List(AgentReading(angle,distance),_*) => {
                 detectedAgents = sensorReadings.asInstanceOf[List[AgentReading]]
                 visibleAgents.clear//empties the set
-                //add detect obstacles to the set
-                for(AgentReading(angle,distance) <- sensorReadings.asInstanceOf[List[AgentReading]])
+                //add detect agents to the set
+                for(agentReading <- sensorReadings.asInstanceOf[List[AgentReading]])
                 {
-                    visibleAgents += PolarToCartesian(angle,distance)
+                    val displacement = PolarToCartesian(agentReading.angle,agentReading.distance)
+                    if(displacement != Displacement(0,0)){
+                        visibleAgents += displacement
+                        //println("Angle: " + angle + " Distance: " + distance)
+                        //println("Displacement generated: " + displacement)
+                    }
+
                 }
+                visibleAgentsCurrent = true
+                /*
+                if(!visibleAgents.isEmpty)
+                    println(visibleAgents)
+                */
               }
 			  case topologicalEntries @ List(TopologicalEntry, _*) =>
 			    relationshipIdentfier ! topologicalEntries
@@ -162,6 +211,7 @@ class Agent(val environment: Actor, val map: Actor,
               }
               case "Stop Exploring" => {
                     exploreMode = false
+                    println("Leaving Explore Mode")
                     if(goalSet){
                         goalFinder.start
                         goalFinder ! Goal(goal)
@@ -174,6 +224,7 @@ class Agent(val environment: Actor, val map: Actor,
               }
               case GoalNotFound() => {
                       exploreMode = true
+                      println("Entering Explore Mode")
                       goalFinder ! "Exit"
               }
               case "Exit" => {
