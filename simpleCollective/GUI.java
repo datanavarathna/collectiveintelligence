@@ -20,7 +20,10 @@ public class GUI {
 	
 	boolean primed;
 	boolean loaded;
-	boolean running;	
+	boolean running;
+
+    private long lastDrawTime = System.currentTimeMillis();
+    private static final int REDRAW_WAIT = 100;
 
 	public GUI() {
 		this.setup( 5, 5, 500, 500 );
@@ -175,7 +178,9 @@ public class GUI {
 					o.setStatus(0);
 				}
 			}
-			this.refresh();
+            long currentTime = System.currentTimeMillis();
+            //if(currentTime - lastDrawTime >= REDRAW_WAIT)
+                this.refresh();
 		} else {
 			System.err.println( "OK. An External Object has Told updateCellAgentStatus to modify" );
 			System.err.println( "Debug: X: " + x + ", Y: " + y );

@@ -131,18 +131,24 @@ class Agent(val environment: Actor, val map: Actor,
 	def act()
 	{
 		println("Agent running")
-        if(exploreMode)
-            move(randomPositiveNegative1(),randomPositiveNegative1())
-        else if(!pathToGoal.isEmpty)
-            planMovement
+        
 		loop 
 		{
 			react
 			{
+              case "Start" => {
+                  //Thread.sleep(100)
+                  if(exploreMode)
+                    move(randomPositiveNegative1(),randomPositiveNegative1())
+                  else if(!pathToGoal.isEmpty)
+                    planMovement
+              }
 			  case Displacement( x, y) => 
 			  {
+                /*
                 if(x != new Measurement(0,.005) && y != new Measurement(0,.005))
                     println("Agent moved: (" + x + "," + y + ")")
+                */
                 lastDisplacementX = x.value.toInt
                 lastDisplacementY = y.value.toInt
                 relativeLocationX += x

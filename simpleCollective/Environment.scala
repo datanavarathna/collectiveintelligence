@@ -101,13 +101,14 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                           println("newX="+newX+" newY="+newY)
                           println("x="+x+" y="+y)
                       }
-					  world - senderAgent
-					  world += (senderAgent -> Coordinate(newX,newY))
-                      scalaGui ! AgentUpdate(oldX,oldY,false)//agent left oldX,oldY
-                      scalaGui ! AgentUpdate(newX,newY,true)//agent went to newX,newY
 					  senderAgent ! Displacement( deltaX, deltaY)
-                      if(deltaX != 0 && deltaY != 0)
+                      if(deltaX != 0 && deltaY != 0){
                         println("Moved to ("+newX+","+newY+")")
+                        world - senderAgent
+                        world += (senderAgent -> Coordinate(newX,newY))
+                        scalaGui ! AgentUpdate(oldX,oldY,false)//agent left oldX,oldY
+                        scalaGui ! AgentUpdate(newX,newY,true)//agent went to newX,newY
+                      }
 				  }
 				  else
 				  {
@@ -202,8 +203,10 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                              
                          }//end while
                          senderAgent ! detectedAgents
-                         if(detectedAgents.isEmpty)
+                         /*
+                         if(!detectedAgents.isEmpty)
                              println("Environment sending: " + detectedAgents)
+                         */
 					 }
                      else
                         println("senderAgent not recognized")
@@ -230,6 +233,11 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                     agent.start
                 }
                 println("Agents in World: " + world)
+                val agentsIterator = world.keys
+                while(agentsIterator.hasNext)
+                {
+                    agentsIterator.next ! "Start"
+                }
 			  }
               case "Exit" => {
                    println("Environment Exiting")
