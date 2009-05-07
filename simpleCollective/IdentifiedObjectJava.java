@@ -10,9 +10,10 @@ public class IdentifiedObjectJava {
 		super();
 	}
 
-	public int compareTo(boolean oneOrTwo, IdentifiedObjectJava ioj){
+
+	public int compareTo(boolean oneORTwo, IdentifiedObjectJava ioj){
 		int output = 0;
-		if(oneOrTwo){
+		if(oneORTwo){
 			if(id1-ioj.id1>0)
 				output+=2;
 			else if(id1-ioj.id1<0)
@@ -30,11 +31,11 @@ public class IdentifiedObjectJava {
 				output += 4;
 			else if(obstacle2Type-ioj.obstacle2Type<0)
 				output -= 4;
-			if(deltaX.canEqual())
+			if(deltaX.canEqual(ioj.deltaX))
 				output += 0;
 			else
 				output += 2;
-			if(deltaY.canEqual())
+			if(deltaY.canEqual(ioj.deltaY))
 				output += 0;
 			else
 				output += 1;

@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+
+
 public class CollectiveMapJava {
 	CollectiveMapTree ids = new CollectiveMapTree(true);
 	CollectiveMapTree relationships = new CollectiveMapTree(false);
