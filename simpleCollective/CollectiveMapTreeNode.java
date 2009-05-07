@@ -20,7 +20,7 @@
 
             // Friendly data; accessible by other package routines
         IdentifiedObjectJava element;      // The data in the node
-        AvlNode    left;         // Left child
-        AvlNode    right;        // Right child
+        CollectiveMapTreeNode    left;         // Left child
+        CollectiveMapTreeNode    right;        // Right child
         int        height;       // Height
     }
