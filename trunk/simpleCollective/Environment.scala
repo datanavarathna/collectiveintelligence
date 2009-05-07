@@ -18,6 +18,9 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
   //import agents.QuadTreeGateway
   private var obstacles: QuadTreeGateway = new QuadTreeGateway
 
+  private var goalObstacle: Obstacle = _
+  private var goalObstacleSet: Boolean = false
+
   def act()
   {
     println("Environment("+minX+"-"+maxX+","+minY+"-"+maxY+") running")
@@ -30,8 +33,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 				  
                   if(world.contains(senderAgent))
 				  {
-					  var deltaX: Measurement = new Measurement(x)
-				      var deltaY: Measurement = new Measurement(y)
+					  var deltaX: Measurement = new Measurement(x,0.0001)
+				      var deltaY: Measurement = new Measurement(y,0.0001)
 					  var location = world(senderAgent)
 					  val oldX = location.x
 					  val oldY = location.y
@@ -85,8 +88,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 					  }//end if target doesn't contain obstacle
 					  else
 					  {
-						  deltaX = new Measurement(0)
-						  deltaY = new Measurement(0)
+						  deltaX = new Measurement(0,0.0001)
+						  deltaY = new Measurement(0,0.0001)
                           
                           //println("Obstacle at (" +(oldX + x)+ "," +(oldY + y)+ ")")
                           //println("Agent was at ("+oldX+","+oldY +")")
@@ -167,8 +170,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                             //println("detectedObstacle: " + obstacle)
 						    val vectorX: Int = obstacle.x - agent.x
 						    val vectorY: Int = obstacle.y - agent.y
-						  	val angle = new Measurement(Math.atan2(vectorX, vectorY))
-						    val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
+						  	val angle = new Measurement(Math.atan2(vectorX, vectorY),sensorDeltaAngle*Math.Pi/180)
+						    val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY),sensorDeltaRange)
 						    val objectReading = ObjectReading(angle, distance, obstacle.obstacleType)
                             //println("sent objectReading" + objectReading)
                             detectedObstacles= objectReading :: detectedObstacles
@@ -226,6 +229,10 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 				println("Received obstacleList")
                 for(obstacle <- obstacleList.asInstanceOf[List[Obstacle]])
                 {
+                    if(obstacle.obstacleType > 1){
+                        goalObstacle = obstacle
+                        goalObstacleSet = true
+                    }
                     if(obstacles.add(obstacle))
                         println("Added " + obstacle)
                     else
@@ -241,6 +248,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                     world += (agent -> Coordinate(x,y))
                     println("Added following to world: " + agent + " x="+x+" y="+y)
                     agent.start
+                    if(goalObstacleSet)
+                        agent ! Goal(goalObstacle)
                 }
                 println("Agents in World: " + world)
                 val agentsIterator = world.keys

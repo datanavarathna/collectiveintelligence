@@ -68,11 +68,13 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
 			{
               case Goal(goal) => {
                  //find goal
-                 val xDisplacementToGoal = new Measurement(0)//temporary
-                 val yDisplacementToGoal = new Measurement(0)//temporary
+                 val xDisplacementToGoal = 2//temporary
+                 val yDisplacementToGoal = 1//temporary
                  var foundGoal: Boolean = true
-                 if(foundGoal)
-                    agent ! TargetDisplacement(xDisplacementToGoal,yDisplacementToGoal)
+                 if(foundGoal){
+                      //agent ! TargetDisplacement(xDisplacementToGoal,yDisplacementToGoal)
+                      agent ! List(Coordinate(xDisplacementToGoal,yDisplacementToGoal))
+                 }
                  else
                     agent ! GoalNotFound()
               }
