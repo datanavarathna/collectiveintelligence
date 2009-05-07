@@ -102,7 +102,17 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                           println("x="+x+" y="+y)
                       }
 					  senderAgent ! Displacement( deltaX, deltaY)
-                      if(deltaX != 0 && deltaY != 0){
+                      /*
+                      if(deltaX != new Measurement(newX-oldX))
+                        println(deltaX+"="+newX + "-" + oldX + "false")
+                      if(deltaY != new Measurement(newY-oldY))
+                        println(deltaY+"="+newY + "-" + oldY + "false")
+                      */
+                      if(deltaX != new Measurement(0) && deltaY != new Measurement(0)){
+                        /*
+                        println(deltaX+"="+ new Measurement(newX-oldX))
+                        println(deltaY+"="+ new Measurement(newY-oldY))
+                        */
                         println("Moved to ("+newX+","+newY+")")
                         world - senderAgent
                         world += (senderAgent -> Coordinate(newX,newY))
