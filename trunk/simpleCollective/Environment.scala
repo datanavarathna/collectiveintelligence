@@ -39,7 +39,16 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 					  var newY = oldY
                       
                       //println("MoveCommand(" +(oldX + x)+","+(oldY + y)+")")
-					  if(!obstacles.contains(oldX + x,oldY + y))//if target doesn't contain obstacle
+                      var agentAtTarget: Boolean = false
+                      val agentIterator = world.values
+                      while (agentIterator.hasNext)
+                      {
+                          val agentWorldCoord: Coordinate = agentIterator.next
+                          //println("agentWorldCoord: " + agentWorldCoord)
+                          agentAtTarget = (agentWorldCoord == Coordinate(oldX + x,oldY + y)) || agentAtTarget
+                      }
+                      //println("agentAtTarget: " + agentAtTarget)
+					  if(!obstacles.contains(oldX + x,oldY + y) && !agentAtTarget)//if target doesn't contain obstacle
 					  {
 
                           if(oldX + x <= maxX)
@@ -97,6 +106,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                       scalaGui ! AgentUpdate(oldX,oldY,false)//agent left oldX,oldY
                       scalaGui ! AgentUpdate(newX,newY,true)//agent went to newX,newY
 					  senderAgent ! Displacement( deltaX, deltaY)
+                      if(deltaX != 0 && deltaY != 0)
+                        println("Moved to ("+newX+","+newY+")")
 				  }
 				  else
 				  {
@@ -135,41 +146,64 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 					 if(world.contains(senderAgent))
 					 {
 						 val agent = world(senderAgent)
-						 val detectedObstacles =
-							 for {obstacle: Obstacle <- obstacles.range(sensorRange, agent.x, agent.y)}
-						     {
-						    	 val vectorX = obstacle.x - agent.x
-						    	 val vectorY = obstacle.y - agent.y
-						    	 val angle = new Measurement(Math.atan2(vectorX, vectorY))
-						    	 val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
-						    	 ObjectReading(angle, distance, obstacle.obstacleType)
-						     }
+                         //println("Obstacles:" + obstacles)
+                         val obstaclesInRange = obstacles.range(sensorRange, agent.x, agent.y)
+                         //println("sensorRange: " + sensorRange)
+                         //println("Obstacles in range: " + obstaclesInRange)
+						 var detectedObstacles: List[ObjectReading] = Nil
+						 for {obstacle: Obstacle <- obstaclesInRange}
+						 {
+                            //println("detectedObstacle: " + obstacle)
+						    val vectorX: Int = obstacle.x - agent.x
+						    val vectorY: Int = obstacle.y - agent.y
+						  	val angle = new Measurement(Math.atan2(vectorX, vectorY))
+						    val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
+						    val objectReading = ObjectReading(angle, distance, obstacle.obstacleType)
+                            //println("sent objectReading" + objectReading)
+                            detectedObstacles= objectReading :: detectedObstacles
+						 }
 						 senderAgent ! detectedObstacles
+                         //println("Environment sending: " + detectedObstacles)
 
                          var detectedAgents: List[AgentReading] = Nil
                          val agentIterator = world.keys
+                         var counter: Int = 0
+                         //println("request agent: " + agent)
                          while (agentIterator.hasNext)
                          {
                              val agentInMap = agentIterator.next
-
+                             //println("agentInMap: " + agentInMap)
+                             counter += 1
+                             //println("World agent: " + counter)
                              world.get(agentInMap) match {
                                  case Some(coordinate) => {
-                                     if(Math.sqrt(coordinate.x*coordinate.x + coordinate.y*coordinate.y) <= sensorRange)
+                                     val vectorX: Int = coordinate.x - agent.x
+                                     val vectorY: Int = coordinate.y - agent.y
+                                     //println("agentInMap: (" + coordinate.x + "," + coordinate.y + ")")
+                                     if(vectorX != 0 || vectorY != 0)
                                      {
-                                        val vectorX = coordinate.x - agent.x
-                                        val vectorY = coordinate.y - agent.y
-                                        val angle = new Measurement(Math.atan2(vectorX, vectorY))
-                                        val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY))
-                                        detectedAgents = AgentReading(angle, distance)::detectedAgents
-                                     } //end if in sensor range
-                                     senderAgent ! detectedAgents
+                                         val distance = Math.sqrt(vectorX*vectorX + vectorY*vectorY)
+                                         if(distance < sensorRange)
+                                         {
+                                            val angle = new Measurement(Math.atan2(vectorY, vectorX))
+                                            val distanceMeasurement = new Measurement(distance)
+                                            val agentReading = AgentReading(angle, distance)
+                                            detectedAgents = agentReading :: detectedAgents
+                                            //println("("+vectorX+","+vectorY+")")
+                                            //println("environment agent reading: " + agentReading)
+                                        } //end if in sensor range
+                                     }//end if not self
+                                     
                                  }
                                  case None => {
                                       println("Error: Value not found for key " + agentInMap + "in map")
                                  }
-                             }
+                             }//end match
                              
                          }//end while
+                         senderAgent ! detectedAgents
+                         if(detectedAgents.isEmpty)
+                             println("Environment sending: " + detectedAgents)
 					 }
                      else
                         println("senderAgent not recognized")
