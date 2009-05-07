@@ -9,7 +9,7 @@ public class CollectiveMapJava {
 		relationships.add(ioj);
 	}
 	public boolean contains(IdentifiedObjectJava ioj){
-		return ids.find(ioj);
+		return ids.find(ioj)!=null;
 	}
 	public ArrayList<IdentifiedObjectJava> relationshipSearch(IdentifiedObjectJava ioj){
 		return relationships.multipleFind(ioj);
