@@ -5,9 +5,9 @@
     // ******************PUBLIC OPERATIONS*********************
     // void insert( x )       --> Insert x
     // void remove( x )       --> Remove x (unimplemented)
-    // IdentifiedObject find( x )   --> Return item that matches x
-    // IdentifiedObject findMin( )  --> Return smallest item
-    // IdentifiedObject findMax( )  --> Return largest item
+    // IdentifiedObjectJava find( x )   --> Return item that matches x
+    // IdentifiedObjectJava findMin( )  --> Return smallest item
+    // IdentifiedObjectJava findMax( )  --> Return largest item
     // boolean isEmpty( )     --> Return true if empty; else false
     // void makeEmpty( )      --> Remove all items
     // void printTree( )      --> Print tree in sorted order
@@ -32,7 +32,7 @@
          * Insert into the tree; duplicates are ignored.
          * @param x the item to insert.
          */
-        public void add( IdentifiedObject x )
+        public void add( IdentifiedObjectJava x )
         {
             root = add( x, root );
         }
@@ -41,7 +41,7 @@
          * Remove from the tree. Nothing is done if x is not found.
          * @param x the item to remove.
          */
-        public void remove( IdentifiedObject x )
+        public void remove( IdentifiedObjectJava x )
         {
             System.out.println( "Sorry, remove unimplemented" );
         }
@@ -51,19 +51,19 @@
          * @param x the item to search for.
          * @return the matching item or null if not found.
          */
-        public IdentifiedObject find( IdentifiedObject x )
+        public IdentifiedObjectJava find( IdentifiedObjectJava x )
         {
             return elementAt( find( x, root ) );
         }
 
-        public ArrayList<IdentifiedObject> multipleFind(IdentifiedObject x)
+        public ArrayList<IdentifiedObjectJava> multipleFind(IdentifiedObjectJava x)
         {
-			ArrayList<IdentifiedObject> al = new ArrayList<IdentifiedObject>();
+			ArrayList<IdentifiedObjectJava> al = new ArrayList<IdentifiedObjectJava>();
 			al = multipleFind(x, root, al);
 			return al;
 		}
 
-        private ArrayList<IdentifiedObject> multipleFind( IdentifiedObject x, CollectiveMapTreeNode t, ArrayList<IdentifiedObject> al )
+        private ArrayList<IdentifiedObjectJava> multipleFind( IdentifiedObjectJava x, CollectiveMapTreeNode t, ArrayList<IdentifiedObjectJava> al )
 		        {
 		            while( t != null )
 		                if( x.compareTo(firstOrSecond,  t.element ) < 0 )
@@ -113,7 +113,7 @@
          * @param t the node.
          * @return the element field or null if t is null.
          */
-        private IdentifiedObject elementAt( CollectiveMapTreeNode t )
+        private IdentifiedObjectJava elementAt( CollectiveMapTreeNode t )
         {
             return t == null ? null : t.element;
         }
@@ -124,7 +124,7 @@
          * @param t the node that roots the tree.
          * @return the new root.
          */
-        private CollectiveMapTreeNode insert( IdentifiedObject x, CollectiveMapTreeNode t )
+        private CollectiveMapTreeNode insert( IdentifiedObjectJava x, CollectiveMapTreeNode t )
         {
             if( t == null )
                 t = new CollectiveMapTreeNode( x, null, null );
@@ -188,7 +188,7 @@
          * @param t the node that roots the tree.
          * @return node containing the matched item.
          */
-        private CollectiveMapTreeNode find( IdentifiedObject x, CollectiveMapTreeNode t )
+        private CollectiveMapTreeNode find( IdentifiedObjectJava x, CollectiveMapTreeNode t )
         {
             while( t != null )
                 if( x.compareTo(firstOrSecond,  t.element ) < 0 )
