@@ -88,19 +88,75 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
 class CollectiveMap extends Actor{
 	var updateTime = System.currentTimeMillis()
     private var primitiveDataStructure: List[IdentifiedObject] = Nil.asInstanceOf[List[IdentifiedObject]]
+    var collective = new CollectiveMapJava();
+    var idNum = 1;
 
     def add(relationship: IdentifiedObject):Boolean = {
         updateTime = System.currentTimeMillis()
-        //add relationship to data structure
+        val o2 = new IdentifiedObjectJava();
+        o2.id1 = relationship.identifier1;
+        o2.id2 = relationship.identifier2;
+        o2.obstacle1Type = relationship.obstacle1Type;
+        o2.obstacle2Type = relationship.obstacle2Type;
+        o2.deltaX = new MeasurementJava();
+        o2.deltaX.meas = relationship.deltaX.value;
+        o2.deltaX.uncertainty = relationship.deltaX.uncertainty;
+        o2.deltaY = new MeasurementJava();
+        o2.deltaY.meas = relationship.deltaY.value;
+        o2.deltaY.uncertainty = relationship.deltaY.uncertainty;
+        collective.add(o2);
+        id++;
         return contains(relationship)
     }
 
     def contains(relationship: IdentifiedObject):Boolean = {
-        return true//check that relationship exists in data structure
+        val o2 = new IdentifiedObjectJava();
+	o2.id1 = relationship.identifier1;
+	o2.id2 = relationship.identifier2;
+	o2.obstacle1Type = relationship.obstacle1Type;
+	o2.obstacle2Type = relationship.obstacle2Type;
+	o2.deltaX = new MeasurementJava();
+	o2.deltaX.meas = relationship.deltaX.value;
+	o2.deltaX.uncertainty = relationship.deltaX.uncertainty;
+	o2.deltaY = new MeasurementJava();
+	o2.deltaY.meas = relationship.deltaY.value;
+        o2.deltaY.uncertainty = relationship.deltaY.uncertainty;
+       	return collective.contains(o2);
     }
 
     def matches(entries: TopologicalEntry *):List[IdentifiedObject] = {
-        return primitiveDataStructure//really return the part of the data structure that matches all the topological entry constrains
+        val o2 = new IdentifiedObjectJava();
+	o2.obstacle1Type = relationship.obstacle1Type;
+	o2.obstacle2Type = relationship.obstacle2Type;
+	o2.deltaX = new MeasurementJava();
+	o2.deltaX.meas = relationship.deltaX.value;
+	o2.deltaX.uncertainty = relationship.deltaX.uncertainty;
+	o2.deltaY = new MeasurementJava();
+	o2.deltaY.meas = relationship.deltaY.value;
+        o2.deltaY.uncertainty = relationship.deltaY.uncertainty;
+        var ArrayList<IdentifiedObject> al = collective.relationshipSearch(o2);        
+        var i = 0;
+        while(i < al.size()){
+        	var IdentifiedObject io = IdentifiedObjectJavatoIdentifiedObject(ArrayList.Item(i));
+        	primativeDataStructure.add(io);
+        	i++;
+        }
+        return primitiveDataStructure;
+    }
+    
+    def IdentifiedObjectJavatoIdentifiedObject(relationship: IdentifiedObjectJava):IdentifiedObject = {
+    	var iO2 = new IdentifiedObject();
+    	iO2.identifier1 = relationship.id1;
+    	iO2.identifier2 = relationship.id2;
+    	iO2.obstacle1Type = relationship.obstacle1Type;
+    	iO2.obstacle2Type = relationship.obstacle2Type;
+    	iO2.deltaX = new Measurement();
+    	iO2.deltaX.value = relationship.deltaX.meas;
+    	iO2.deltaX.uncertainty = relationship.deltaX.uncertainty;
+    	iO2.deltaY = new Measurement();
+	iO2.deltaY.value = relationship.deltaY.meas;
+    	iO2.deltaY.uncertainty = relationship.deltaY.uncertainty;
+    	return iO2;
     }
 
     //if the map is empty, objects need to be assigned random identifiers and added to map
