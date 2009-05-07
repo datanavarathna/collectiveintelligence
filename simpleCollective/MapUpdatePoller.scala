@@ -17,7 +17,7 @@ class MapUpdatePoller(agent: Actor, val map: Actor) extends Actor {
 			{
               case TimeSinceLastUpdate(lastUpdate) => {
                    if(lastUpdate > lastUpdateThreshold){
-                       //agent ! "Stop Exploring"
+                       agent ! "Stop Exploring"
                        //println("Stopped exploring after " + (lastUpdateThreshold/1000) + " sec")
                    }
               }
