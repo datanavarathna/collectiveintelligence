@@ -10,7 +10,7 @@
             this( theElement, null, null );
         }
 
-        CollectiveMapTreeNode( IdentifiedObjectJava theElement, AvlNode lt, AvlNode rt )
+        CollectiveMapTreeNode( IdentifiedObjectJava theElement, CollectiveMapTreeNode lt, CollectiveMapTreeNode rt )
         {
             element  = theElement;
             left     = lt;
