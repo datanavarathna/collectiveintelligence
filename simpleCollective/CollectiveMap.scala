@@ -101,13 +101,13 @@ class CollectiveMap extends Actor{
         o2.obstacle1Type = relationship.obstacle1Type;
         o2.obstacle2Type = relationship.obstacle2Type;
         o2.deltaX = new MeasurementJava();
-        o2.deltaX.meas = relationship.deltaX.value;
-        o2.deltaX.uncertainty = relationship.deltaX.uncertainty;
+        o2.deltaX.meas = relationship.deltaX.value.toInt;
+        o2.deltaX.uncertainty = relationship.deltaX.uncertainty.toInt;
         o2.deltaY = new MeasurementJava();
-        o2.deltaY.meas = relationship.deltaY.value;
-        o2.deltaY.uncertainty = relationship.deltaY.uncertainty;
+        o2.deltaY.meas = relationship.deltaY.value.toInt;
+        o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
         collective.add(o2);
-        id++;
+        id += 1;
         return contains(relationship)
     }
 
@@ -118,11 +118,11 @@ class CollectiveMap extends Actor{
 	o2.obstacle1Type = relationship.obstacle1Type;
 	o2.obstacle2Type = relationship.obstacle2Type;
 	o2.deltaX = new MeasurementJava();
-	o2.deltaX.meas = relationship.deltaX.value;
-	o2.deltaX.uncertainty = relationship.deltaX.uncertainty;
+	o2.deltaX.meas = relationship.deltaX.value.toInt;
+	o2.deltaX.uncertainty = relationship.deltaX.uncertainty.toInt;
 	o2.deltaY = new MeasurementJava();
-	o2.deltaY.meas = relationship.deltaY.value;
-        o2.deltaY.uncertainty = relationship.deltaY.uncertainty;
+	o2.deltaY.meas = relationship.deltaY.value.toInt;
+        o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
        	return collective.contains(o2);
     }
 
@@ -131,16 +131,16 @@ class CollectiveMap extends Actor{
 	o2.obstacle1Type = relationship.obstacle1Type;
 	o2.obstacle2Type = relationship.obstacle2Type;
 	o2.deltaX = new MeasurementJava();
-	o2.deltaX.meas = relationship.deltaX.value;
-	o2.deltaX.uncertainty = relationship.deltaX.uncertainty;
+	o2.deltaX.meas = relationship.deltaX.value.toInt;
+	o2.deltaX.uncertainty = relationship.deltaX.uncertainty.toInt;
 	o2.deltaY = new MeasurementJava();
-	o2.deltaY.meas = relationship.deltaY.value;
-        o2.deltaY.uncertainty = relationship.deltaY.uncertainty;
+	o2.deltaY.meas = relationship.deltaY.value.toInt;
+        o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
         var al  = collective.relationshipSearch(o2);
         var i = 0;
         while(i < al.size()){
         	var io: IdentifiedObject = IdentifiedObjectJavatoIdentifiedObject(al.Item(i));
-        	primativeDataStructure.add(io);
+        	primitiveDataStructure = primitiveDataStructure  :: io;
         	i += 1;
         }
         return primitiveDataStructure;
