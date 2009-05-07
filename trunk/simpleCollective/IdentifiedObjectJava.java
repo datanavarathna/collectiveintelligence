@@ -36,5 +36,6 @@ public class IdentifiedObjectJava {
 			else
 				output += 1;
 		}
+		return output;
 	}
 }
