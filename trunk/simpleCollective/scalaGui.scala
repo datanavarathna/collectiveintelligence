@@ -81,6 +81,7 @@ class scalaGui(squareX: Int, squareY: Int, windowX: Int, windowY: Int) extends A
                     this.exit
                 }
                 case AgentUpdate(x, y, present) =>{
+                        //println("GUI Update ("+x+","+y+") " + present)
                         guiInstance.updateCellAgentStatus(x, y, present)
                 }
             }
