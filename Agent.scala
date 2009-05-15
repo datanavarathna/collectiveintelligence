@@ -22,12 +22,20 @@ case class Displacement(x: Measurement, y: Measurement) {
           case _ => false
 		}
 	}
+
+    def - (that: Displacement): Displacement = {
+        new Displacement(this.x - that.x,this.y-that.y)
+    }
 }
 case class Move(agent: Actor, x: Measurement, y: Measurement) 
 case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
 case class AgentReading(angle: Measurement, distance: Measurement) 
 case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
-                            deltaX: Measurement, deltaY: Measurement) 
+                            deltaX: Measurement, deltaY: Measurement){
+    def inverse() : TopologicalEntry = {
+        new TopologicalEntry(this.obstacle2Type,this.obstacle1Type,-1*this.x,-1*this.y)
+    }
+}
 case class IdentifiedObject(identifier1: Int, identifier2: Int, 
                             obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement) 

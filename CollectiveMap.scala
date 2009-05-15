@@ -1,6 +1,7 @@
 import scala.actors._
 import Actor._
 import java.util.ArrayList
+import Measurement._
 
 /*//The following commented code is for reference only
 case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
@@ -8,6 +9,8 @@ case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
 case class IdentifiedObject(identifier1: Int, identifier2: Int,
                             obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement)
+case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
+case class Displacement(x: Measurement, y: Measurement)
 */
 case class Add(identifiedObject: IdentifiedObject)
 case class Contains(entries: TopologicalEntry *)
@@ -15,7 +18,21 @@ case class TargetDisplacement(x: Measurement, y: Measurement)
 case class TimeSinceLastUpdate(time: Long)
 
 class TopologicalElementGenerator(val map: Actor) extends Actor{
-	def act()
+	
+    def PolarToCartesian(angle: Measurement, distance: Measurement): Displacement =  {
+      Displacement(distance * cos(angle), distance * sin(angle))
+    }
+    
+    def topologicalGenerator(readingA: ObjectReading,readingB: ObjectReading): TopologicalEntry = {
+        val aVector: Displacement = PolarToCartesian(readingA.angle,readingA.distance)
+        val bVector: Displacement = PolarToCartesian(readingB.angle,readingB.distance)
+        val baVector: Displacement = aVector - bVector
+        new TopologicalEntry(readingB.obstacleType, readingA.obstacleType,
+                baVector.x, baVector.y
+            )
+    }
+
+    def act()
 	{
 		println("TopologicalElementGenerator Running")
 		loop
@@ -24,7 +41,17 @@ class TopologicalElementGenerator(val map: Actor) extends Actor{
 			{
               case sensorReadings @ List(ObjectReading,_*) =>{
                       //convert to topological entries and reply(entries)
-              }
+                      var entries: List[TopologicalEntry] = Nil
+                      var readings: List[ObjectReading]  = sensorReadings.asInstanceOf[List[ObjectReading]]
+                      while(!readings.isEmpty){
+                          val readingA = readings.head
+                          readings = readings.tail
+                          for(readingB <- readings){
+                              entries = topologicalGenerator(readingA,readingB) :: entries
+                          }
+                      }//end while
+                      reply(entries)
+              }//end case
 
                 case "Exit" => {
                  println("TopologicalElementGenerator Exiting")
