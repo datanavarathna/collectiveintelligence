@@ -112,7 +112,7 @@ object Test
 
         
       //run program
-       (new scalaGui(50,50,1900,1000)).start
+       (new scalaGuiWrapper(50,50,1900,1000)).start
        println("Done")
        
     }
