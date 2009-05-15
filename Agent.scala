@@ -26,6 +26,10 @@ case class Displacement(x: Measurement, y: Measurement) {
     def - (that: Displacement): Displacement = {
         new Displacement(this.x - that.x,this.y-that.y)
     }
+
+    def inverse(): Displacement = {
+        Displacement(-1*this.x, -1*this.y)
+    }
 }
 case class Move(agent: Actor, x: Measurement, y: Measurement) 
 case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
@@ -37,8 +41,8 @@ case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
     }
 }
 case class IdentifiedObject(identifier1: Int, identifier2: Int, 
-                            obstacle1Type: Int,obstacle2Type: Int,
-                            deltaX: Measurement, deltaY: Measurement) 
+                            //obstacle1Type: Int,obstacle2Type: Int,
+                            vector: Displacement)
 case class UpdateSensor(sender: Agent, range: Int, sensorDeltaAngle: Int, SensorDeltaRange: Int) 
 
 case class Coordinate(x: Int, y: Int) 

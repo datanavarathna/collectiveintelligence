@@ -7,8 +7,8 @@ import Measurement._
 case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement)
 case class IdentifiedObject(identifier1: Int, identifier2: Int,
-                            obstacle1Type: Int,obstacle2Type: Int,
-                            deltaX: Measurement, deltaY: Measurement)
+                            //obstacle1Type: Int,obstacle2Type: Int,
+                            vector: Displacement)
 case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
 case class Displacement(x: Measurement, y: Measurement)
 */
@@ -16,6 +16,31 @@ case class Add(identifiedObject: IdentifiedObject)
 case class Contains(entries: TopologicalEntry *)
 case class TargetDisplacement(x: Measurement, y: Measurement)
 case class TimeSinceLastUpdate(time: Long)
+case class Identifiers(a: Int, b: Int)
+case class IdentifiedStored(idObject:IdentifiedObject, dSquared: Measurement) extends Ordered[IdentifiedStored]{
+    def this(idObject:IdentifiedObject) = {
+        this(idObject,
+            {
+                val dispX: Measurement = idObject.vector.x
+                val dispY: Measurement = idObject.vector.y
+                dispX*dispX + dispY*dispY
+            })
+    }//end auxillary constructor, doesn't seem to be detected
+
+    def compare(that : IdentifiedStored) : Int ={
+        val thisX = this.idObject.vector.x
+        val thisY = this.idObject.vector.y
+        val thatX = that.idObject.vector.x
+        val thatY = that.idObject.vector.y
+        if( (thisX == thatX) && (thisY == thatY) )
+            return 0
+        else if(this.dSquared < that.dSquared)
+            return -1
+        else
+            return 1
+    }
+
+}
 
 class TopologicalElementGenerator(val map: Actor) extends Actor{
 	
@@ -115,79 +140,158 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
 }
 
 class CollectiveMap extends Actor{
-	var updateTime = System.currentTimeMillis()
-    private var primitiveDataStructure: List[IdentifiedObject] = Nil
-    var collective = new CollectiveMapJava();
-    var idNum = 1;
+	private var updateTime = System.currentTimeMillis()
 
-    def add(relationship: IdentifiedObject):Boolean = {
+    import scala.collection.mutable.Map
+    import scala.collection.jcl.TreeMap
+    import scala.collection.jcl.TreeSet
+    private var relationshipsLookup = Map.empty[Identifiers,Displacement]//key,value
+    private var obstacle1Map = Map.empty[Int,TreeMap[Int,TreeSet[IdentifiedStored]]]//key,value [obstacleType1]
+
+    /*
+    private def findRelationships(identifier1: Int, identifier2: Int):TreeSet[IdentifiedStored] = {
+        var obstacle2Map = obstacle1Map.getOrElse(identifier1,
+            new TreeMap[Int,TreeSet[IdentifiedStored]])
+        obstacle2Map.getOrElse(identifier2,
+            new TreeSet[IdentifiedStored])
+    }*/
+    //might not handle inverse vectors properly
+    def add(relationship: IdentifiedObject): Boolean = {
         updateTime = System.currentTimeMillis()
-        val o2 = new IdentifiedObjectJava();
-        o2.id1 = relationship.identifier1;
-        o2.id2 = relationship.identifier2;
-        o2.obstacle1Type = relationship.obstacle1Type;
-        o2.obstacle2Type = relationship.obstacle2Type;
-        o2.deltaX = new MeasurementJava();
-        o2.deltaX.meas = relationship.deltaX.value.toInt;
-        o2.deltaX.uncertainty = relationship.deltaX.uncertainty.toInt;
-        o2.deltaY = new MeasurementJava();
-        o2.deltaY.meas = relationship.deltaY.value.toInt;
-        o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
-        collective.add(o2);
-        idNum += 1;
-        return contains(relationship)
+
+        val identifier1 = relationship.identifier1
+        val identifier2 = relationship.identifier2
+        val identifiers = Identifiers(identifier1,identifier2)
+
+        var obstacle2Map = obstacle1Map.getOrElse(identifier1,
+            new TreeMap[Int,TreeSet[IdentifiedStored]])
+        var relationships = obstacle2Map.getOrElse(identifier2,
+            new TreeSet[IdentifiedStored])
+
+        val dispX: Measurement = relationship.vector.x
+        val dispY: Measurement = relationship.vector.y
+        val addItem = IdentifiedStored(relationship,dispX*dispX + dispY*dispY)
+        
+        relationships += addItem
+        if(relationships.has(addItem))//boolean to check if successful
+        {
+            obstacle2Map.put(identifier2,relationships)
+            if(obstacle2Map.contains(identifier2))
+            {
+                obstacle1Map.put(identifier1,obstacle2Map)
+                if(obstacle2Map.contains(identifier1))
+                {
+                    relationshipsLookup += (identifiers -> relationship.vector)
+                    if(contains(identifiers)){
+                        return true
+                    }
+                    else{
+                        println("Failed to add identifiers to relationshipsLookup")
+                        return false
+                    }//end add to relationshipsLookup check
+                }
+                else{
+                    println("Failed to add element to obstacle1Map")
+                    return false
+                }//end add to obstacle1Map check
+            }
+            else{
+                println("Failed to add element to obstacle2Map")
+                return false
+            }//end add to obstacle2Map check
+        }
+        else{
+            println("Failed to add element to relationships")
+            return false
+        }//end add to relationships check
+    }//end add
+    //might not handle inverse vectors properly
+    def delete(relationship: IdentifiedObject): Boolean = {
+       val identifier1 = relationship.identifier1
+        val identifier2 = relationship.identifier2
+        val identifiers = Identifiers(identifier1,identifier2)
+
+        if(contains(identifiers))
+        {
+           var obstacle2Map = obstacle1Map.getOrElse(identifier1,
+            new TreeMap[Int,TreeSet[IdentifiedStored]])
+           var relationships = obstacle2Map.getOrElse(identifier2,
+            new TreeSet[IdentifiedStored])
+
+            val dispX: Measurement = relationship.vector.x
+            val dispY: Measurement = relationship.vector.y
+            val addItem = IdentifiedStored(relationship,dispX*dispX + dispY*dispY)
+
+            relationships -= addItem
+            if(!relationships.has(addItem))//boolean to check if successful
+            {
+                obstacle2Map.put(identifier2,relationships)
+                if(!obstacle2Map.contains(identifier2))
+                {
+                    obstacle1Map.put(identifier1,obstacle2Map)
+                    if(!obstacle2Map.contains(identifier1))
+                    {
+                        relationshipsLookup -= (identifiers)
+                        if(!contains(identifiers)){
+                            return true
+                        }
+                        else{
+                            println("Failed to remove identifiers to relationshipsLookup")
+                            return false
+                        }//end add to relationshipsLookup check
+                    }
+                    else{
+                        println("Failed to remove element to obstacle1Map")
+                        return false
+                    }//end add to obstacle1Map check
+                }
+                else{
+                    println("Failed to remove element to obstacle2Map")
+                    return false
+                }//end add to obstacle2Map check
+            }
+            else{
+                println("Failed to remove element to relationships")
+                return false
+            }//end add to relationships check
+        }
+        else
+            return true//nothing to delete
+    }//end delete
+
+    def contains(identifiers: Identifiers):Boolean = {
+        if(relationshipsLookup.contains(identifiers))
+            return true
+        else{
+            val inverseIdentifiers = Identifiers(identifiers.b,identifiers.a)
+            return relationshipsLookup.contains(inverseIdentifiers)
+        }
     }
 
-    def contains(relationship: IdentifiedObject):Boolean = {
-        val o2 = new IdentifiedObjectJava();
-	o2.id1 = relationship.identifier1;
-	o2.id2 = relationship.identifier2;
-	o2.obstacle1Type = relationship.obstacle1Type;
-	o2.obstacle2Type = relationship.obstacle2Type;
-	o2.deltaX = new MeasurementJava();
-	o2.deltaX.meas = relationship.deltaX.value.toInt;
-	o2.deltaX.uncertainty = relationship.deltaX.uncertainty.toInt;
-	o2.deltaY = new MeasurementJava();
-	o2.deltaY.meas = relationship.deltaY.value.toInt;
-        o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
-       	return collective.contains(o2);
-    }
-/*
     def matches(entries: TopologicalEntry *):List[IdentifiedObject] = {
-        val o2 = new IdentifiedObjectJava();
-	o2.obstacle1Type = relationship.obstacle1Type;
-	o2.obstacle2Type = relationship.obstacle2Type;
-	o2.deltaX = new MeasurementJava();
-	o2.deltaX.meas = relationship.deltaX.value.toInt;
-	o2.deltaX.uncertainty = relationship.deltaX.uncertainty.toInt;
-	o2.deltaY = new MeasurementJava();
-	o2.deltaY.meas = relationship.deltaY.value.toInt;
-        o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
-        var al  = collective.relationshipSearch(o2);
-        var i = 0;
-        while(i < al.size()){
-        	var io: IdentifiedObject = IdentifiedObjectJavatoIdentifiedObject(al.Item(i));
-        	primitiveDataStructure = io :: primitiveDataStructure;
-        	i += 1;
+        Nil.asInstanceOf[List[IdentifiedObject]]
+    }
+
+    //always check contains before calling
+    def getRelationship(relationship: Identifiers):IdentifiedObject = {
+    	relationshipsLookup.get(relationship) match {
+            case Some(vector) => {
+                    IdentifiedObject(relationship.a,relationship.b,vector)
+            }
+            case None => {
+                   relationshipsLookup.get(relationship) match {
+                      case Some(vector) => {
+                        IdentifiedObject(relationship.a,relationship.b,vector.inverse)
+                        }
+                        case None => {
+                            println("No relationship found")
+                            IdentifiedObject(0,0,Displacement(0,0))
+                        }
+                   }//end 2nd match
+            }//end case None
         }
-        return primitiveDataStructure;
     }
-    
-    def IdentifiedObjectJavatoIdentifiedObject(relationship: IdentifiedObjectJava):IdentifiedObject = {
-    	var iO2 = new IdentifiedObject();
-    	iO2.identifier1 = relationship.id1;
-    	iO2.identifier2 = relationship.id2;
-    	iO2.obstacle1Type = relationship.obstacle1Type;
-    	iO2.obstacle2Type = relationship.obstacle2Type;
-    	iO2.deltaX = new Measurement();
-    	iO2.deltaX.value = relationship.deltaX.meas;
-    	iO2.deltaX.uncertainty = relationship.deltaX.uncertainty;
-    	iO2.deltaY = new Measurement();
-	iO2.deltaY.value = relationship.deltaY.meas;
-    	iO2.deltaY.uncertainty = relationship.deltaY.uncertainty;
-    	return iO2;
-    }
-*/
+
     //if the map is empty, objects need to be assigned random identifiers and added to map
 
     def act()
