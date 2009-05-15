@@ -89,7 +89,7 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
 
 class CollectiveMap extends Actor{
 	var updateTime = System.currentTimeMillis()
-    private var primitiveDataStructure: List[IdentifiedObject] = Nil.asInstanceOf[List[IdentifiedObject]]
+    private var primitiveDataStructure: List[IdentifiedObject] = Nil
     var collective = new CollectiveMapJava();
     var idNum = 1;
 
@@ -107,7 +107,7 @@ class CollectiveMap extends Actor{
         o2.deltaY.meas = relationship.deltaY.value.toInt;
         o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
         collective.add(o2);
-        id += 1;
+        idNum += 1;
         return contains(relationship)
     }
 
@@ -125,7 +125,7 @@ class CollectiveMap extends Actor{
         o2.deltaY.uncertainty = relationship.deltaY.uncertainty.toInt;
        	return collective.contains(o2);
     }
-
+/*
     def matches(entries: TopologicalEntry *):List[IdentifiedObject] = {
         val o2 = new IdentifiedObjectJava();
 	o2.obstacle1Type = relationship.obstacle1Type;
@@ -140,7 +140,7 @@ class CollectiveMap extends Actor{
         var i = 0;
         while(i < al.size()){
         	var io: IdentifiedObject = IdentifiedObjectJavatoIdentifiedObject(al.Item(i));
-        	primitiveDataStructure = primitiveDataStructure  :: io;
+        	primitiveDataStructure = io :: primitiveDataStructure;
         	i += 1;
         }
         return primitiveDataStructure;
@@ -160,7 +160,7 @@ class CollectiveMap extends Actor{
     	iO2.deltaY.uncertainty = relationship.deltaY.uncertainty;
     	return iO2;
     }
-
+*/
     //if the map is empty, objects need to be assigned random identifiers and added to map
 
     def act()
@@ -174,10 +174,10 @@ class CollectiveMap extends Actor{
                     if(add(identifiedObject))
                         print("Failed to add object")
               }
-              case Contains(entries) => {
+/*              case Contains(entries) => {
                    reply(matches(entries))
               }
-              case "lastUpdate" =>
+*/              case "lastUpdate" =>
                   reply(TimeSinceLastUpdate(System.currentTimeMillis()-updateTime))
               case "Exit" => {
                  println("CollectiveMap Exiting")

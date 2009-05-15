@@ -3,8 +3,13 @@ import Measurement._
 import scala.actors._
 import Actor._
 
-case class AgentUpdate(x: Int, y: Int, present: Boolean){
-    override def toString = " x=" +x+ " y=" +y+ "present=" + present
+//case class Obstacle(obstacleType: Int, x: Int, y: Int)
+case class AgentWithLocation(agent: Agent, x: Int, y: Int){
+	override def toString = "AgentWithLocation: agent="+agent+" x="+x+" y="+y
+}
+
+case class AgentUpdate(oldX: Int, oldY: Int, newX: Int, newY: Int){
+    override def toString = " x=" +oldX+ " y=" +oldY+ " x=" +newX+ " y=" +newY
 }
 
 class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,val scalaGui: Actor) extends Actor{
@@ -119,8 +124,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                         println("Moved to ("+newX+","+newY+")")
                         world - senderAgent
                         world += (senderAgent -> Coordinate(newX,newY))
-                        scalaGui ! AgentUpdate(oldX,oldY,false)//agent left oldX,oldY
-                        scalaGui ! AgentUpdate(newX,newY,true)//agent went to newX,newY
+                        scalaGui ! AgentUpdate(oldX,oldY,newX,newY)
                       }
 				  }
 				  else

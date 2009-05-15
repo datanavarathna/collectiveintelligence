@@ -109,6 +109,7 @@ class Agent(val environment: Actor, val map: Actor,
   }
 
   def move(x: Int,y: Int){
+      //Thread.sleep(100)
 		environment ! MoveCommand(this,x,y)
 	}
 
@@ -362,7 +363,7 @@ class Agent(val environment: Actor, val map: Actor,
                  mapUpdatePoller ! "Exit"
                  this.exit
               }
-              case catchAll => println("Catchall: " + catchAll)
+              //case catchAll => println("Catchall: " + catchAll)
 			}//end react
 		}//end loop
 	}//end act
