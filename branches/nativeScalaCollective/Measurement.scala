@@ -77,7 +77,7 @@ object Measurement {
 	}
 }
 
-class Measurement (val value: Double, val uncertainty:Double) 
+class Measurement (val value: Double, val uncertainty:Double) extends Ordered[Measurement]
 {
 	import Measurement._
 	
@@ -105,7 +105,17 @@ class Measurement (val value: Double, val uncertainty:Double)
 	override def hashCode: Int = { this.value.hashCode }
  
 	override def toString = { this.value + " +- " + this.uncertainty }
- 
+
+    def compare(that: Measurement): Int = {
+        //need to find out how to take into account uncertainty
+        if(this == that)
+            return 0
+        else if(this.value < that.value)
+            return -1
+        else
+            return 1
+    }
+
 	def + (that:Int): Measurement =
 	{
 		new Measurement(
