@@ -42,7 +42,11 @@ case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
 }
 case class IdentifiedObject(identifier1: Int, identifier2: Int, 
                             //obstacle1Type: Int,obstacle2Type: Int,
-                            vector: Displacement)
+                            vector: Displacement){
+    def inverse: IdentifiedObject = {
+        IdentifiedObject(identifier2,identifier1,vector.inverse)
+    }
+}
 case class UpdateSensor(sender: Agent, range: Int, sensorDeltaAngle: Int, SensorDeltaRange: Int) 
 
 case class Coordinate(x: Int, y: Int) 

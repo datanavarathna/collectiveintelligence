@@ -16,16 +16,14 @@ case class Add(identifiedObject: IdentifiedObject)
 case class Contains(entries: TopologicalEntry *)
 case class TargetDisplacement(x: Measurement, y: Measurement)
 case class TimeSinceLastUpdate(time: Long)
-case class Identifiers(a: Int, b: Int)
-case class IdentifiedStored(idObject:IdentifiedObject, dSquared: Measurement) extends Ordered[IdentifiedStored]{
-    def this(idObject:IdentifiedObject) = {
-        this(idObject,
-            {
-                val dispX: Measurement = idObject.vector.x
-                val dispY: Measurement = idObject.vector.y
-                dispX*dispX + dispY*dispY
-            })
-    }//end auxillary constructor, doesn't seem to be detected
+case class Identifiers(a: Int, b: Int){
+    def inverse: Identifiers = Identifiers(b,a)
+}
+case class MatchRelationships(identifier1: Int,identifier2: Int,relationshipsDisplacements: List[Displacement])
+case class IdentifiedStored(idObject:IdentifiedObject) extends Ordered[IdentifiedStored]{
+    private val dispX: Measurement = idObject.vector.x
+    private val dispY: Measurement = idObject.vector.y
+    val dSquared = dispX*dispX + dispY*dispY
 
     def compare(that : IdentifiedStored) : Int ={
         val thisX = this.idObject.vector.x
@@ -41,7 +39,12 @@ case class IdentifiedStored(idObject:IdentifiedObject, dSquared: Measurement) ex
     }
 
 }
-
+case class RelationshipStored(vector: Displacement)
+{
+    private val x = vector.x
+    private val y = vector.y
+    val dSquared = x*x + y*y
+}
 class TopologicalElementGenerator(val map: Actor) extends Actor{
 	
     def PolarToCartesian(angle: Measurement, distance: Measurement): Displacement =  {
@@ -89,7 +92,6 @@ class TopologicalElementGenerator(val map: Actor) extends Actor{
 
 class RelationshipIdentfier(val map: Actor) extends Actor{
 
-
     def act()
 	{
 		println("RelationshipIdentfier Running")
@@ -98,7 +100,47 @@ class RelationshipIdentfier(val map: Actor) extends Actor{
 			react
 			{
               case topologicalEntries @ List(TopologicalEntry, _*) => {
-                      //reply()//convert topological entries to identified objects and send in reply
+                 //reply()//convert topological entries to identified objects and send in reply
+                 val entries = topologicalEntries.asInstanceOf[List[TopologicalEntry]]
+                 import scala.collection.mutable.Map
+                 import scala.collection.mutable.HashSet
+                 var type1 = Map.empty[Int,Map[Int,HashSet[Displacement]]]
+                 for(entry <- entries)
+                 {
+                     var type2 = type1.getOrElse(entry.obstacle1Type,Map.empty[Int,HashSet[Displacement]])
+                     var relationships = type2.getOrElse(entry.obstacle2Type,new HashSet[Displacement])
+                     relationships += Displacement(entry.deltaX,entry.deltaY)
+                     type2.put(entry.obstacle2Type,relationships)
+                     type1.put(entry.obstacle1Type,type2)
+                 }
+                 var identifier1: Int = 0
+                 var identifier2: Int = 0
+                 var type1Iterator = type1.keys
+                 while(type1Iterator.hasNext)
+                 {
+                     identifier1 = type1Iterator.next
+                     type1.get(identifier1) match
+                     {
+                         case Some(type2) =>
+                         {
+                            var type2Iterator = type2.keys
+                            while(type2Iterator.hasNext)
+                            {
+                                identifier2 = type2Iterator.next
+                                type2.get(identifier2) match
+                                {
+                                    case Some(relationships) =>
+                                    {
+                                        map ! MatchRelationships(identifier1,identifier2,relationships.toList)
+                                    }
+                                    case None => {}
+                                }
+                            }
+                         }
+                         case None => {}
+                     }
+
+                 }
               }
               case "Exit" => {
                  println("RelationshipIdentfier Exiting")
@@ -146,7 +188,7 @@ class CollectiveMap extends Actor{
     import scala.collection.jcl.TreeMap
     import scala.collection.jcl.TreeSet
     private var relationshipsLookup = Map.empty[Identifiers,Displacement]//key,value
-    private var obstacle1Map = Map.empty[Int,TreeMap[Int,TreeSet[IdentifiedStored]]]//key,value [obstacleType1]
+    private var obstacle1Map = Map.empty[Int,TreeMap[Int,TreeMap[RelationshipStored,Identifiers]]]//key,value [obstacleType1]
 
     /*
     private def findRelationships(identifier1: Int, identifier2: Int):TreeSet[IdentifiedStored] = {
@@ -155,7 +197,7 @@ class CollectiveMap extends Actor{
         obstacle2Map.getOrElse(identifier2,
             new TreeSet[IdentifiedStored])
     }*/
-    //might not handle inverse vectors properly
+
     def add(relationship: IdentifiedObject): Boolean = {
         updateTime = System.currentTimeMillis()
 
@@ -166,11 +208,11 @@ class CollectiveMap extends Actor{
         var obstacle2Map = obstacle1Map.getOrElse(identifier1,
             new TreeMap[Int,TreeSet[IdentifiedStored]])
         var relationships = obstacle2Map.getOrElse(identifier2,
-            new TreeSet[IdentifiedStored])
+            new TreeMap[RelationshipStored,Identifiers])
 
         val dispX: Measurement = relationship.vector.x
         val dispY: Measurement = relationship.vector.y
-        val addItem = IdentifiedStored(relationship,dispX*dispX + dispY*dispY)
+        val addItem = IdentifiedStored(relationship)
         
         relationships += addItem
         if(relationships.has(addItem))//boolean to check if successful
@@ -205,7 +247,7 @@ class CollectiveMap extends Actor{
             return false
         }//end add to relationships check
     }//end add
-    //might not handle inverse vectors properly
+
     def delete(relationship: IdentifiedObject): Boolean = {
        val identifier1 = relationship.identifier1
         val identifier2 = relationship.identifier2
@@ -213,25 +255,60 @@ class CollectiveMap extends Actor{
 
         if(contains(identifiers))
         {
-           var obstacle2Map = obstacle1Map.getOrElse(identifier1,
-            new TreeMap[Int,TreeSet[IdentifiedStored]])
-           var relationships = obstacle2Map.getOrElse(identifier2,
-            new TreeSet[IdentifiedStored])
+           var identifierA = identifier1
+           var identifierB = identifier2
+           var obstacle2Map = new TreeMap[Int,TreeSet[IdentifiedStored]]
+           var relationships = new TreeSet[IdentifiedStored]
+           obstacle1Map.get(identifier1) match{
+               case Some(map) =>{
+                       obstacle2Map = map
+                       obstacle2Map.get(identifier2) match{
+                           case Some(idRelationships) => {
+                               relationships = idRelationships
+                           }
+                           case None =>{
+                                println("Uneven Data Structure: Data not added to structure evenly")
+                           }
+                       }//end 2nd level match
+               }//end regular Some case
+               case None => {
+                       identifierA = identifier2
+                       identifierB = identifier1
+                       obstacle1Map.get(identifier2) match{
+                            case Some(map) =>{
+                                obstacle2Map = map
+                                obstacle2Map.get(identifier1) match{
+                                    case Some(idRelationships) => {
+                                        relationships = idRelationships
+                                    }
+                                    case None =>{
+                                        println("Uneven Data Structure: Data not added to structure evenly")
+                                    }
+                                }//end 2nd level match
+                            }//end inverse Some case
+                            case None => {
+                                println("Uneven Data Structure: Data not added to structure evenly")
+                            }
+                       }//end inverse match
+               }//end regular None casse
 
-            val dispX: Measurement = relationship.vector.x
-            val dispY: Measurement = relationship.vector.y
-            val addItem = IdentifiedStored(relationship,dispX*dispX + dispY*dispY)
+           }//end regular match
+           
+            val addItem = IdentifiedStored(relationship)
+            val addItemInverse = IdentifiedStored(relationship.inverse)
 
             relationships -= addItem
-            if(!relationships.has(addItem))//boolean to check if successful
+            relationships -= addItemInverse
+            if(!relationships.has(addItem) && !relationships.has(addItemInverse))//boolean to check if successful
             {
-                obstacle2Map.put(identifier2,relationships)
-                if(!obstacle2Map.contains(identifier2))
+                obstacle2Map.put(identifierB,relationships)
+                if(!obstacle2Map.contains(identifierB))
                 {
-                    obstacle1Map.put(identifier1,obstacle2Map)
-                    if(!obstacle2Map.contains(identifier1))
+                    obstacle1Map.put(identifierA,obstacle2Map)
+                    if(!obstacle2Map.contains(identifierA))
                     {
                         relationshipsLookup -= (identifiers)
+                        relationshipsLookup -= (identifiers.inverse)
                         if(!contains(identifiers)){
                             return true
                         }
@@ -269,6 +346,9 @@ class CollectiveMap extends Actor{
     }
 
     def matches(entries: TopologicalEntry *):List[IdentifiedObject] = {
+        import scala.collection.mutable.HashSet
+        var matches = new HashSet[Identifiers]
+
         Nil.asInstanceOf[List[IdentifiedObject]]
     }
 
@@ -292,6 +372,20 @@ class CollectiveMap extends Actor{
         }
     }
 
+    def matchRelationships(identifier1: Int,identifier2: Int,relationshipsDisplacements: List[Displacement]): List[Identifiers] =
+    {
+        obstacle1Map.get(identifier1) match
+        {
+            case Some(obstacle2Map) =>
+            {
+                var relationships = obstacle2Map.getOrElse(identifier2,
+                    new TreeSet[IdentifiedStored])
+            }
+            case None => return Nil
+        }
+
+    }
+
     //if the map is empty, objects need to be assigned random identifiers and added to map
 
     def act()
@@ -307,8 +401,12 @@ class CollectiveMap extends Actor{
               }
 /*              case Contains(entries) => {
                    reply(matches(entries))
+              } */
+              case MatchRelationships(identifier1,identifier2,relationshipsDisplacements) =>
+              {
+                  reply(matchRelationships(identifier1,identifier2,relationshipsDisplacements))
               }
-*/              case "lastUpdate" =>
+              case "lastUpdate" =>
                   reply(TimeSinceLastUpdate(System.currentTimeMillis()-updateTime))
               case "Exit" => {
                  println("CollectiveMap Exiting")
