@@ -207,6 +207,46 @@ object UnitTests {
         println("TreeSet")
         println(treeset)
         */
+        import scala.collection.jcl.TreeMap
+        var uncertaintyTreeMap = new TreeMap[RelationshipStored,Int]
+        uncertaintyTreeMap +=  (RelationshipStored(new Displacement(new Measurement(8,1),new Measurement(2,1))) -> 1)
+        uncertaintyTreeMap +=  (RelationshipStored(new Displacement(new Measurement(10,1),new Measurement(2,1))) -> 1)
+        uncertaintyTreeMap +=  (RelationshipStored(new Displacement(new Measurement(15,1),new Measurement(2,1))) -> 1)
+        uncertaintyTreeMap +=  (RelationshipStored(new Displacement(new Measurement(6,1),new Measurement(2,1))) -> 1)
+        println("uncertaintyTreeMap: " + uncertaintyTreeMap)
+        var lowerBound: Option[RelationshipStored] = Some(RelationshipStored(new Displacement(new Measurement(9,0),new Measurement(0,0)) ) )
+        var upperBound: Option[RelationshipStored] = Some(RelationshipStored(new Displacement(new Measurement(11,0),new Measurement(0,0)) ))
+        println("uncertaintyTreeMap between 9 and 11 " 
+                + uncertaintyTreeMap.rangeImpl(lowerBound,upperBound)
+        )
+        
+        println("Creating UncertaintyMap")
+	  	var uncertaintyTree = new UncertaintyMap[Int]
+        println(uncertaintyTree)
+        println("Adding 8+-1,0+-0 -> 1")
+        uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(8,1),new Measurement(0,0))) -> 1)
+        println(uncertaintyTree)
+        println("Adding 10+-1,0+-0 -> 2")
+        uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(10,1),new Measurement(0,0))) -> 2)
+        println(uncertaintyTree)
+        println("Adding 15+-1,0+-0 -> 3")
+        uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(15,1),new Measurement(0,0))) -> 3)
+        println(uncertaintyTree)
+        println("Adding 7+-1,0+-0 -> 4")
+        uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(7,1),new Measurement(0,0))) -> 4)
+        println(uncertaintyTree)
+        println("Adding 11+-1,0+-0 -> 5")
+        uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(11,1),new Measurement(0,0))) -> 5)
+        println(uncertaintyTree)
+        println("Adding 6+-1.2,0+-0 -> 6")
+        uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(6,1.2),new Measurement(0,0))) -> 6)
+        println(uncertaintyTree)
+        println("Adding 10+-0,0+-0 -> 7")
+        uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(12,1),new Measurement(0,0))) -> 7)
+        println(uncertaintyTree + "\n")
+        println("uncertaintyTree for RelationshipStored(Displacement(9+-1,0+-3)) " )
+        println(uncertaintyTree.getAllEquals(RelationshipStored(new Displacement(new Measurement(9,1),new Measurement(0,0)))))
+        
         var collectiveMap = new CollectiveMap
         collectiveMap.start
         actor {
@@ -237,10 +277,6 @@ object UnitTests {
           println(collectiveMap)
           collectiveMap ! "Exit"
           /*
-
-			  case MapSize => {
-				  reply(Size(size))
-			  }
 			  case GetIdentifierType(identifier: Int) => {
 				  getIdentifierType(identifier) match {
 				    case Some(objectType) => reply(IdentifierType(identifier,objectType))

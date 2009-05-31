@@ -122,8 +122,9 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                         println(deltaY+"="+ new Measurement(newY-oldY))
                         */
                         println("Moved to ("+newX+","+newY+")")
-                        world - senderAgent
-                        world += (senderAgent -> Coordinate(newX,newY))
+                        world.put(senderAgent,Coordinate(newX,newY))
+                        //world - senderAgent
+                        //world += (senderAgent -> Coordinate(newX,newY))
                         scalaGui ! AgentUpdate(oldX,oldY,newX,newY)
                       }
 				  }
