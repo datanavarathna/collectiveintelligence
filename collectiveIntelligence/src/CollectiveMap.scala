@@ -11,7 +11,9 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
 case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
 case class Displacement(x: Measurement, y: Measurement)
 */
+case class PossibleMatches(matches : List[IdentifiedStored])
 case class PickName(identifier: Int, obstacleType: Int)
+case class RemoveName(identifier: Int)
 case class MapSize()
 case class Size(size: Int)
 case class GetIdentifierType(identifier: Int)
@@ -26,7 +28,7 @@ case class TimeSinceLastUpdate(time: Long)
 case class Identifiers(a: Int, b: Int){
     def inverse: Identifiers = Identifiers(b,a)
 }
-case class MatchRelationships(identifier1: Int,identifier2: Int,relationshipsDisplacements: List[Displacement])
+case class MatchRelationships(identifier1Type: Int,identifier2Type: Int,relationshipsDisplacements: List[Displacement])
 case class IdentifiedStored(idObject:IdentifiedObject) extends Ordered[IdentifiedStored]{
     private val dispX: Measurement = idObject.vector.x
     private val dispY: Measurement = idObject.vector.y
@@ -124,7 +126,7 @@ class RelationshipIdentfier(val map: Actor) extends Actor{
                  val entries = topologicalEntries.asInstanceOf[List[TopologicalEntry]]
                  import scala.collection.mutable.Map
                  import scala.collection.mutable.HashSet
-                 var type1 = Map.empty[Int,Map[Int,HashSet[Displacement]]]
+                 var type1 = Map.empty[Int,Map[Int,HashSet[Displacement]]]//type1->type2->Displacement
                  for(entry <- entries)
                  {
                      var type2 = type1.getOrElse(entry.obstacle1Type,Map.empty[Int,HashSet[Displacement]])
@@ -133,35 +135,34 @@ class RelationshipIdentfier(val map: Actor) extends Actor{
                      type2.put(entry.obstacle2Type,relationships)
                      type1.put(entry.obstacle1Type,type2)
                  }
-                 var identifier1: Int = 0
-                 var identifier2: Int = 0
+                 var identifier1Type: Int = 0
+                 var identifier2Type: Int = 0
                  var type1Iterator = type1.keys
                  while(type1Iterator.hasNext)
                  {
-                     identifier1 = type1Iterator.next
-                     type1.get(identifier1) match
+                     identifier1Type = type1Iterator.next
+                     type1.get(identifier1Type) match
                      {
                          case Some(type2) =>
                          {
                             var type2Iterator = type2.keys
                             while(type2Iterator.hasNext)
                             {
-                                identifier2 = type2Iterator.next
-                                type2.get(identifier2) match
+                                identifier2Type = type2Iterator.next
+                                type2.get(identifier2Type) match
                                 {
                                     case Some(relationships) =>
                                     {
-                                        map ! MatchRelationships(identifier1,identifier2,relationships.toList)
-                                    }
-                                    case None => {}
-                                }
-                            }
-                         }
-                         case None => {}
-                     }
-
-                 }
-              }
+                                        map ! MatchRelationships(identifier1Type,identifier2Type,relationships.toList)
+                                    }//end Some
+                                    case None => {}//Should never get to
+                                }//end match type2
+                            }//end while iterating through type2
+                         }//end Some type 2
+                         case None => {}//Should never get to
+                     }//end match type 2
+                 }//end while type 1 iterator
+              }//end case topological entries
               case "Exit" => {
                  println("RelationshipIdentfier Exiting")
                  this.exit
@@ -185,7 +186,7 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
                  val xDisplacementToGoal = 2//temporary
                  val yDisplacementToGoal = 1//temporary
                  var foundGoal: Boolean = true
-                 if(foundGoal){
+                 if(foundGoal){//retrun list of displacements as instructions on path to goal
                       //agent ! TargetDisplacement(xDisplacementToGoal,yDisplacementToGoal)
                       agent ! List(Coordinate(xDisplacementToGoal,yDisplacementToGoal))
                  }
@@ -203,7 +204,7 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
 
 class CollectiveMap extends Actor
 {
-	private var updateTime = System.currentTimeMillis()
+	private var updateTime: Long = System.currentTimeMillis()
 	private var size: Int = 0
 
     import scala.collection.mutable.Map
@@ -212,8 +213,8 @@ class CollectiveMap extends Actor
     import scala.collection.jcl.TreeSet
     private var relationshipsLookup = Map.empty[Identifiers,Displacement]//key,value
     private var identifierType = Map.empty[Int,Int]// (identifier -> type)
-    private var obstacle1TypeMap = Map.empty[Int,HashMap[Int,TreeMap[RelationshipStored,Identifiers]]]//key,value obstacleType1->obstacleType2->relationship->Identifiers
-    private var identifierRelationshipsGraph = Map.empty[Int,TreeMap[RelationshipStored,Int]]//identifier1->relationships->identifier2
+    private var obstacle1TypeMap = Map.empty[Int,HashMap[Int,UncertaintyMap[Identifiers]]]//key,value obstacleType1->obstacleType2->relationship->Identifiers
+    private var identifierRelationshipsGraph = Map.empty[Int,UncertaintyMap[Int]]//identifier1->relationships->identifier2
 
     /*
     private def findRelationships(identifier1: Int, identifier2: Int):TreeSet[IdentifiedStored] = {
@@ -232,7 +233,7 @@ class CollectiveMap extends Actor
     		result
     }
     
-    def pickName(identifier: Int, obstacleType: Int): Boolean =
+    private def pickName(identifier: Int, obstacleType: Int): Boolean =
     {
         if(!identifierType.contains(identifier))
         {
@@ -246,12 +247,17 @@ class CollectiveMap extends Actor
         }
     }
     
-    def getIdentifierType(identifier: Int): Option[Int] = 
+    private def removeName(identifier: Int): Boolean = {
+    	identifierType -= (identifier)
+    	return !identifierType.contains(identifier)
+    }
+    
+    private def getIdentifierType(identifier: Int): Option[Int] = 
     {
     		identifierType.get(identifier)
     }
 
-    def add(relationship: IdentifiedObject): Boolean = 
+    private def add(relationship: IdentifiedObject): Boolean = 
     {
         updateTime = System.currentTimeMillis()
 
@@ -279,12 +285,12 @@ class CollectiveMap extends Actor
         }
         
         val graphRelationshipsStored = identifierRelationshipsGraph.getOrElse(
-        	identifier1, new TreeMap[RelationshipStored,Int])
+        	identifier1, new UncertaintyMap[Int])
         
         var obstacle2TypeMap = obstacle1TypeMap.getOrElse(identifier1Type,
-            new HashMap[Int,TreeMap[RelationshipStored,Identifiers]])
+            new HashMap[Int,UncertaintyMap[Identifiers]])
         var relationships = obstacle2TypeMap.getOrElse(identifier2Type,
-            new TreeMap[RelationshipStored,Identifiers])
+            new UncertaintyMap[Identifiers])
 
         val addKey = RelationshipStored(relationship.vector)
         val addItem = Identifiers(relationship.identifier1,
@@ -347,8 +353,8 @@ class CollectiveMap extends Actor
         {
            var identifierA = identifier1
            var identifierB = identifier2
-           var obstacle2TypeMap = new HashMap[Int,TreeMap[RelationshipStored,Identifiers]]
-           var relationships = new TreeMap[RelationshipStored,Identifiers]
+           var obstacle2TypeMap = new HashMap[Int,UncertaintyMap[RelationshipStored,Identifiers]]
+           var relationships = new UncertaintyMap[RelationshipStored,Identifiers]
            obstacle1TypeMap.get(identifier1) match
            {
                case Some(map) =>
@@ -430,7 +436,7 @@ class CollectiveMap extends Actor
             return true//nothing to delete
     }//end delete
 */
-    def contains(identifiers: Identifiers):Boolean = {
+    private def contains(identifiers: Identifiers):Boolean = {
         if(relationshipsLookup.contains(identifiers))
             return true
         else{
@@ -439,7 +445,7 @@ class CollectiveMap extends Actor
         }
     }
 
-    def matches(entries: TopologicalEntry *):List[IdentifiedObject] = {
+    private def matches(entries: TopologicalEntry *):List[IdentifiedObject] = {
         import scala.collection.mutable.HashSet
         var matches = new HashSet[Identifiers]
 
@@ -447,7 +453,7 @@ class CollectiveMap extends Actor
     }
 
     //always check contains before calling
-    def getRelationship(relationship: Identifiers):IdentifiedObject = {
+    private def getRelationship(relationship: Identifiers):IdentifiedObject = {
     	relationshipsLookup.get(relationship) match {
             case Some(vector) => {
                     IdentifiedObject(relationship.a,relationship.b,vector)
@@ -466,24 +472,32 @@ class CollectiveMap extends Actor
         }
     }
 
-    def matchRelationships(identifier1: Int,identifier2: Int,relationshipsDisplacements: List[Displacement]): List[Identifiers] =
+    def matchRelationships(identifier1Type: Int,identifier2Type: Int,relationshipsDisplacements: List[Displacement]): List[IdentifiedStored] =
     {
 		var matches = new TreeSet[IdentifiedStored]
-        obstacle1TypeMap.get(identifier1) match
+        obstacle1TypeMap.get(identifier1Type) match
         {
             case Some(obstacle2Map) =>
             {
-                obstacle2Map.get(identifier2) match 
+                obstacle2Map.get(identifier2Type) match 
                 {
-                  case Some(identifiedStoredTreeSet) =>
+                  case Some(identifiedStoredTreeSet) => //UncertaintyMap[RelationsStored,identifiers]
                   {
-                    
+                    //get all matches and prepend 'matches'
                   }
-                  case None => return Nil 
-                }
-                return Nil
+                  case None => 
+                  {
+                    println("No relations for type " + identifier1Type + " -> type " + identifier2Type)
+                    return Nil 
+                  }//end case None
+                }//end match type 2
+                return matches.toList
             }
-            case None => return Nil
+            case None =>
+            {
+              println("No relations for type " + identifier1Type)
+              return Nil
+            }
         }
 
     }
@@ -508,6 +522,12 @@ class CollectiveMap extends Actor
 					  println("Failed to add name")
 					  reply("Failed to add name")
 				  }
+			  }
+			  case RemoveName(identifier) => {
+				  if(removeName(identifier))
+					  println("Successfully removed name")
+				  else
+					  println("Failed to remove " + identifier)
 			  }
 			  case MapSize => {
 				  println("Map size: " + size)
@@ -537,9 +557,9 @@ class CollectiveMap extends Actor
 /*              case Contains(entries) => {
                    reply(matches(entries))
               } */
-              case MatchRelationships(identifier1,identifier2,relationshipsDisplacements) =>
+              case MatchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements) =>
               {
-                  reply(matchRelationships(identifier1,identifier2,relationshipsDisplacements))
+                  reply(PossibleMatches(matchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements)))
               }
               case "lastUpdate" =>
                   reply(TimeSinceLastUpdate(System.currentTimeMillis()-updateTime))
