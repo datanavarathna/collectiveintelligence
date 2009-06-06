@@ -121,7 +121,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                         println(deltaX+"="+ new Measurement(newX-oldX))
                         println(deltaY+"="+ new Measurement(newY-oldY))
                         */
-                        println("Moved to ("+newX+","+newY+")")
+                        //println("Moved to ("+newX+","+newY+")")
                         world.put(senderAgent,Coordinate(newX,newY))
                         //world - senderAgent
                         //world += (senderAgent -> Coordinate(newX,newY))
@@ -271,7 +271,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                    scalaGui ! "Exit"
                    this.exit
               }
-              case catchAll => println("Catchall: " +catchAll)
+              case catchAll => println("Environment Catchall: " +catchAll)
 			}//end react
 		}//end loop
   }//end act

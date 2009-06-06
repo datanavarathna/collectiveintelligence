@@ -246,7 +246,7 @@ object UnitTests {
         println(uncertaintyTree + "\n")
         println("uncertaintyTree for RelationshipStored(Displacement(9+-1,0+-3)) " )
         println(uncertaintyTree.getAllEquals(RelationshipStored(new Displacement(new Measurement(9,1),new Measurement(0,0)))))
-        
+        var updateTime: Long = System.currentTimeMillis();
         var collectiveMap = new CollectiveMap
         collectiveMap.start
         actor {
@@ -262,16 +262,19 @@ object UnitTests {
           collectiveMap ! PickName(4,1)
           collectiveMap ! MapSize
           println("Add(IdentifiedObject(1,2,Displacement(2,3)))")
-          collectiveMap ! Add(IdentifiedObject(1,2,Displacement(2,3)))
+          collectiveMap ! Add(updateTime,List(IdentifiedObject(1,2,Displacement(2,3))))
           collectiveMap ! MapSize
+		  updateTime = System.currentTimeMillis();
           println("Add(IdentifiedObject(1,3,Displacement(2,1)))")
-          collectiveMap ! Add(IdentifiedObject(1,3,Displacement(2,1)))
+          collectiveMap ! Add(updateTime,List(IdentifiedObject(1,3,Displacement(2,1))))
           collectiveMap ! MapSize
+		  updateTime = System.currentTimeMillis();
           println("Add(IdentifiedObject(1,4,Displacement(1,-1)))")
-          collectiveMap ! Add(IdentifiedObject(1,4,Displacement(1,-1)))
+          collectiveMap ! Add(updateTime,List(IdentifiedObject(1,4,Displacement(1,-1))))
           collectiveMap ! MapSize
+		  updateTime = System.currentTimeMillis();
           println("Add(IdentifiedObject(3,4,Displacement(-1,-2)))")
-          collectiveMap ! Add(IdentifiedObject(3,4,Displacement(-1,-2)))
+          collectiveMap ! Add(updateTime,List(IdentifiedObject(3,4,Displacement(-1,-2))))
           collectiveMap ! MapSize
           Thread.sleep(2000)//msec
           println(collectiveMap)
