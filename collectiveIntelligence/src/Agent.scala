@@ -5,7 +5,9 @@ import Actor._
 import Measurement._
 //import agents.DataClasses
 import scala.util.Random
-
+//import TopologicalElementGenerator._
+//import CaseClasses._
+/*
 case class Pheromone(locationX: Int,LocationY: Int,targetX: Int, targetY: Int)
 case class MoveCommand(sender: Agent, x: Int, y: Int ) 
 case class Displacement(x: Measurement, y: Measurement) {
@@ -56,16 +58,14 @@ case class Obstacle(obstacleType: Int, x: Int, y: Int){
 
 case class Goal(goal:Obstacle)
 case class GoalNotFound()
-
+*/
 class Agent(val environment: Actor, val map: Actor,
             val sensorRange: Int, val sensorDeltaAngle: Int, val SensorDeltaRange: Int) extends Actor 
 {
-  private val topologicalElementGenerator: Actor = new TopologicalElementGenerator(map)
-  private val relationshipIdentfier: Actor = new RelationshipIdentfier(map)
+  private val sensorProcessor = new SensorObjectReadingsProcessor(map, this)
   private val mapUpdatePoller: Actor = new MapUpdatePoller(this,map)
   private val goalFinder: Actor = new GoalFinder(this,map)
-  topologicalElementGenerator.start
-  relationshipIdentfier.start
+  sensorProcessor.start
   mapUpdatePoller.start
 
   private var relativeLocationX: Measurement = new Measurement(0.00000001,0)
@@ -89,6 +89,8 @@ class Agent(val environment: Actor, val map: Actor,
   import scala.collection.mutable.Map
   private var visibleAgents = Set.empty[Displacement]
   private var visibleObstacles = Map.empty[Displacement,Int]//key,value obstacleType: Int
+  private var locationOfObstacles = Map.empty[Displacement,Int]//key,value identifier: Int
+  private var identifierTranslator = Map.empty[Int,Int]// originalIdentifier->currentIdentifier
   private var visibleAgentsCurrent: Boolean = false
   private var visibleObstaclesCurrent: Boolean = false
 
@@ -96,8 +98,8 @@ class Agent(val environment: Actor, val map: Actor,
 
   override def toString = {
 	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " SensorDeltaRange=" + SensorDeltaRange
-	result += " environment=" + environment + " topologicalElementGenerator=" + topologicalElementGenerator
-	result +=  " relationshipIdentfier=" + relationshipIdentfier + " map=" + map
+	result += " environment=" + environment + " SensorObjectReadingsProcessor=" + sensorProcessor
+	result +=  " map=" + map
 	result
 	}
 
@@ -186,9 +188,10 @@ class Agent(val environment: Actor, val map: Actor,
         return -1
   }
 
-  def addToMapMethod(entries: IdentifiedObject *)
+  def addToMapMethod(lastUpdate: Long, entries: List[IdentifiedObject])
   {
-    entries.foreach(entry => map ! Add(entry))
+    //entries.foreach(entry => map ! Add(lastUpdate,entry))
+    map ! Add(lastUpdate,entries)
   }
 
   def planMovement() {
@@ -271,22 +274,28 @@ class Agent(val environment: Actor, val map: Actor,
 				relativeLocationY += y 
                 visibleAgentsCurrent = false
                 visibleObstaclesCurrent = false
-                println("Displaced: (" +lastDisplacementX+","+lastDisplacementY+")" )
+                //println("Displaced: (" +lastDisplacementX+","+lastDisplacementY+")" )
+                
+                //update sensor before moving again
 				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
                 if(exploreMode)
                     move(randomPositiveNegative1(),randomPositiveNegative1())
                 else if(!pathToGoal.isEmpty)
                     planMovement
 			  }
+     
+			  //from update sensor
 			  case sensorReadings @ List(ObjectReading(_,_,_),_*) => {
-                println("Received visible objects: " + sensorReadings)
-                topologicalElementGenerator ! sensorReadings
-			    //pass to helper actor that calculates topological references and sends results as a message to parent actors
+                //println("Received visible objects: " + sensorReadings)
+                
+                //pass to helper actor that calculates topological references and sends results as a message to parent actors
+                sensorProcessor ! sensorReadings
+                
                 visibleObstacles.clear//empties the map
                 //add detect obstacles to the map
                 for(objectReading <- sensorReadings.asInstanceOf[List[ObjectReading]])
                 {
-                    println("objectReading: " + objectReading)
+                    //println("objectReading: " + objectReading)
                     val displacement = PolarToCartesian(objectReading.angle,objectReading.distance)
                     //if(displacement != Displacement(0,0))
                     if(displacement.x.value != 0 && displacement.x.uncertainty != 0 &&
@@ -296,13 +305,15 @@ class Agent(val environment: Actor, val map: Actor,
                         visibleObstacles += Pair(displacement, objectReading.obstacleType)
                         //println("Angle: " + objectReading.angle + " Distance: " + objectReading.distance)
                         //println("Displacement generated: " + displacement)
+                        
+	                    
                     }
                     //println("Angle: " + objectReading.angle + " Distance: " + objectReading.distance)
                     //println("Displacement generated: " + displacement)
                 }
                 visibleObstaclesCurrent = true
-                if(!visibleObstacles.isEmpty)
-                    println("visibleObstacles: " + visibleObstacles)
+                //if(!visibleObstacles.isEmpty)
+                    //println("visibleObstacles: " + visibleObstacles)
               }
               case sensorReadings @ List(AgentReading(angle,distance),_*) => {
                 println("Received visible agents")
@@ -325,12 +336,22 @@ class Agent(val environment: Actor, val map: Actor,
                     println(visibleAgents)
                 
               }
-			  case topologicalEntries @ List(TopologicalEntry(_,_,_,_), _*) =>
-			    relationshipIdentfier ! topologicalEntries
+              /*
+              //received from topological element generator
+			  case topologicalEntries @ List(TopologicalEntry(_,_,_,_), _*) => {
 			    //send to helper actor that identifies the objects, naming if necessary, messages to parent identify objects
-			  case relationships @  List(IdentifiedObject, _*) => {
-				  addToMapMethod(relationships.asInstanceOf[Seq[IdentifiedObject]]: _*)//asInstanceOf is a cast, need to test that works correctly
-				  //move(randomPositiveNegative1(),randomPositiveNegative1())
+			    relationshipIdentifier ! topologicalEntries
+			    println("Received topological entries")
+			  }
+			  */
+              case recheck @ RecheckObjects(identifiedObjects) => {
+            	  sensorProcessor.forward(recheck)
+              }
+     
+			  case NewIdentifiedObjects(lastUpdate,newIdentifiedObjects) => {
+				  println("Adding relationships to CollectiveMap")
+				  addToMapMethod(lastUpdate, newIdentifiedObjects)//asInstanceOf is a cast, need to test that works correctly
+				  map ! MapSize
                   if(exploreMode)
                     move(randomPositiveNegative1(),randomPositiveNegative1())
 			  }
@@ -373,13 +394,11 @@ class Agent(val environment: Actor, val map: Actor,
               }
               case "Exit" => {
                  println("Agent Exiting")
-                 topologicalElementGenerator ! "Exit"
-                 relationshipIdentfier ! "Exit"
                  goalFinder ! "Exit"
                  mapUpdatePoller ! "Exit"
                  this.exit
               }
-              //case catchAll => println("Catchall: " + catchAll)
+              //case catchAll => println("Agent Catchall: " + catchAll)
 			}//end react
 		}//end loop
 	}//end act
