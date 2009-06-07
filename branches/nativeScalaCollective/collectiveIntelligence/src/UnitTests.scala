@@ -260,18 +260,31 @@ object UnitTests {
           collectiveMap ! PickName(3,1)
           println("Picking Name (4->1)")
           collectiveMap ! PickName(4,1)
+		  println("updateTime= " + updateTime)
+		  collectiveMap ! "lastUpdate"
           collectiveMap ! MapSize
           println("Add(IdentifiedObject(1,2,Displacement(2,3)))")
           collectiveMap ! Add(updateTime,List(IdentifiedObject(1,2,Displacement(2,3))))
+          println("updateTime= " + updateTime)
+		  collectiveMap ! "lastUpdate"
           collectiveMap ! MapSize
-		  updateTime = System.currentTimeMillis();
-          println("Add(IdentifiedObject(1,3,Displacement(2,1)))")
+          println("No Timestamp update Add(IdentifiedObject(1,3,Displacement(2,1)))")
           collectiveMap ! Add(updateTime,List(IdentifiedObject(1,3,Displacement(2,1))))
+		  Thread.sleep(400)//msec
+		  updateTime = System.currentTimeMillis();
+		  println("Add(IdentifiedObject(1,3,Displacement(2,1)))")
+          collectiveMap ! Add(updateTime,List(IdentifiedObject(1,3,Displacement(2,1))))
+          println("updateTime= " + updateTime)
+		  collectiveMap ! "lastUpdate"
           collectiveMap ! MapSize
+		  Thread.sleep(400)//msec
 		  updateTime = System.currentTimeMillis();
           println("Add(IdentifiedObject(1,4,Displacement(1,-1)))")
           collectiveMap ! Add(updateTime,List(IdentifiedObject(1,4,Displacement(1,-1))))
+          println("updateTime= " + updateTime)
+		  collectiveMap ! "lastUpdate"
           collectiveMap ! MapSize
+		  Thread.sleep(400)//msec
 		  updateTime = System.currentTimeMillis();
           println("Add(IdentifiedObject(3,4,Displacement(-1,-2)))")
           collectiveMap ! Add(updateTime,List(IdentifiedObject(3,4,Displacement(-1,-2))))

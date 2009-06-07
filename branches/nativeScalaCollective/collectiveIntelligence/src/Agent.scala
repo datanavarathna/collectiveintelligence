@@ -349,7 +349,7 @@ class Agent(val environment: Actor, val map: Actor,
               }
      
 			  case NewIdentifiedObjects(lastUpdate,newIdentifiedObjects) => {
-				  println("Adding relationships to CollectiveMap")
+				  println("Adding  the following relationships to CollectiveMap: " + newIdentifiedObjects)
 				  addToMapMethod(lastUpdate, newIdentifiedObjects)//asInstanceOf is a cast, need to test that works correctly
 				  map ! MapSize
                   if(exploreMode)

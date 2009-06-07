@@ -37,12 +37,13 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
     
     private def searchForMatches(topologicalEntries: List[TopologicalEntry], relationEntries: List[Relationship])
     {
-		
-       	val entries = topologicalEntries.asInstanceOf[List[TopologicalEntry]]
+		println("Search for matchs")
+		println("topologicalEntries: " + topologicalEntries)
+		println("relationEntries: " + relationEntries)
         import scala.collection.mutable.Map
         import scala.collection.mutable.HashSet
         var type1 = Map.empty[Int,Map[Int,HashSet[Displacement]]]//type1->type2->Displacement
-        for(entry <- entries)
+        for(entry <- topologicalEntries)
         {
         	var type2 = type1.getOrElse(entry.obstacle1Type,Map.empty[Int,HashSet[Displacement]])
             var relationships = type2.getOrElse(entry.obstacle2Type,new HashSet[Displacement])
@@ -50,6 +51,7 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
             type2.put(entry.obstacle2Type,relationships)
             type1.put(entry.obstacle1Type,type2)
         }
+        println(type1)
         var identifier1Type: Int = 0
         var identifier2Type: Int = 0
         var type1Iterator = type1.keys
@@ -68,14 +70,16 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
                         {
                         	case Some(relationships) =>
                             {
+                            	println("Calling MatchRelationships for " + 
+                            			identifier1Type + ", " + identifier2Type + ", " + relationships)
                             	map ! MatchRelationships(identifier1Type,identifier2Type,
 									relationships.toList, relationEntries)
                             }//end Some
-                            case None => {}//Should never get to
+                            case None => {println("Error: No relationships found")}//Should never get to
                         }//end match type2
                      }//end while iterating through type2
                 }//end Some type 2
-                case None => {}//Should never get to
+                case None => {println("Error: No type2 found")}//Should never get to
             }//end match type 2
         }//end while type 1 iterator
     }//end search for matches

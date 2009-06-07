@@ -74,7 +74,7 @@ case class RelationshipStored(vector: Displacement) extends Ordered[Relationship
 */
 class CollectiveMap extends Actor
 {
-	private var updateTime: Long = System.currentTimeMillis()
+	private var updateTime: Long = 0//System.currentTimeMillis()
 	private var size: Int = 0
 
     import scala.collection.mutable.Map
@@ -257,7 +257,10 @@ class CollectiveMap extends Actor
 
     def matchRelationships(identifier1Type: Int,identifier2Type: Int,relationshipsDisplacements: List[Displacement]): List[IdentifiedStored] =
     {
+		println("matchRelationships received: " + identifier1Type +", "+ identifier2Type +", relDisp= "+
+			relationshipsDisplacements)
 		var matches = new TreeSet[IdentifiedStored]
+		println("map size= " + size)
 		//var possibleMatches = new HashSet[Identifiers]
         obstacle1TypeMap.get(identifier1Type) match
         {
@@ -271,13 +274,16 @@ class CollectiveMap extends Actor
                     var storedRelationships: List[RelationshipStored] = Nil;
                     for(relationshipDisplacement <- relationshipsDisplacements)
                     {
-                    	var identifiers = identifiedStoredTreeSet.getAllEquals(RelationshipStored(relationshipDisplacement))
+                    	println("getting all equals for " + relationshipDisplacement)
+						var identifiers = identifiedStoredTreeSet.getAllEquals(RelationshipStored(relationshipDisplacement))
+						println("allEqualsEor " + relationshipDisplacement +": " + identifiers)
                     	/*for(identifier <- identifiers)
                         {
                     		possibleMatches += identifier
                         }*/
                     	if(identifiers.size == 1)
                     	{
+							println("Only one possible match")
                     		var identifier = identifiers.head
                     		relationshipsLookup.get(identifier) match
                     		{
@@ -290,10 +296,22 @@ class CollectiveMap extends Actor
                         }// end if uniquely identified
                         else
                         {
-                        	//see if comparisons with agents sensors & local map of obstacles can uniquely identify
+                        	println("Multiple possible matches")
+							for(identifier <- identifiers)
+							{
+								relationshipsLookup.get(identifier) match
+								{
+									case Some(vector) => {
+										matches += IdentifiedStored(IdentifiedObject(identifier.a, identifier.b,vector))
+									}
+									case None => { println("relationshipsLookup does not contain " + identifier)}//should never get to
+								}//end match
+							}
+							
+							//see if comparisons with agents sensors & local map of obstacles can uniquely identify
                         }//end not unique
                     		
-                    }//end for
+                    }//end for relationshipsDisplacements
                     //possibleMatchesGraph(possibleMatches.toList)
                     
                   }//end matched identifier
@@ -303,6 +321,7 @@ class CollectiveMap extends Actor
                     return Nil 
                   }//end case None
                 }//end match type 2
+				println("matchRelations returning" + matches.toList)
                 return matches.toList //currently returns list of already existing relations
             }
             case None =>
@@ -385,10 +404,12 @@ class CollectiveMap extends Actor
             	  if(lastUpdate < updateTime)
                   {
             		  println("Timestamp out of date, repeat checks")
+					  println("checked at " + lastUpdate + " updated at " + updateTime)
             		  reply(RecheckObjects(identifiedObjects))
                   }
             	  else
                   {
+					  println("Valid Timestamp");
             		  for(identifiedObject <- identifiedObjects)
             		  {
             			  if(!add(identifiedObject))
@@ -414,8 +435,10 @@ class CollectiveMap extends Actor
                   reply(PossibleMatches(updateTime,matchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements),entries))
               }
               case "getSize" => reply(getSize)
-              case "lastUpdate" =>
+              case "lastUpdate" => {
+				  println("LastUpdate on: " + updateTime)
                   reply(TimeSinceLastUpdate(System.currentTimeMillis()-updateTime))
+				  }
               case "Exit" => {
                  println("CollectiveMap Exiting")
                  this.exit
