@@ -1,6 +1,6 @@
 public class ObstacleJava {
-	int x;
-	int y;
+	double x;
+	double y;
 	int Otype;
 	
 	public ObstacleJava(){

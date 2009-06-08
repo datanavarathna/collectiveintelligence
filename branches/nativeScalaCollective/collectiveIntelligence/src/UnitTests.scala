@@ -245,9 +245,9 @@ object UnitTests {
         uncertaintyTree +=  (RelationshipStored(new Displacement(new Measurement(12,1),new Measurement(0,0))) -> 7)
         println(uncertaintyTree + "\n")
         println("uncertaintyTree for RelationshipStored(Displacement(9+-1,0+-3)) " )
-        println(uncertaintyTree.getAllEquals(RelationshipStored(new Displacement(new Measurement(9,1),new Measurement(0,0)))))
+        println(uncertaintyTree.getAllEquals(RelationshipStored(new Displacement(new Measurement(9,1),new Measurement(0,0)))))/*
         var updateTime: Long = System.currentTimeMillis();
-        var collectiveMap = new CollectiveMap
+        var collectiveMap = new CollectiveMap 
         collectiveMap.start
         actor {
           println("Picking Name (1->1)")
@@ -306,7 +306,7 @@ object UnitTests {
                         print("Failed to add object")
               }
            */
-        }
+        }*/
         
    }
 }

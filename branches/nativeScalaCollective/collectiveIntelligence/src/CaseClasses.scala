@@ -43,10 +43,10 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
         IdentifiedObject(identifier2,identifier1,vector.inverse)
     }
 }
-case class UpdateSensor(sender: Agent, range: Int, sensorDeltaAngle: Int, SensorDeltaRange: Int) 
+case class UpdateSensor(sender: Agent, range: Double, sensorDeltaAngle: Double, sensorRange: Double) 
 
 case class Coordinate(x: Int, y: Int) 
-case class Obstacle(obstacleType: Int, x: Int, y: Int){
+case class Obstacle(obstacleType: Int, x: Double, y: Double){
 	override def toString = "Obstacle: obstacleType="+obstacleType+" x="+x+" y="+y
 } 
 
@@ -54,18 +54,20 @@ case class Goal(goal:Obstacle)
 case class GoalNotFound()
 
 case class Relationship(identifier1Temp: Int, identifier2Temp: Int, vector: Displacement )
-case class InternalIdentifiedObject(name: Int, vectorFromAgent: Displacement)
+case class InternalIdentifiedObject(name: Int, objectType: Int, vectorFromAgent: Displacement)
 case class IdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject])
 
 case class CollectiveMapSize(size: Int, lastUpdate: Long)
 
-case class PossibleMatches(lastUpdate: Long,matches : List[IdentifiedStored], entries: List[Relationship])
+case class PossibleMatches(	lastUpdate: Long,matches : List[IdentifiedStored], entries: List[Relationship],
+							cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
 case class PickName(identifier: Int, obstacleType: Int)
 case class RemoveName(identifier: Int)
 case class MapSize()
 case class Size(size: Int)
 case class GetIdentifierType(identifier: Int)
-case class Add(lastUpdate: Long,identifiedObjects: List[IdentifiedObject])
+case class Add(	lastUpdate: Long,identifiedObjects: List[IdentifiedObject],
+				cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
 case class Contains(identifiers: Identifiers)
 case class Matches(entries: TopologicalEntry *)
 case class IdentifierType(identifier: Int,objectType: Int)
@@ -77,7 +79,8 @@ case class Identifiers(a: Int, b: Int){
     def inverse: Identifiers = Identifiers(b,a)
 }
 case class MatchRelationships(identifier1Type: Int,identifier2Type: Int,
-	relationshipsDisplacements: List[Displacement],entries: List[Relationship])
+	relationshipsDisplacements: List[Displacement],entries: List[Relationship],
+	cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
 case class IdentifiedStored(idObject:IdentifiedObject) extends Ordered[IdentifiedStored]{
     private val dispX: Measurement = idObject.vector.x
     private val dispY: Measurement = idObject.vector.y
@@ -116,11 +119,19 @@ case class RelationshipStored(vector: Displacement) extends Ordered[Relationship
             return 1
     }
 }
-case class RecheckRelationships(reconstructedTopEntries: List[TopologicalEntry],entries: List[Relationship])
-case class SensorRelations(sensorReadings: List[ObjectReading], entries: List[Relationship])
-case class RecheckObjects(identifiedObjects: List[IdentifiedObject])
-case class NewIdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject])
-case class MapIdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject])
+
+case class GetRelationsForIdentifier(identifier: Int)
+case class SensorReadings(sensorRange: Double, sensorReadings: List[ObjectReading])
+case class ObjectReadingCartesian(obstacleType: Int, sensorVector: Displacement)
+case class RecheckRelationships(reconstructedTopEntries: List[TopologicalEntry],entries: List[Relationship],
+								cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
+case class SensorRelations(sensorReadings: List[ObjectReading],cartesianReadings: List[InternalIdentifiedObject], entries: List[Relationship],sensorRange: Double)
+case class RecheckObjects(identifiedObjects: List[IdentifiedObject],
+                          cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
+case class NewIdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject],
+								cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
+case class MapIdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject],
+                                cartesianObjectReadings: List[InternalIdentifiedObject],sensorRange: Double)
 {
 	override def toString = "MapIdentifiedObjects: lastUpdate= " + 
 			lastUpdate + "identifiedObjects= " + identifiedObjects

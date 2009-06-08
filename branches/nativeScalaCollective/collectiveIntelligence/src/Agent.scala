@@ -3,64 +3,11 @@
 import scala.actors._
 import Actor._
 import Measurement._
-//import agents.DataClasses
+
 import scala.util.Random
-//import TopologicalElementGenerator._
-//import CaseClasses._
-/*
-case class Pheromone(locationX: Int,LocationY: Int,targetX: Int, targetY: Int)
-case class MoveCommand(sender: Agent, x: Int, y: Int ) 
-case class Displacement(x: Measurement, y: Measurement) {
-    def canEqual(other: Any): Boolean = { other.isInstanceOf[Displacement] }
-	override def equals(other:Any):Boolean =
-	{
-		other match {
-		  case other: Displacement =>
-		    {
-		      //the "2 *" is for 95% certainty
-		      (other canEqual this) &&
-              this.x == other.x && this.y == other.y
-		    }
-          case _ => false
-		}
-	}
 
-    def - (that: Displacement): Displacement = {
-        new Displacement(this.x - that.x,this.y-that.y)
-    }
-
-    def inverse(): Displacement = {
-        Displacement(-1*this.x, -1*this.y)
-    }
-}
-case class Move(agent: Actor, x: Measurement, y: Measurement) 
-case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
-case class AgentReading(angle: Measurement, distance: Measurement) 
-case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
-                            deltaX: Measurement, deltaY: Measurement){
-    def inverse() : TopologicalEntry = {
-        new TopologicalEntry(obstacle2Type,obstacle1Type,-1*deltaX,-1*deltaY)
-    }
-}
-case class IdentifiedObject(identifier1: Int, identifier2: Int, 
-                            //obstacle1Type: Int,obstacle2Type: Int,
-                            vector: Displacement){
-    def inverse: IdentifiedObject = {
-        IdentifiedObject(identifier2,identifier1,vector.inverse)
-    }
-}
-case class UpdateSensor(sender: Agent, range: Int, sensorDeltaAngle: Int, SensorDeltaRange: Int) 
-
-case class Coordinate(x: Int, y: Int) 
-case class Obstacle(obstacleType: Int, x: Int, y: Int){
-	override def toString = "Obstacle: obstacleType="+obstacleType+" x="+x+" y="+y
-} 
-
-case class Goal(goal:Obstacle)
-case class GoalNotFound()
-*/
 class Agent(val environment: Actor, val map: Actor,
-            val sensorRange: Int, val sensorDeltaAngle: Int, val SensorDeltaRange: Int) extends Actor 
+            val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double) extends Actor 
 {
   private val sensorProcessor = new SensorObjectReadingsProcessor(map, this)
   private val mapUpdatePoller: Actor = new MapUpdatePoller(this,map)
@@ -97,7 +44,7 @@ class Agent(val environment: Actor, val map: Actor,
   private var stoppedExploring: Boolean = false
 
   override def toString = {
-	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " SensorDeltaRange=" + SensorDeltaRange
+	var result = "Agent: sensorRange=" + sensorRange + " sensorDeltaAngle=" + sensorDeltaAngle + " sensorDeltaRange=" + sensorDeltaRange
 	result += " environment=" + environment + " SensorObjectReadingsProcessor=" + sensorProcessor
 	result +=  " map=" + map
 	result
@@ -188,10 +135,11 @@ class Agent(val environment: Actor, val map: Actor,
         return -1
   }
 
-  def addToMapMethod(lastUpdate: Long, entries: List[IdentifiedObject])
+  def addToMapMethod(lastUpdate: Long, entries: List[IdentifiedObject],
+  					 cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
   {
     //entries.foreach(entry => map ! Add(lastUpdate,entry))
-    map ! Add(lastUpdate,entries)
+    map ! Add(lastUpdate, entries, cartesianObjectReadings, sensorRange)
   }
 
   def planMovement() {
@@ -277,7 +225,7 @@ class Agent(val environment: Actor, val map: Actor,
                 //println("Displaced: (" +lastDisplacementX+","+lastDisplacementY+")" )
                 
                 //update sensor before moving again
-				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, SensorDeltaRange)
+				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorRange)
                 if(exploreMode)
                     move(randomPositiveNegative1(),randomPositiveNegative1())
                 else if(!pathToGoal.isEmpty)
@@ -289,7 +237,7 @@ class Agent(val environment: Actor, val map: Actor,
                 //println("Received visible objects: " + sensorReadings)
                 
                 //pass to helper actor that calculates topological references and sends results as a message to parent actors
-                sensorProcessor ! sensorReadings
+                sensorProcessor ! SensorReadings(sensorRange, sensorReadings.asInstanceOf[List[ObjectReading]])
                 
                 visibleObstacles.clear//empties the map
                 //add detect obstacles to the map
@@ -344,13 +292,13 @@ class Agent(val environment: Actor, val map: Actor,
 			    println("Received topological entries")
 			  }
 			  */
-              case recheck @ RecheckObjects(identifiedObjects) => {
+              case recheck @ RecheckObjects(_,_,_) => {
             	  sensorProcessor.forward(recheck)
               }
      
-			  case NewIdentifiedObjects(lastUpdate,newIdentifiedObjects) => {
+			  case NewIdentifiedObjects(lastUpdate,newIdentifiedObjects,cartesianObjectReadings, sensorRange) => {
 				  println("Adding  the following relationships to CollectiveMap: " + newIdentifiedObjects)
-				  addToMapMethod(lastUpdate, newIdentifiedObjects)//asInstanceOf is a cast, need to test that works correctly
+				  addToMapMethod(lastUpdate, newIdentifiedObjects,cartesianObjectReadings, sensorRange)
 				  map ! MapSize
                   if(exploreMode)
                     move(randomPositiveNegative1(),randomPositiveNegative1())

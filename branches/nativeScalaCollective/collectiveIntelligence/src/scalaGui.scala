@@ -116,9 +116,9 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
             }
             case ButtonClicked(b) => {
                 try{
-                    agentButtonVar.sensorRange = sensorRangeTextfield.text.toInt
-                    agentButtonVar.sensorDeltaRange = sensorDeltaRangeTextfield.text.toInt
-                    agentButtonVar.sensorDeltaAngle = DeltaAngleTextfield.text.toInt
+                    agentButtonVar.sensorRange = sensorRangeTextfield.text.toDouble
+                    agentButtonVar.sensorDeltaRange = sensorDeltaRangeTextfield.text.toDouble
+                    agentButtonVar.sensorDeltaAngle = DeltaAngleTextfield.text.toDouble
                     visible = false
                 }
                 catch{

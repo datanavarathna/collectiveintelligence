@@ -30,6 +30,11 @@ class UncertaintyMap[E] {
 		map += (relationStored -> e)
     }
     
+    def keys() : Iterator[RelationshipStored] =
+    {
+       map.keys 
+    }
+    
     def contains(relationStored: RelationshipStored): Boolean = 
     {
         map.contains(relationStored)

@@ -173,8 +173,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 						 for {obstacle: Obstacle <- obstaclesInRange}
 						 {
                             //println("detectedObstacle: " + obstacle)
-						    val vectorX: Int = obstacle.x - agent.x
-						    val vectorY: Int = obstacle.y - agent.y
+						    val vectorX: Double = obstacle.x - agent.x
+						    val vectorY: Double = obstacle.y - agent.y
 						  	val angle = new Measurement(Math.atan2(vectorX, vectorY),sensorDeltaAngle*Math.Pi/180)
 						    val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY),sensorDeltaRange)
 						    val objectReading = ObjectReading(angle, distance, obstacle.obstacleType)
