@@ -43,7 +43,7 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
         var results: List[InternalIdentifiedObject] = Nil
         for(reading <- readings)
         {
-            results = new InternalIdentifiedObject( nameObstacles(reading.obstacleType),
+            results = new InternalIdentifiedObject( nameObstacles(reading.obstacleType),reading.obstacleType,
                                                 PolarToCartesian(reading.angle,reading.distance) ) :: results
         }
         results
@@ -56,13 +56,14 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
 		{
 			react
 			{
-              case sensorReadings @ List(ObjectReading(_,_,_),_*) =>{
+			  case SensorReadings(sensorRange, sensorReadings) =>{
             	  	  println("SensorProcessor Received ObjectReadings from Agent")
                 
             	  	  
             	  	  //sensorObjectNames = Nil
                       var entries: List[Relationship] = Nil
-                      var readings: List[InternalIdentifiedObject]  = internallyIdentifyObjects(sensorReadings.asInstanceOf[List[ObjectReading]])
+                      val cartesianReadings = internallyIdentifyObjects(sensorReadings.asInstanceOf[List[ObjectReading]])
+                      var readings: List[InternalIdentifiedObject]  = cartesianReadings
                       while(!readings.isEmpty){
                           val readingA = readings.head
                           readings = readings.tail
@@ -71,14 +72,16 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
                           }
                       }//end while
                       println("Relationships from readings: " + entries)
+                      println("cartesianReadings: " + cartesianReadings)
+                      println("readings: " + readings)
                       sensorEntries = entries //send List[Relationship] to agent
-					  relationshipIdentifier ! SensorRelations(
-						sensorReadings.asInstanceOf[List[ObjectReading]],entries)
+					  relationshipIdentifier ! SensorRelations(sensorReadings.asInstanceOf[List[ObjectReading]],
+                                                cartesianReadings,entries,sensorRange)
 					  
               }//end case
 
               //MapIdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject])
-              case MapIdentifiedObjects(lastUpdate,identifiedObjects) => {
+              case MapIdentifiedObjects(lastUpdate,identifiedObjects,cartesianReadings,sensorRange) => {
                 println("Received map identified objects")
                 if(!identifiedObjects.isEmpty)
                 {
@@ -113,12 +116,12 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
             		{
             			newIdentifiedObjects = new IdentifiedObject(entry.identifier1Temp,entry.identifier2Temp, entry.vector) :: newIdentifiedObjects
             		}
-            		agent ! NewIdentifiedObjects(lastUpdate,newIdentifiedObjects)
+            		agent ! NewIdentifiedObjects(lastUpdate,newIdentifiedObjects,cartesianReadings,sensorRange)
                 }
                 
               }
               
-              case RecheckObjects(identifiedObjects) => {
+              case RecheckObjects(identifiedObjects,cartesianObjectReadings, sensorRange) => {
 				  println("Received recheck from agent")
             	  var reconstructedTopEntries : List[TopologicalEntry] = Nil
             	  for(identifiedObject <- identifiedObjects)
@@ -143,7 +146,8 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
             			reconstructedEntries = new Relationship(identifiedObject.identifier1,
 							identifiedObject.identifier2, identifiedObject.vector) :: reconstructedEntries
             		}
-                  relationshipIdentifier ! RecheckRelationships(reconstructedTopEntries,reconstructedEntries)
+                  relationshipIdentifier ! RecheckRelationships(reconstructedTopEntries,reconstructedEntries,
+                  												cartesianObjectReadings, sensorRange)
 				  
               }
               case "Exit" => {

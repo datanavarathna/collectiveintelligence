@@ -2,76 +2,7 @@ import scala.actors._
 import Actor._
 import java.util.ArrayList
 import Measurement._
-//import CaseClasses._
-/*//The following commented code is for reference only
-case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
-                            deltaX: Measurement, deltaY: Measurement)
-case class IdentifiedObject(identifier1: Int, identifier2: Int,
-                            vector: Displacement)
-case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
-case class Displacement(x: Measurement, y: Measurement)
-*/
 
-/*
-case class CollectiveMapSize(size: Int, lastUpdate: Long)
-
-case class PossibleMatches(lastUpdate: Long,matches : List[IdentifiedStored])
-case class PickName(identifier: Int, obstacleType: Int)
-case class RemoveName(identifier: Int)
-case class MapSize()
-case class Size(size: Int)
-case class GetIdentifierType(identifier: Int)
-case class Add(identifiedObject: IdentifiedObject)
-case class Contains(identifiers: Identifiers)
-case class Matches(entries: TopologicalEntry *)
-case class IdentifierType(identifier: Int,objectType: Int)
-case class noType(identifier: Int)
-
-case class TargetDisplacement(x: Measurement, y: Measurement)
-case class TimeSinceLastUpdate(time: Long)
-case class Identifiers(a: Int, b: Int){
-    def inverse: Identifiers = Identifiers(b,a)
-}
-case class MatchRelationships(identifier1Type: Int,identifier2Type: Int,relationshipsDisplacements: List[Displacement])
-case class IdentifiedStored(idObject:IdentifiedObject) extends Ordered[IdentifiedStored]{
-    private val dispX: Measurement = idObject.vector.x
-    private val dispY: Measurement = idObject.vector.y
-    val dSquared = dispX*dispX + dispY*dispY
-
-    def compare(that : IdentifiedStored) : Int ={
-        val thisX = this.idObject.vector.x
-        val thisY = this.idObject.vector.y
-        val thatX = that.idObject.vector.x
-        val thatY = that.idObject.vector.y
-        if( (thisX == thatX) && (thisY == thatY) )
-            return 0
-        else if(this.dSquared < that.dSquared)
-            return -1
-        else
-            return 1
-    }
-
-}
-case class RelationshipStored(vector: Displacement) extends Ordered[RelationshipStored]
-{
-    private val x = vector.x
-    private val y = vector.y
-    val dSquared = x*x + y*y
-    
-    override def toString = "RelationshipStored("+ vector + "," + dSquared + ") "
-    
-    def compare(that : RelationshipStored) : Int ={
-        val thatX = that.vector.x
-        val thatY = that.vector.y
-        if( (x == thatX) && (y == thatY) )
-            return 0
-        else if(this.dSquared < that.dSquared)
-            return -1
-        else
-            return 1
-    }
-}
-*/
 class CollectiveMap extends Actor
 {
 	private var updateTime: Long = 0//System.currentTimeMillis()
@@ -86,14 +17,6 @@ class CollectiveMap extends Actor
     private var identifierType = Map.empty[Int,Int]// (identifier -> type)
     private var obstacle1TypeMap = Map.empty[Int,HashMap[Int,UncertaintyMap[Identifiers]]]//key,value obstacleType1->obstacleType2->relationship->Identifiers
     private var identifierRelationshipsGraph = Map.empty[Int,UncertaintyMap[Int]]//identifier1->relationships->identifier2
-
-    /*
-    private def findRelationships(identifier1: Int, identifier2: Int):TreeSet[IdentifiedStored] = {
-        var obstacle2Map = obstacle1Map.getOrElse(identifier1,
-            new TreeMap[Int,TreeSet[IdentifiedStored]])
-        obstacle2Map.getOrElse(identifier2,
-            new TreeSet[IdentifiedStored])
-    }*/
     
     override def toString = {
     		var result = "Collective Map \n"
@@ -398,14 +321,14 @@ class CollectiveMap extends Actor
 			  }
 			  case Contains(identifiers: Identifiers) => {}
 			  case Matches(entries) => {}
-              case Add(lastUpdate,identifiedObjects) => {
+              case Add(lastUpdate,identifiedObjects,cartesianReadings,sensorRange) => {
             	  println("Attempting to add objects")
             	  println("Checking TimeStamp")
             	  if(lastUpdate < updateTime)
                   {
             		  println("Timestamp out of date, repeat checks")
 					  println("checked at " + lastUpdate + " updated at " + updateTime)
-            		  reply(RecheckObjects(identifiedObjects))
+            		  reply(RecheckObjects(identifiedObjects,cartesianReadings,sensorRange))
                   }
             	  else
                   {
@@ -428,11 +351,46 @@ class CollectiveMap extends Actor
 /*              case Contains(entries) => {
                    reply(matches(entries))
               } */
-              case MatchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements, entries) =>
+              case GetRelationsForIdentifier(identifier)=>
+              {
+                val relationsForIdentifier = Map.empty [Displacement,Int]
+				identifierRelationshipsGraph.get(identifier) match
+				{
+					case Some(uncertaintyRelations) =>
+					{
+						val uncertaintyRelationsIterator = uncertaintyRelations.keys
+						while(uncertaintyRelationsIterator.hasNext)
+						{
+							val relationshipStored: RelationshipStored = uncertaintyRelationsIterator.next
+							uncertaintyRelations.get(relationshipStored) match
+							{
+								case Some(identifier2) =>
+								{
+								  identifierType.get(identifier2) match
+								  {
+									  case Some(obstacleType) =>
+									  {
+									    relationsForIdentifier += (relationshipStored.vector -> obstacleType)
+									  }
+									  case None => println("No type found for identifier " + identifier2)
+								  }//end identifier2 match
+								}//end case Some(identifier2)
+								case None => println("Error: unable to find value for key")//should never get to
+							}//end uncertaintyRelation match
+						}//end while
+          
+					}//end case some
+					case None => println("No relationships for identifier " + identifier)
+				}//end match
+				reply(relationsForIdentifier)
+              }
+              
+              case MatchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements,
+                                      entries, cartesianObjectReadings, sensorRange) =>
               {
             	  println("Received MatchRelationships from RelationshipIdentfier")
             	  //from RelationshipIdentfier
-                  reply(PossibleMatches(updateTime,matchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements),entries))
+                  reply(PossibleMatches(updateTime,matchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements),entries,cartesianObjectReadings, sensorRange))
               }
               case "getSize" => reply(getSize)
               case "lastUpdate" => {

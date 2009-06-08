@@ -60,7 +60,7 @@ class QuadTreeGateway
 			outp
 	}
 
-	def range(radius: Int, x: Int, y: Int): List[Obstacle] =
+	def range(radius: Double, x: Double, y: Double): List[Obstacle] =
 	{
 		val input = qT.returnAll()
 		var output = Nil.asInstanceOf[List[Obstacle]]
