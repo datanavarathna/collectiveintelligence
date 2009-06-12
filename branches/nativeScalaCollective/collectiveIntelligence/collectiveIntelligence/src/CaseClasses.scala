@@ -51,7 +51,6 @@ case class Obstacle(obstacleType: Int, x: Double, y: Double){
 } 
 
 case class Goal(goal:Obstacle)
-case class FindGoal(obstacleType: Int,rootIdentifier: Int)
 case class GoalNotFound()
 
 case class Relationship(identifier1Temp: Int, identifier2Temp: Int, vector: Displacement )
