@@ -5,7 +5,7 @@ import Measurement._
 
 class CollectiveMap extends Actor
 {
-	private var updateTime: Long = System.currentTimeMillis()
+	private var updateTime: Long = 0//System.currentTimeMillis()
 	private var size: Int = 0
 
     import scala.collection.mutable.Map
@@ -48,6 +48,7 @@ class CollectiveMap extends Actor
     
     private def removeName(identifier: Int): Boolean = {
     	identifierType -= (identifier)
+    	println("Removing " + identifier)
     	return !identifierType.contains(identifier)
     }
     
@@ -58,11 +59,15 @@ class CollectiveMap extends Actor
 
     private def add(relationship: IdentifiedObject): Boolean = 
     {
-        updateTime = System.currentTimeMillis()
-
-        val identifier1 = relationship.identifier1
+    	val identifier1 = relationship.identifier1
         val identifier2 = relationship.identifier2
         val identifiers = Identifiers(identifier1,identifier2)
+        
+    	if(!relationshipsLookup.contains(identifiers))
+       {
+        updateTime = System.currentTimeMillis()
+
+        
         
         val identifier1Type: Int = getIdentifierType(identifier1) match 
         {
@@ -112,7 +117,7 @@ class CollectiveMap extends Actor
             if(obstacle2TypeMap.contains(identifier2Type))
             {
                 obstacle1TypeMap.put(identifier1Type,obstacle2TypeMap)
-                if(obstacle1TypeMap.contains(identifier1Type))
+                if(obstacle2TypeMap.contains(identifier1Type))
                 {
                 	relationshipsLookup += (identifiers -> relationship.vector)
                     if(contains(identifiers)){
@@ -140,6 +145,12 @@ class CollectiveMap extends Actor
             println("Failed to add element to relationships")
             return false
         }//end add to relationships check
+        }//end if not already in map
+        else
+        {
+        	println("CollectiveMap already contains " + relationship)
+        	false
+        }
     }//end add
 
     private def contains(identifiers: Identifiers):Boolean = {
@@ -183,7 +194,7 @@ class CollectiveMap extends Actor
 		println("matchRelationships received: " + identifier1Type +", "+ identifier2Type +", relDisp= "+
 			relationshipsDisplacements)
 		var matches = new TreeSet[IdentifiedStored]
-		println("map size= " + size)
+		//println("map size= " + size)
 		//var possibleMatches = new HashSet[Identifiers]
         obstacle1TypeMap.get(identifier1Type) match
         {
@@ -197,9 +208,10 @@ class CollectiveMap extends Actor
                     var storedRelationships: List[RelationshipStored] = Nil;
                     for(relationshipDisplacement <- relationshipsDisplacements)
                     {
-                    	println("getting all equals for " + relationshipDisplacement)
+                    	
 						var identifiers = identifiedStoredTreeSet.getAllEquals(RelationshipStored(relationshipDisplacement))
-						println("allEqualsEor " + relationshipDisplacement +": " + identifiers)
+						println("map size= " + size+"\n getting all equals for " + relationshipDisplacement +
+							"\n allEqualsEor " + relationshipDisplacement +": " + identifiers)
                     	/*for(identifier <- identifiers)
                         {
                     		possibleMatches += identifier
@@ -336,7 +348,7 @@ class CollectiveMap extends Actor
             		  for(identifiedObject <- identifiedObjects)
             		  {
             			  if(!add(identifiedObject))
-            				  println("Failed to add object" + identifiedObject)
+            				  println("Failed to add object")
             			  else
             			  {
             				  println("Attempting to add inverse object")
@@ -353,7 +365,6 @@ class CollectiveMap extends Actor
               } */
               case GetRelationsForIdentifier(identifier)=>
               {
-                println("Getting relations for " + identifier)
                 val relationsForIdentifier = Map.empty [Displacement,Int]
 				identifierRelationshipsGraph.get(identifier) match
 				{
@@ -371,8 +382,7 @@ class CollectiveMap extends Actor
 								  {
 									  case Some(obstacleType) =>
 									  {
-									    //relationsForIdentifier += (relationshipStored.vector -> obstacleType)
-									    relationsForIdentifier += (relationshipStored.vector -> identifier2)
+									    relationsForIdentifier += (relationshipStored.vector -> obstacleType)
 									  }
 									  case None => println("No type found for identifier " + identifier2)
 								  }//end identifier2 match
@@ -384,7 +394,6 @@ class CollectiveMap extends Actor
 					}//end case some
 					case None => println("No relationships for identifier " + identifier)
 				}//end match
-				//println("relations for " + identifier + ": " + relationsForIdentifier)
 				reply(relationsForIdentifier)
               }
               

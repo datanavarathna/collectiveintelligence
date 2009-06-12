@@ -19,7 +19,18 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
  	relationshipIdentifier.start
  
 	def PolarToCartesian(angle: Measurement, distance: Measurement): Displacement =  {
-      Displacement(distance * cos(angle), distance * sin(angle))
+	  val processedAngle = {
+			if(angle.value<0)
+				angle + Math.Pi
+			else
+				angle
+	  }
+	  var y = distance * cos(angle)
+	  var x = distance * sin(angle)
+	  if(angle.value > Math.Pi)
+		  y = -1 * y
+	  //println("angle: "+angle+" distance: "+distance+" x: "+x+" y: "+y)
+      Displacement(distance * sin(angle), distance * cos(angle))
     }
     
     def relationGenerator(readingA: InternalIdentifiedObject, readingB: InternalIdentifiedObject): Relationship = {
@@ -62,7 +73,9 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
             	  	  
             	  	  //sensorObjectNames = Nil
                       var entries: List[Relationship] = Nil
-                      val cartesianReadings = internallyIdentifyObjects(sensorReadings.asInstanceOf[List[ObjectReading]])
+                      println("sensorReadings passed to internallyIdentifiedObjects: "+sensorReadings)
+                      val cartesianReadings = internallyIdentifyObjects(sensorReadings)
+                      println("cartesianReadings: "+cartesianReadings)
                       var readings: List[InternalIdentifiedObject]  = cartesianReadings
                       while(!readings.isEmpty){
                           val readingA = readings.head
@@ -73,8 +86,8 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
                       }//end while
                       println("Relationships from readings: " + entries)
                       println("cartesianReadings: " + cartesianReadings)
-                      println("readings: " + readings)
-                      //sensorEntries = entries //send List[Relationship] to agent
+                      println("readings: " + readings)//should be empty
+                      sensorEntries = entries //send List[Relationship] to agent
 					  relationshipIdentifier ! SensorRelations(sensorReadings.asInstanceOf[List[ObjectReading]],
                                                 cartesianReadings,entries,sensorRange)
 					  
@@ -82,7 +95,7 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
 
               //MapIdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject])
               case MapIdentifiedObjects(lastUpdate,identifiedObjects,cartesianReadings,sensorRange) => {
-                println("Received map identified objects")
+                println("sensorObjectReading Received map identified objects")
                 if(!identifiedObjects.isEmpty)
                 {
                     import scala.collection.mutable.Map
