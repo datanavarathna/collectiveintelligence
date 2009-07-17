@@ -98,7 +98,7 @@ class UncertaintyMap[E] {
 						case None => { println("Error: " + element + " not found in UncertaintyMap")}//Should never execute
 					}//end match
 			}//end if (higherList.head == relationStored)
-			println("Removing first element from list")
+			//println("Removing first element from list")
 			higherList = higherList.tail
 		}//end while iterating through higherList
     	return results.toList

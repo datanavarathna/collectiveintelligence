@@ -119,6 +119,8 @@ case class RelationshipStored(vector: Displacement) extends Ordered[Relationship
         else
             return 1
     }
+    
+    def inverse(): RelationshipStored = RelationshipStored(vector.inverse)
 }
 
 case class GetRelationsForIdentifier(identifier: Int)

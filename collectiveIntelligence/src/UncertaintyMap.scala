@@ -11,9 +11,9 @@ class UncertaintyMap[E] {
 
     override def toString = 
     {
-        "UncertaintyMap:\n" + map.toString + 
+        "UncertaintyMap:\n" + map.toString /*+ 
           "\n lowest: " + lowestMeasurements.toString +
-          "\n highest: " + highestMeasurements.toString
+          "\n highest: " + highestMeasurements.toString*/
     	
     }
     
@@ -25,9 +25,12 @@ class UncertaintyMap[E] {
 		val omega: Double = 2 * relationStored.dSquared.uncertainty
 		var key: Double = value - omega
 		lowestMeasurements += ( key -> relationStored )
+		//println("Lowest: "+key+" -> "+relationStored)
 		key = value + omega
 		highestMeasurements += ( key -> relationStored )
+		//println("Highest: "+key+" -> "+relationStored)
 		map += (relationStored -> e)
+		//println("map: "+relationStored+" -> "+e)	
     }
     
     def keys() : Iterator[RelationshipStored] =
@@ -51,8 +54,9 @@ class UncertaintyMap[E] {
     }
     
     def getAllEquals(relationStored: RelationshipStored): List[E] = 
-    {
+    {	
         var results = new HashSet[E]
+        /*
     	val value: Double = relationStored.dSquared.value
 		val omega: Double = 2 * relationStored.dSquared.uncertainty
 		println("value: " + value + " omega: " + omega)
@@ -60,18 +64,17 @@ class UncertaintyMap[E] {
 		var higherKey: Double = value + omega+ 0.0000001//constant added because rangeImpl is upperBound exclusive
 		println("Getting lowestMeasurements from " + lowerKey + " to " + higherKey)
 		var lowestKeys = lowestMeasurements.rangeImpl(Some(lowerKey),Some(higherKey))
-		println("lowestKeys: " + lowestKeys)
-		//key = value + omega + 0.0000001//constant added because rangeImpl is upperBound exclusive
+		println("lowestKeys: " + lowestKeys +" from "+lowestMeasurements)
 		println("Getting highestMeasurements from " + lowerKey + " to " + higherKey)
 		var highestKeys = highestMeasurements.rangeImpl(Some(lowerKey), Some(higherKey))
-		println("highestKeys: " + highestKeys)
+		println("highestKeys: " + highestKeys +" from "+highestMeasurements)
 		var lowerIterator = lowestKeys.values
 		println("while(lowerIterator.hasNext)")
 		while(lowerIterator.hasNext)
 		{
 			val element: RelationshipStored = lowerIterator.next
-			println("element: " + element)
-			if(element == relationStored)//should be true in most cases
+			println("element: " + element +"relationStored: "+ relationStored)
+			if(element == relationStored || element.inverse == relationStored)//should be true in most cases
 			{
 				println("element == relationStored")
 			    //Add element to results
@@ -88,10 +91,11 @@ class UncertaintyMap[E] {
 		while(!higherList.isEmpty)
 		{
 			var element = higherList.head
+			println("element: " + element +"relationStored: "+ relationStored)
 			if(element == relationStored)//should be true in most cases
 			{
 				println("higherList.head == relationStored")
-					println("element: " + element)
+					
 					map.get(element) match
 					{
 						case Some(e) => { results += e }
@@ -101,6 +105,15 @@ class UncertaintyMap[E] {
 			println("Removing first element from list")
 			higherList = higherList.tail
 		}//end while iterating through higherList
+    	return results.toList
+    	*/
+    	println(relationStored +" in "+map)
+    	println("Filtered: "+ map.filterKeys(key => key == relationStored))
+    	var matchesIterator  = map.filterKeys(key => key == relationStored).values
+    	while(matchesIterator.hasNext)
+    	{
+    	   results += matchesIterator.next
+    	}//end while
     	return results.toList
     }
 }

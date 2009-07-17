@@ -90,7 +90,7 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
         }//end while type 1 iterator
     }//end search for matches
     
-	def mapIdentifiedObjects(	lastUpdate: Long, identifiedObjects: List[IdentifiedObject], sensorEntries: List[Relationship],
+	def mapIdentifiedObjects(	lastCheck: Long, identifiedObjects: List[IdentifiedObject], sensorEntries: List[Relationship],
                           		cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double) = 
     {
                 println("Received map identified objects")
@@ -137,11 +137,13 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
                         {
                           case Some(mappings) => 
                           {
+                            println("tempIdentifier "+tempIdentifier+" has mappings "+mappings)
                             for(mapping <- mappings)
                             {  
                             	(map !? GetRelationsForIdentifier(mapping)) match {
                             	  	case relationsForIdentifier : Map[_,_] =>
                             	  	{
+                            	  		println("mapping "+mapping+" has relations "+relationsForIdentifier)
                             	  		val identifierRelations = relationsForIdentifier.asInstanceOf[Map[Displacement,Int]]
                             	  		val relationsIterator = identifierRelations.keys
                             	  		val sensorsMatchMap: Boolean = true
@@ -152,21 +154,28 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
                             	  			{
                             	  			  case Some(sensorVector) =>
                             	  				{
+                            	  					println("relationVector: "+relationVector+" sensorVector: "+sensorVector+" sensorRange: "+sensorRange)
                             	  					val mapX = (relationVector.x + sensorVector.x)
                             	  					val mapY = (relationVector.y + sensorVector.y)
                             	  					if((mapX*mapX + mapY*mapY).value <= sensorRange*sensorRange)//triggers more often than expected because of high uncertainties
                             	  					{
-                            	  					  //should be visible
+                            	  					  println(tempIdentifier + " should be visible")
                             	  					  var detectedVisibleRelation: Boolean = false
                             	  					  for(cartesianReading <- cartesianObjectReadings)
                             	  					  {
                             	  						  val visibleObjectVector = cartesianReading.vectorFromAgent
+                            	  						  println("mapX: "+mapX+" mapY: "+mapY+" visObjVector "+visibleObjectVector)
                             	  						  if(mapX == visibleObjectVector.x && mapY == visibleObjectVector.y)
+                            	  						  {
+                            	  							  println("Detected "+tempIdentifier+" with "+visibleObjectVector)
                             	  							  detectedVisibleRelation = true || detectedVisibleRelation
+                            	  						  }
                             	  					  }
                             	  					  if(!detectedVisibleRelation)
                             	  					  {
                             	  					    //failed to detect a relation that would be visible if the possible match was correct
+                            	  					    println("Failed to detect what should be visible is match correct")
+                            	  					    println("Removing entry: "+mapping+" from mappings "+mappings)
                             	  					    mappings.removeEntry(mapping)
                             	  					  }
                             	  					}
@@ -181,35 +190,45 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
                             	}//end reply match
                             	
                             }//end for loop for possible matchings
-                            
-                            if(mappings.size == 1)
+                            val mappingsSize = mappings.size
+                            if( mappingsSize == 1)
                             {
+                            	println("MappingsSize == 1")
                             	val collectiveMapObjectID = mappings.toList.head
-                                //rename object and delete temporary identifier
+                                println("renaming object and deleting temporary identifier")
                                 var updatedSensorEntries: List[Relationship] = Nil
+                                println("sensorEntries: "+sensorEntries)
                                 for(entry <- sensorEntries)
                                 {
                                   if(entry.identifier1Temp == tempIdentifier)
                                   {
+                                    println(entry.identifier1Temp+ " == "+tempIdentifier)
                                     updatedSensorEntries = new Relationship(collectiveMapObjectID, entry.identifier2Temp,
                                                                             entry.vector) :: updatedSensorEntries
                                   }
                                   else if(entry.identifier2Temp == tempIdentifier)
                                   {
+                                    println(entry.identifier2Temp+ " == "+tempIdentifier)
                                     updatedSensorEntries = new Relationship(entry.identifier1Temp, collectiveMapObjectID,
                                                                             entry.vector) :: updatedSensorEntries
                                   }
                                   else
                                     updatedSensorEntries = entry :: updatedSensorEntries
                                 }//end converting sensor entries
+                                println("updatedEntries: "+updatedSensorEntries)
+                                println("Removing tempIdentifier: "+tempIdentifier)
                                 map ! RemoveName(tempIdentifier)//remove tempIdentifier from CollectiveMap
-                                sendNewObjectsToAgent(lastUpdate,cartesianObjectReadings,updatedSensorEntries,sensorRange)
+                                sendNewObjectsToAgent(lastCheck,cartesianObjectReadings,updatedSensorEntries,sensorRange)
                             }//end if mapping is unique
-                            else
+                            else if(mappingsSize > 1)
                             {
                               println("Multiple possible matches remain for sensorEntries: " + sensorEntries)
                               println("Adding sensorEntries to CollectiveMap as is")
-                              sendNewObjectsToAgent(lastUpdate,cartesianObjectReadings,sensorEntries,sensorRange)
+                              sendNewObjectsToAgent(lastCheck,cartesianObjectReadings,sensorEntries,sensorRange)
+                            }
+                            else
+                            {
+                              println("no possible matches remain for sensorEntries: " + sensorEntries)
                             }
                             //possibleMappings.put(tempIdentifier, mappings)//updates possibleMappings to the filtered mappings
                           }//end case Some(mapping)
@@ -222,19 +241,19 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
             	else
                 {
 					println("No possible matches to sensor readings exist, adding to CollectiveMap")
-            		sendNewObjectsToAgent(lastUpdate,cartesianObjectReadings,sensorEntries,sensorRange)
+            		sendNewObjectsToAgent(lastCheck,cartesianObjectReadings,sensorEntries,sensorRange)
                 }
                 
     }
     
-    def sendNewObjectsToAgent(lastUpdate: Long,cartesianObjectReadings: List[InternalIdentifiedObject], sensorEntries: List[Relationship], sensorRange: Double)
+    def sendNewObjectsToAgent(lastCheck: Long,cartesianObjectReadings: List[InternalIdentifiedObject], sensorEntries: List[Relationship], sensorRange: Double)
     {
     	var newIdentifiedObjects: List[IdentifiedObject] = Nil
       	for(entry <- sensorEntries)
         {
         	newIdentifiedObjects = new IdentifiedObject(entry.identifier1Temp,entry.identifier2Temp, entry.vector) :: newIdentifiedObjects
         }
-        agent ! NewIdentifiedObjects(lastUpdate,newIdentifiedObjects,cartesianObjectReadings, sensorRange)
+        agent ! NewIdentifiedObjects(lastCheck,newIdentifiedObjects,cartesianObjectReadings, sensorRange)
     }
 	
     def act()
@@ -256,7 +275,7 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
             	  searchForMatches(reconstructedTopEntries,cartesianReadings,entries,sensorRange)
               }
      
-              case PossibleMatches(lastUpdate,matches,entries,
+              case PossibleMatches(lastCheck,matches,entries,
                                    cartesianObjectReadings, sensorRange) =>
               {
             	  println("Received possible matches from CollectiveMap")
@@ -273,7 +292,7 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
                 	 println("IdentifiedObjects from possible matches is empty")
 				  }
 				  //println("Sending: " + MapIdentifiedObjects(lastUpdate,identifiedObjects) )
-				  mapIdentifiedObjects(	lastUpdate,identifiedObjects, entries,
+				  mapIdentifiedObjects(	lastCheck,identifiedObjects, entries,
 						  				cartesianObjectReadings, sensorRange)
 				  
               }

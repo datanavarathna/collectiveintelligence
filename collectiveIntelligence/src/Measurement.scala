@@ -22,12 +22,14 @@ object Measurement {
 
 	def ln(that:Measurement): Measurement = 
 	{
-		val newUncertainty = {
+		var newUncertainty = {
             if(that.value != 0)
                 that.uncertainty/that.value
             else
                 that.uncertainty
         }
+		if(Math.abs(newUncertainty) < 1E-04)
+				newUncertainty = 1E-04
         new Measurement(ln(that.value),newUncertainty)
 	}
  
@@ -36,23 +38,26 @@ object Measurement {
  
 	def sin(that:Measurement): Measurement =
 	{
-			new Measurement( Math.sin(that.value),
-					Math.cos(that.value)*that.uncertainty
-			)
+			var propogatedUncertainty: Double = Math.cos(that.value)*that.uncertainty
+			if(Math.abs(propogatedUncertainty) < 1E-04)
+				propogatedUncertainty = 1E-04
+			new Measurement( Math.sin(that.value),propogatedUncertainty)
 	}
 
 	def cos(that:Measurement): Measurement =
 	{
-			new Measurement( Math.cos(that.value),
-					-1*Math.sin(that.value)*that.uncertainty
-			)
+			var propogatedUncertainty: Double = -1*Math.sin(that.value)*that.uncertainty
+			if(Math.abs(propogatedUncertainty) < 1E-04)
+				propogatedUncertainty = 1E-04
+			new Measurement( Math.cos(that.value),propogatedUncertainty)
 	}
  
 	def tan(that:Measurement): Measurement =
 	{
-			new Measurement( Math.tan(that.value),
-				that.uncertainty/square(Math.cos(that.value))
-			)
+			var propogatedUncertainty: Double = that.uncertainty/square(Math.cos(that.value))
+			if(Math.abs(propogatedUncertainty) < 1E-04)
+				propogatedUncertainty = 1E-04
+			new Measurement( Math.tan(that.value),propogatedUncertainty)
 	}
  
 	def asin(that:Measurement): Measurement =
@@ -141,48 +146,54 @@ class Measurement (val value: Double, val uncertainty:Double) extends Ordered[Me
 
 	def + (that:Int): Measurement =
 	{
+		var propogatedUncertainty = this.uncertainty
+		if(Math.abs(propogatedUncertainty) < 1E-04)
+				propogatedUncertainty = 1E-04
 		new Measurement(
-				this.value + that,
-				this.uncertainty
-		)
+				this.value + that,propogatedUncertainty)
 	}
 	def + (that:Measurement): Measurement = 
 	{
+		var propogatedUncertainty = quadratureAddition(this.uncertainty,that.uncertainty)
+		if(Math.abs(propogatedUncertainty) < 1E-04)
+				propogatedUncertainty = 1E-04
 		new Measurement(
-				this.value + that.value,
-				quadratureAddition(this.uncertainty,that.uncertainty)
-		)
+				this.value + that.value,propogatedUncertainty)
 	}
 	def - (that:Int): Measurement =
 	{
+		var propogatedUncertainty = this.uncertainty
+		if(Math.abs(propogatedUncertainty) < 1E-04)
+				propogatedUncertainty = 1E-04
 		new Measurement(
-				this.value - that,
-				this.uncertainty
-		)
+				this.value - that,propogatedUncertainty)
 	}
 	def - (that:Measurement): Measurement =
 	{
+		var propogatedUncertainty = quadratureAddition(this.uncertainty,that.uncertainty)
+		if(Math.abs(propogatedUncertainty) < 1E-04)
+				propogatedUncertainty = 1E-04
 		new Measurement(
-				this.value - that.value,
-				quadratureAddition(this.uncertainty,that.uncertainty)
-		)
+				this.value - that.value,propogatedUncertainty)
 	}
 
 	def * (that:Int): Measurement = 
 	{
 		val newValue: Double = this.value * that
-        val newUncertainty: Double = {
+        var newUncertainty: Double = {
             if(this.value != 0)
                 newValue * this.uncertainty/this.value
             else
                 this.uncertainty
         }
+        if(Math.abs(newUncertainty) < 1E-04)
+				newUncertainty = 1E-04
 		new Measurement( newValue, newUncertainty)
 	}
 	def * (that:Measurement): Measurement = 
 	{
 		val newValue: Double = this.value * that.value
-        val newUncertainty: Double = {
+        var newUncertainty: Double = {
             if(this.value != 0)
                 newValue * quadratureAddition(
                     this.uncertainty/this.value,
@@ -195,23 +206,27 @@ class Measurement (val value: Double, val uncertainty:Double) extends Ordered[Me
                     that.uncertainty
             }
         }
+        if(Math.abs(newUncertainty) < 1E-04)
+				newUncertainty = 1E-04
 		new Measurement( newValue,newUncertainty)
 	}
 	def / (that:Int): Measurement = 
 	{
 		val newValue: Double = this.value / that
-		val newUncertainty: Double = {
+		var newUncertainty: Double = {
             if(this.value != 0)
                 newValue * this.uncertainty/this.value
             else
                 this.uncertainty
         }
+		if(Math.abs(newUncertainty) < 1E-04)
+				newUncertainty = 1E-04
 		new Measurement( newValue, newUncertainty)
 	}
 	def / (that:Measurement): Measurement = 
 	{
 		val newValue: Double = this.value / that.value
-		val newUncertainty: Double = {
+		var newUncertainty: Double = {
             if(this.value != 0)
                 newValue * quadratureAddition(
                     this.uncertainty/this.value,
@@ -224,25 +239,29 @@ class Measurement (val value: Double, val uncertainty:Double) extends Ordered[Me
                     that.uncertainty
             }
         }
+		if(Math.abs(newUncertainty) < 1E-04)
+			newUncertainty = 1E-04
 		new Measurement( newValue,newUncertainty)
 	}
 
 	def ^(power:Double): Measurement = 
 	{
 		val newValue: Double = pow(this.value,power)
-        val newUncertainty: Double = {
+        var newUncertainty: Double = {
             if(this.value != 0)
                 newValue*power*this.uncertainty/this.value
             else
                 this.uncertainty
         }
+        if(Math.abs(newUncertainty) < 1E-04)
+			newUncertainty = 1E-04
 		new Measurement( newValue,newUncertainty)
 	}
 	def ^(power:Measurement): Measurement = 
 	{
 	    //correct if d(x^b)=(x^b)[(b/x)dx + ln(x)db]
 	    val newValue: Double = pow(this.value,power.value)
-        val newUncertainty: Double = {
+        var newUncertainty: Double = {
             if(this.value != 0)
                 newValue *  ( power.value*this.uncertainty/this.value +
 						ln(this.value)*power.uncertainty )
@@ -253,6 +272,8 @@ class Measurement (val value: Double, val uncertainty:Double) extends Ordered[Me
                     power.uncertainty
             }
         }
+        if(Math.abs(newUncertainty) < 1E-04)
+			newUncertainty = 1E-04
 		new Measurement( newValue,newUncertainty)
 	}
 }

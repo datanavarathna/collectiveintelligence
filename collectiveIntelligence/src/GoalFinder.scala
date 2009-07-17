@@ -52,8 +52,6 @@ class GoalFinder(val agent: Actor, val map: Actor) extends Actor
               {
                 val vector = relationsIterator.next
                 println("Vector: "+vector)
-                //route = (vector,globalLevel) :: route
-                //println("route: "+route)
                 identifierRelations.get(vector) match {
                   case Some(identifier)=>
                   {

@@ -225,7 +225,7 @@ class Agent(val environment: Actor, val map: Actor,
                 //println("Displaced: (" +lastDisplacementX+","+lastDisplacementY+")" )
                 
                 //update sensor before moving again
-				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorRange)
+				environment ! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
                 if(exploreMode)
                     move(randomPositiveNegative1(),randomPositiveNegative1())
                 else if(!pathToGoal.isEmpty)
