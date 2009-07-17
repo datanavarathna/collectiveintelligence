@@ -211,7 +211,7 @@ class CollectiveMap extends Actor
                     	
 						var identifiers = identifiedStoredTreeSet.getAllEquals(RelationshipStored(relationshipDisplacement))
 						println("map size= " + size+"\n getting all equals for " + relationshipDisplacement +
-							"\n allEqualsEor " + relationshipDisplacement +": " + identifiers)
+							"\n allEqualsFor " + relationshipDisplacement +": " + identifiers)
                     	/*for(identifier <- identifiers)
                         {
                     		possibleMatches += identifier

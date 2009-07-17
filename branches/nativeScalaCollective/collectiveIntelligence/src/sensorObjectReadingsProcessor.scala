@@ -58,11 +58,11 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
 			{
 			  case SensorReadings(sensorRange, sensorReadings) =>{
             	  	  println("SensorProcessor Received ObjectReadings from Agent")
-                
+            	  	  println("sensorReadings: "+sensorReadings)
             	  	  
             	  	  //sensorObjectNames = Nil
                       var entries: List[Relationship] = Nil
-                      val cartesianReadings = internallyIdentifyObjects(sensorReadings.asInstanceOf[List[ObjectReading]])
+                      val cartesianReadings = internallyIdentifyObjects(sensorReadings)
                       var readings: List[InternalIdentifiedObject]  = cartesianReadings
                       while(!readings.isEmpty){
                           val readingA = readings.head
@@ -75,11 +75,11 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
                       println("cartesianReadings: " + cartesianReadings)
                       println("readings: " + readings)
                       //sensorEntries = entries //send List[Relationship] to agent
-					  relationshipIdentifier ! SensorRelations(sensorReadings.asInstanceOf[List[ObjectReading]],
+					  relationshipIdentifier ! SensorRelations(sensorReadings,
                                                 cartesianReadings,entries,sensorRange)
 					  
               }//end case
-
+              /*
               //MapIdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject])
               case MapIdentifiedObjects(lastUpdate,identifiedObjects,cartesianReadings,sensorRange) => {
                 println("Received map identified objects")
@@ -119,7 +119,7 @@ class SensorObjectReadingsProcessor(val map: Actor,val agent: Actor) extends Act
             		agent ! NewIdentifiedObjects(lastUpdate,newIdentifiedObjects,cartesianReadings,sensorRange)
                 }
                 
-              }
+              }*/
               
               case RecheckObjects(identifiedObjects,cartesianObjectReadings, sensorRange) => {
 				  println("Received recheck from agent")

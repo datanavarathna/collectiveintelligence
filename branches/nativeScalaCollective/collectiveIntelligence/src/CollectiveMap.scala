@@ -58,7 +58,6 @@ class CollectiveMap extends Actor
 
     private def add(relationship: IdentifiedObject): Boolean = 
     {
-        updateTime = System.currentTimeMillis()
 
         val identifier1 = relationship.identifier1
         val identifier2 = relationship.identifier2
@@ -106,6 +105,7 @@ class CollectiveMap extends Actor
           println("Failed to add relation to graph")
           return false
         }
+        
         if(relationships.contains(addKey))//boolean to check if successful
         {
             obstacle2TypeMap.put(identifier2Type,relationships)
@@ -117,6 +117,8 @@ class CollectiveMap extends Actor
                 	relationshipsLookup += (identifiers -> relationship.vector)
                     if(contains(identifiers)){
                     	//size += 1
+                    	updateTime = System.currentTimeMillis()
+                    	println("Last update on "+updateTime)
                         return true
                     }
                     else{
@@ -199,12 +201,14 @@ class CollectiveMap extends Actor
                     {
                     	println("getting all equals for " + relationshipDisplacement)
 						var identifiers = identifiedStoredTreeSet.getAllEquals(RelationshipStored(relationshipDisplacement))
-						println("allEqualsEor " + relationshipDisplacement +": " + identifiers)
+						println("allEqualsFor " + relationshipDisplacement +": " + identifiers)
+						//println("in " + identifiedStoredTreeSet)
                     	/*for(identifier <- identifiers)
                         {
                     		possibleMatches += identifier
                         }*/
-                    	if(identifiers.size == 1)
+                        var numOfPossibleMatches = identifiers.size
+                    	if( numOfPossibleMatches == 1)
                     	{
 							println("Only one possible match")
                     		var identifier = identifiers.head
@@ -217,7 +221,7 @@ class CollectiveMap extends Actor
                     		}//end match
                     		
                         }// end if uniquely identified
-                        else
+                     else if(numOfPossibleMatches > 1)
                         {
                         	println("Multiple possible matches")
 							for(identifier <- identifiers)
@@ -244,7 +248,7 @@ class CollectiveMap extends Actor
                     return Nil 
                   }//end case None
                 }//end match type 2
-				println("matchRelations returning" + matches.toList)
+				println("matchRelations returning " + matches.toList)
                 return matches.toList //currently returns list of already existing relations
             }
             case None =>
@@ -322,8 +326,8 @@ class CollectiveMap extends Actor
 			  case Contains(identifiers: Identifiers) => {}
 			  case Matches(entries) => {}
               case Add(lastUpdate,identifiedObjects,cartesianReadings,sensorRange) => {
-            	  println("Attempting to add objects")
-            	  println("Checking TimeStamp")
+            	  println("Attempting to add objects: "+ identifiedObjects)
+            	  println("Checking TimeStamp: "+lastUpdate+ ">="+updateTime)
             	  if(lastUpdate < updateTime)
                   {
             		  println("Timestamp out of date, repeat checks")
@@ -391,9 +395,12 @@ class CollectiveMap extends Actor
               case MatchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements,
                                       entries, cartesianObjectReadings, sensorRange) =>
               {
+            	  val checkTime: Long = System.currentTimeMillis
+            	  val possibleMatches = matchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements)
             	  println("Received MatchRelationships from RelationshipIdentfier")
             	  //from RelationshipIdentfier
-                  reply(PossibleMatches(updateTime,matchRelationships(identifier1Type,identifier2Type,relationshipsDisplacements),entries,cartesianObjectReadings, sensorRange))
+            	  //val checkTime: Long = System.currentTimeMillis
+                  reply(PossibleMatches(checkTime,possibleMatches,entries,cartesianObjectReadings, sensorRange))
               }
               case "getSize" => reply(getSize)
               case "lastUpdate" => {

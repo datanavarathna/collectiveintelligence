@@ -98,7 +98,7 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
         }//end while type 1 iterator
     }//end search for matches
     
-	def mapIdentifiedObjects(	lastUpdate: Long, identifiedObjects: List[IdentifiedObject], sensorEntries: List[Relationship],
+	def mapIdentifiedObjects(	lastCheck: Long, identifiedObjects: List[IdentifiedObject], sensorEntries: List[Relationship],
                           		cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double) = 
     {
                 println("Received map identified objects")
@@ -308,7 +308,7 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
             	  searchForMatches(reconstructedTopEntries,cartesianReadings,entries,sensorRange)
               }
      
-              case PossibleMatches(lastUpdate,matches,entries,
+              case PossibleMatches(lastCheck,matches,entries,
                                    cartesianObjectReadings, sensorRange) =>
               {
             	  println("Received possible matches from CollectiveMap")
@@ -325,7 +325,7 @@ class RelationshipIdentfier(val map: Actor, val sensorProcessor: Actor, agent: A
                 	 println("IdentifiedObjects from possible matches is empty")
 				  }
 				  //println("Sending: " + MapIdentifiedObjects(lastUpdate,identifiedObjects) )
-				  mapIdentifiedObjects(	lastUpdate,identifiedObjects, entries,
+				  mapIdentifiedObjects(	lastCheck,identifiedObjects, entries,
 						  				cartesianObjectReadings, sensorRange)
 				  
               }
