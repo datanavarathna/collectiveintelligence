@@ -1,4 +1,4 @@
-package focussedDstar
+package focusedDstar
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.WeakHashMap
@@ -43,15 +43,19 @@ object State {
 	}//end compare
 }
 
-abstract class State extends Ordering[State]{
+abstract class State(var neighbors: Stream[State] = Stream.empty) /*extends Ordering[State]*/
+{
 	var parent: State = null
 	var tag = Tag.New
 	var biasedEstimatedPathCost: Double = 0 //fB
 	var estimatedPathCost: Double = 0 //f
 	var k,h: Double = 0
 	var agentStateWhenModified: State = null
-	var neighbors: List[State] = Nil
 	
+	/*
+	def transitionCostTo(that: State): Double
+	def updateCostTo(that: State, cost: Double)
+	*/
 }
 class Goal(){
 	private var empty = true
@@ -72,14 +76,13 @@ class ReachedGoal extends Goal {
 	
 }
 
-abstract class focusedDstar {
-	var goal: State
+abstract class focusedDstar(val biasEpsilon: Double = Double.Epsilon) {
+	var goal: State = _
 	private var initialAgentState: State = null
-	var biasedF: Double
-	private var numOfAgentState: Int = 0
+	//var biasedF: Double
+	//private var numOfAgentState: Int = 0
 	private var agentStates = new ListBuffer[State]() //zero based
 	private var bias = new WeakHashMap[State,Double]()//key State, value = Double
-	val biasEpsilon = Double.Epsilon
 	val noPath = 'NoPath
 	
 	private var open: TreeSet[State] = TreeSet.empty[State](State.ordering)
@@ -96,8 +99,12 @@ abstract class focusedDstar {
 	
 	//c(X,Y)
 	//cost of moving from state X to state Y, always positive
-	def costOfTransversal(x: State, y: State): Double
-	def updateCostOFTransversal(x: State, y: State, costValue: Double)
+	def costOfTransversal(x: State, y: State): Double //= x transitionCostTo y
+	def transitionToState(next: State): State
+	
+	def updateCostOfTransversal(x: State, y: State, costValue: Double) /*= {
+		x.updateCostTo(y,costValue)
+	}*/
 	
 	//h(x)
 	//estimate of cost from state X to Goal, always positive
@@ -109,17 +116,17 @@ abstract class focusedDstar {
 	
 	//f(X,Ri)
 	//estimated agent path cost
-	def estimateAgentPathCost(x: State, agent: State): Double = {
+	private def estimateAgentPathCost(x: State, agent: State): Double = {
 		heuristic(x) + focussingHeuristic(x,agent)
 	}
 	
 	//fB(X,Ri)
-	def biasedEstimatedAgentPathCost(x: State, agent: State): Double = {
+	private def biasedEstimatedAgentPathCost(x: State, agent: State): Double = {
 		estimateAgentPathCost(x,agent) + accruedBias(agent)
 	}
 	
 	//d(Ri,R0)
-	def accruedBias(agentState: State, initialAgentState: State = this.initialAgentState): Double = {
+	private def accruedBias(agentState: State, initialAgentState: State = this.initialAgentState): Double = {
 		if(bias.isEmpty)
 			bias += (agentState -> 0.0 )
 		bias.getOrElseUpdate(currentState,
@@ -151,13 +158,15 @@ abstract class focusedDstar {
 		)
 	}//end accruedBias
 	
-	def delete(x: State) = {
+	private def delete(x: State) = {
 		x.tag = Tag.Closed
 		//remove from open
 		open = open - x
 	}
 	
-	def insert(x: State, newH: Double){
+	private def insert(x: State, newH: Double){
+		if(newH == 0)
+			goal = x
 		if(x.tag == Tag.New )
 			x.k = newH
 		else if(x.tag == Tag.Open ){
@@ -172,7 +181,7 @@ abstract class focusedDstar {
 		open = open + x
 	}//end insert
 	
-	def minState(): State = {
+	private def minState(): State = {
 		var result: State = null
 		var foundResult = false
 		while(!open.isEmpty && !foundResult){
@@ -190,7 +199,7 @@ abstract class focusedDstar {
 		return result
 	}
 	
-	def minValue(): Option[(Double,Double)] = {
+	private def minValue(): Option[(Double,Double)] = {
 		if(!open.isEmpty){
 			var x: State = open.min(State.ordering)
 			Some(x.estimatedPathCost, x.k )
@@ -198,20 +207,20 @@ abstract class focusedDstar {
 			None
 	}
 	
-	def modifyCost(x: State, y: State, costValue: Double): Option[(Double,Double)] = {
-		updateCostOFTransversal(x,y,costValue)
+	private def modifyCost(x: State, y: State, costValue: Double): Option[(Double,Double)] = {
+		updateCostOfTransversal(x,y,costValue)
 		if(x.tag == Tag.Closed )
 			insert(x,x.h)
 		return minValue
 	}
 	
-	def cost(x: State): (Double, Double) = {
+	private def cost(x: State): (Double, Double) = {
 		var guess = heuristic(x)
 		var estimatedPathCost = guess + focussingHeuristic(x, currentState)
 		return (estimatedPathCost, guess)
 	}
 	
-	def lessThanTest(a: (Double, Double), b: (Double,Double)): Boolean = {
+	private def lessThanTest(a: (Double, Double), b: (Double,Double)): Boolean = {
 		val (a1, a2) = a
 		val (b1, b2) = b
 		if( a1 == b1)
@@ -220,7 +229,7 @@ abstract class focusedDstar {
 			return a1 < b1	
 	}
 	
-	def lessThanEqualTest(a: (Double, Double), b: (Double,Double)): Boolean = {
+	private def lessThanEqualTest(a: (Double, Double), b: (Double,Double)): Boolean = {
 		val (a1, a2) = a
 		val (b1, b2) = b
 		if( a1 == b1)
@@ -266,12 +275,13 @@ abstract class focusedDstar {
 					temp = processState() 
 				}
 			}//end if discrepancies exist
+			agentState = transitionToState(agentState.parent)
 		}//end while state not goal
 			
 		return new Goal
 	}
 	
-	def processState(): Option[(Double,Double)] = {
+	private def processState(): Option[(Double,Double)] = {
 		//lowest pathCost removed from open
 		var x = minState()
 		if (x == null) return None
