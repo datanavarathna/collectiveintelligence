@@ -43,7 +43,7 @@ object State {
 	}//end compare
 }
 
-abstract class State(var neighbors: Stream[State] = Stream.empty) /*extends Ordering[State]*/
+abstract class State(initialNeighbors: Seq[State] = Stream.empty) /*extends Ordering[State]*/
 {
 	var parent: State = null
 	var tag = Tag.New
@@ -51,6 +51,13 @@ abstract class State(var neighbors: Stream[State] = Stream.empty) /*extends Orde
 	var estimatedPathCost: Double = 0 //f
 	var k,h: Double = 0
 	var agentStateWhenModified: State = null
+	private var neighborsSeq: Seq[State] = initialNeighbors
+	
+	def neighbors = neighborsSeq
+	def neighbors_(newNeighbors: Seq[State]){
+		if(neighborsSeq.isEmpty)
+			neighborsSeq = newNeighbors
+	}
 	
 	/*
 	def transitionCostTo(that: State): Double

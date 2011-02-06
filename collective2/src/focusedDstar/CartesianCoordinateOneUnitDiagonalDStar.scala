@@ -3,7 +3,7 @@ import focusedDstar._
 import scala.collection.mutable
 
 case class Coordinate(val x: Int, val y: Int, var passable: Boolean = true,
-		adjacent: Stream[State] = Stream.empty) extends State(adjacent){
+		adjacent: Seq[State] = Stream.empty) extends State(adjacent){
 	
 }
 
@@ -18,16 +18,29 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) {
 		
 	
 	def createCoordinate(x: Int, y: Int, passable: Boolean = true): Coordinate = {
-		var neighbors = Stream.empty[Coordinate]
-		for (horiz <- (x-1) to (x+1);vert <- (y-1) to (y+1);
-			if((horiz != x || vert != y ) && withinBounds(horiz,vert))
-		){
-				neighbors = createCoordinate(horiz,vert) +: neighbors
-		}
-		new Coordinate(x,y,passable, neighbors)
+		//println("Creating coordinate ("+x+","+y+")")
+		val newCoordinate = new Coordinate(x,y,passable)
+		coordinates += ((x,y)-> newCoordinate)
+		lazy val neighbors: Seq[Coordinate] = {
+				for (horiz <- (x-1) to (x+1);vert <- (y-1) to (y+1);
+					if(!(horiz == x && vert == y ) && withinBounds(horiz,vert) ) ) 
+					yield{
+						//println("Getting neighbor horiz= "+horiz+" vert= "+vert)	
+						getCoordinate(horiz,vert)
+					}
+		}//end neighbors
+		newCoordinate.neighbors_(neighbors)
+		newCoordinate
 	}
 	
-	def getCoordinate(x: Int, y: Int) = coordinates((x,y))
+	def getCoordinate(x: Int, y: Int): Coordinate = {
+		if(withinBounds(x,y))
+			coordinates.getOrElseUpdate((x,y),		
+			createCoordinate(x,y) )
+		else
+			null
+	}
+		
 	
 	override def toString: String = coordinates.values.toString
 }
