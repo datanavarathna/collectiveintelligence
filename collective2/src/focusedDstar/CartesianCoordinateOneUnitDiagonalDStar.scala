@@ -3,24 +3,43 @@ import focusedDstar._
 import scala.collection.mutable
 
 case class Coordinate(val x: Int, val y: Int, var passable: Boolean = true,
-		adjacent: Seq[State] = Stream.empty) extends State(adjacent){
+		factory: StateConstructor) extends State(factory){
+	
+	override def toString = "Coordinate("+x+","+y+","+"passable="+passable+")"
 	
 }
 
-class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) {
+class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstructor{
 	val (minX,minY)= minXY
 	val (maxX,maxY)= maxXY
-	var coordinates = mutable.Map.empty[(Int,Int),Coordinate]
+	var coordinates = mutable.WeakHashMap.empty[(Int,Int),Coordinate]
 	
-	private def withinBounds(x: Int, y: Int): Boolean = {
+	def withinBounds(x: Int, y: Int): Boolean = {
 		minX <= x && x <= maxX &&  minY <= y && y <= maxY
 	}
 		
+	def getNeighbors(state: State): Seq[State] = {
+		state match{
+			case Coordinate(x,y,_,_) =>{
+				for (horiz <- (x-1) to (x+1);vert <- (y-1) to (y+1);
+					if(!(horiz == x && vert == y ) && withinBounds(horiz,vert) ) ) 
+					yield{
+						//println("Coord("+x+","+y+")Getting neighbor horiz= "+horiz+" vert= "+vert)	
+						getCoordinate(horiz,vert)
+					}
+			}
+			case that => {
+				throw new Exception(that+" is an incompatable State")
+			}
+		}
+	}
+	
 	
 	def createCoordinate(x: Int, y: Int, passable: Boolean = true): Coordinate = {
 		//println("Creating coordinate ("+x+","+y+")")
-		val newCoordinate = new Coordinate(x,y,passable)
+		val newCoordinate = new Coordinate(x,y,passable, this)
 		coordinates += ((x,y)-> newCoordinate)
+		/*
 		lazy val neighbors: Seq[Coordinate] = {
 				for (horiz <- (x-1) to (x+1);vert <- (y-1) to (y+1);
 					if(!(horiz == x && vert == y ) && withinBounds(horiz,vert) ) ) 
@@ -29,7 +48,7 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) {
 						getCoordinate(horiz,vert)
 					}
 		}//end neighbors
-		newCoordinate.neighbors_(neighbors)
+		newCoordinate.neighbors_(neighbors)*/
 		newCoordinate
 	}
 	
@@ -45,13 +64,12 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) {
 	override def toString: String = coordinates.values.toString
 }
 
-abstract class CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
+abstract class CartesianCoordinateOneUnitDiagonalDStar(transitionStateOperation: => Unit)
+	extends focusedDstar(transitionStateOperation) {
 
 	private var impassableMap = mutable.Map.empty[(Coordinate,Coordinate),Double]
 	
 	def sensor: Map[(State,State),Double] 
-	
-	def transitionToState(next: State): State
 	
 	def costOfTransversal(x: State, y: State): Double = {
 		(x,y) match {

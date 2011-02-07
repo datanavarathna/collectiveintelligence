@@ -10,12 +10,40 @@ import scala.collection.mutable
 import scala.actors.Actor
 import scala.actors.Actor._
 
+class Cartesian1DiagonalTest(var factory: CoordinateCreator) extends 
+	CartesianCoordinateOneUnitDiagonalDStar( {} )
+{
+	def sensor: Map[(State,State),Double] = {
+		currentState match {
+			case state @ Coordinate(x,y,_,_) => {
+				var tempMap = mutable.Map.empty[(State,State),Double]
+				for (horiz <- (x-1) to (x+1);vert <- (y-1) to (y+1);
+					if(!(horiz == x && vert == y ) && factory.withinBounds(horiz,vert) ) ) 
+					{
+						//println("Getting neighbor horiz= "+horiz+" vert= "+vert)	
+						tempMap += ( (state,factory.getCoordinate(horiz,vert) ) -> 1)
+					}
+				return tempMap.toMap[(State,State),Double]
+			}
+			
+			case state => {
+				println(state+" is an incompatable State")
+				return null
+			}
+		}
+		
+	}//end sensor
+	
+}
+
 class DstarTest extends JUnitSuite{
 	var factory = new CoordinateCreator((0,0),(2,2))
+	var dStar = new Cartesian1DiagonalTest(factory)
 	var start: Coordinate = null
 	var goal: Coordinate = null
 	
-	@Test def noInfiniteRecursion {
+	@Test(timeout = 2000) def noInfiniteRecursion {
+		/*
 		val msTimeout: Long = 2000
 		//create timer actor to fail test if takes too long
 		var timer = actor {
@@ -28,10 +56,10 @@ class DstarTest extends JUnitSuite{
 					exit
 				}
 			}
-		}
+		}*/
 		start = factory.createCoordinate(0, 0)
 		goal = factory.createCoordinate(2, 2)
-		timer ! 'finished
+		//timer ! 'finished
 	}
 	
 	@Test def neighbors{
@@ -58,5 +86,19 @@ class DstarTest extends JUnitSuite{
 		coordNeighbors = factory.getCoordinate(1, 1).neighbors
 		assert(adjacent.length === coordNeighbors.length)
 		assertTrue(adjacent+"!="+coordNeighbors,coordNeighbors.sameElements(adjacent))
+	}
+
+	@Test(timeout = 15000) def pathFindingNoObstacles{
+		factory = new CoordinateCreator((0,0),(2,2))
+		dStar = new Cartesian1DiagonalTest(factory)
+		start = factory.getCoordinate(0, 0)
+		goal = factory.getCoordinate(2, 2)
+		val plannedPath = dStar.moveAgent(start, goal)
+		val expectedPath = new Goal
+		expectedPath.addStateToPath(factory.getCoordinate(0, 0))
+		expectedPath.addStateToPath(factory.getCoordinate(1, 1))
+		expectedPath.addStateToPath(factory.getCoordinate(2, 2))
+		assertTrue("Planned path was not a path",plannedPath != Goal.NoPath)
+		assertTrue(plannedPath+" != "+expectedPath, plannedPath == expectedPath)
 	}
 }

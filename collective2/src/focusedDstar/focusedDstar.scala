@@ -43,7 +43,11 @@ object State {
 	}//end compare
 }
 
-abstract class State(initialNeighbors: Seq[State] = Stream.empty) /*extends Ordering[State]*/
+abstract class StateConstructor(){
+	def getNeighbors(state: State): Seq[State]
+}
+
+abstract class State(factory: StateConstructor) /*extends Ordering[State]*/
 {
 	var parent: State = null
 	var tag = Tag.New
@@ -51,23 +55,46 @@ abstract class State(initialNeighbors: Seq[State] = Stream.empty) /*extends Orde
 	var estimatedPathCost: Double = 0 //f
 	var k,h: Double = 0
 	var agentStateWhenModified: State = null
+	
+	lazy val neighbors: Seq[State] = factory.getNeighbors(this)
+	/*
 	private var neighborsSeq: Seq[State] = initialNeighbors
 	
 	def neighbors = neighborsSeq
 	def neighbors_(newNeighbors: Seq[State]){
 		if(neighborsSeq.isEmpty)
 			neighborsSeq = newNeighbors
-	}
+	}*/
 	
 	/*
 	def transitionCostTo(that: State): Double
 	def updateCostTo(that: State, cost: Double)
 	*/
 }
+
 class Goal(){
-	private var empty = true
+	private var pathList: List[State] = Nil
 	
-	def isEmpty: Boolean = true 
+	def path = pathList
+	def addStateToPath(state: State){
+		pathList = state :: pathList
+	}
+	
+	def isEmpty: Boolean = pathList.isEmpty
+	
+	override def equals(other: Any): Boolean = {
+		other match{
+			case that: NoPath => false
+			case that: Goal => {
+				val thatPath = that.path
+				(pathList.size == thatPath.size) && 
+					(pathList.sameElements(thatPath))
+			}
+			case _ => false
+		}
+	}
+	
+	override def toString = path.toString
 }
 
 object Goal{
@@ -77,13 +104,20 @@ object Goal{
 
 class NoPath extends Goal {
 	override val isEmpty = true
+	
+	override def equals(other: Any): Boolean = {
+		other match{
+			case that: NoPath => true
+			case _ => false
+		}
+	}
 }
 
 class ReachedGoal extends Goal {
 	
 }
 
-abstract class focusedDstar(val biasEpsilon: Double = Double.Epsilon) {
+abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasEpsilon: Double = Double.Epsilon) {
 	var goal: State = _
 	private var initialAgentState: State = null
 	//var biasedF: Double
@@ -91,6 +125,7 @@ abstract class focusedDstar(val biasEpsilon: Double = Double.Epsilon) {
 	private var agentStates = new ListBuffer[State]() //zero based
 	private var bias = new WeakHashMap[State,Double]()//key State, value = Double
 	val noPath = 'NoPath
+	val path: Goal = new Goal
 	
 	private var open: TreeSet[State] = TreeSet.empty[State](State.ordering)
 	
@@ -107,7 +142,13 @@ abstract class focusedDstar(val biasEpsilon: Double = Double.Epsilon) {
 	//c(X,Y)
 	//cost of moving from state X to state Y, always positive
 	def costOfTransversal(x: State, y: State): Double //= x transitionCostTo y
-	def transitionToState(next: State): State
+	
+	def transitionToState(next: State): State = {
+		path.addStateToPath(next)
+		currentState = next
+		stateTransitionOperation
+		next
+	}
 	
 	def updateCostOfTransversal(x: State, y: State, costValue: Double) /*= {
 		x.updateCostTo(y,costValue)
@@ -285,7 +326,7 @@ abstract class focusedDstar(val biasEpsilon: Double = Double.Epsilon) {
 			agentState = transitionToState(agentState.parent)
 		}//end while state not goal
 			
-		return new Goal
+		return path
 	}
 	
 	private def processState(): Option[(Double,Double)] = {
