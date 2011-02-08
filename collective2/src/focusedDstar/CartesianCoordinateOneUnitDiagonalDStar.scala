@@ -39,16 +39,6 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstru
 		//println("Creating coordinate ("+x+","+y+")")
 		val newCoordinate = new Coordinate(x,y,passable, this)
 		coordinates += ((x,y)-> newCoordinate)
-		/*
-		lazy val neighbors: Seq[Coordinate] = {
-				for (horiz <- (x-1) to (x+1);vert <- (y-1) to (y+1);
-					if(!(horiz == x && vert == y ) && withinBounds(horiz,vert) ) ) 
-					yield{
-						//println("Getting neighbor horiz= "+horiz+" vert= "+vert)	
-						getCoordinate(horiz,vert)
-					}
-		}//end neighbors
-		newCoordinate.neighbors_(neighbors)*/
 		newCoordinate
 	}
 	

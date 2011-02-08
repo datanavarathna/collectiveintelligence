@@ -128,13 +128,17 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 	val path: Goal = new Goal
 	
 	private var open: TreeSet[State] = TreeSet.empty[State](State.ordering)
-	
+	var accruedBias: Double = _
 	
 	def currentState: State = agentStates.head //Rcurr
 	def currentState_=(currentState: State) = {
 		if(agentStates.isEmpty)
 			initialAgentState = currentState
 		agentStates.prepend(currentState)
+	}
+	def initializeCurrentState(state: State) = {
+		agentStates = new ListBuffer[State]()
+		currentState = state
 	}
 	
 	def sensor: Map[(State,State),Double] //sensor cost of state transversal
@@ -161,7 +165,7 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 	//g(x,y)
 	//estimated path cost from state X to state Y
 	def focussingHeuristic(x: State, y: State) = costOfTransversal(x,y)
-	
+	/*
 	//f(X,Ri)
 	//estimated agent path cost
 	private def estimateAgentPathCost(x: State, agent: State): Double = {
@@ -205,11 +209,16 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 			}
 		)
 	}//end accruedBias
-	
+	*/
 	private def delete(x: State) = {
 		x.tag = Tag.Closed
 		//remove from open
 		open = open - x
+	}
+	
+	private def putState(x: State){
+		x.tag = Tag.Open 
+		open = open + x
 	}
 	
 	private def insert(x: State, newH: Double){
@@ -225,8 +234,8 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 		x.h = newH
 		x.agentStateWhenModified = currentState
 		x.estimatedPathCost = x.k + focussingHeuristic(x,currentState)
-		x.biasedEstimatedPathCost = x.estimatedPathCost + accruedBias(currentState)
-		open = open + x
+		x.biasedEstimatedPathCost = x.estimatedPathCost + accruedBias//accruedBias(currentState)
+		putState(x)
 	}//end insert
 	
 	private def minState(): State = {
@@ -264,6 +273,7 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 	
 	private def cost(x: State): (Double, Double) = {
 		var guess = heuristic(x)
+		x.h = guess//not sure if correct
 		var estimatedPathCost = guess + focussingHeuristic(x, currentState)
 		return (estimatedPathCost, guess)
 	}
@@ -288,18 +298,19 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 	
 	def moveAgent(start: State, goal: State): Goal = {
 		//initialize
-		var accruedBias: Double = 0
-		currentState = start
+		accruedBias = 0
+		initializeCurrentState(start)//currentState = start
 		insert(goal,0)
 		var temp: Option[(Double,Double)] = Some(0.0,0.0)
 		//find optimal path
 		while(start.tag != Tag.Closed &&
-				temp != None /*path exists*/){
+				temp != None /*unobstructed path exists to goal from start*/){
 			temp = processState()
 		}
-		if(start.tag == Tag.New )
+		if(start.tag == Tag.New )//goal is an unreachable state
 			return Goal.NoPath
 		var agentState = start
+		path.addStateToPath(start)
 		while(agentState != goal){
 			var discrepancies = sensor.filter( element => {
 					val ((x: State, y: State), cost: Double) = element
@@ -318,7 +329,7 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 					}
 				)//end processing discrepancies
 				//update costs and replan
-				while( temp != None &&
+				while( temp != None /*unobstructed path exists to goal from current state*/ &&
 						lessThanTest(temp.asInstanceOf[(Double,Double)], cost(agentState)) ){
 					temp = processState() 
 				}
@@ -350,7 +361,7 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 			}
 		}
 		//see if pathCost can be lowered for neighbor Y of X
-		else if(kval == x.h){
+		if(kval == x.h){
 			for(y <- x.neighbors )
 			{
 				var c = costOfTransversal(y,x)
@@ -359,7 +370,7 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 						(y.parent == x && y.h != hValue) ||
 						(y.parent != x && y.h > hValue) ){
 					y.parent = x
-					insert(x,hValue)
+					insert(y,hValue)
 				}
 			}
 		}
@@ -372,12 +383,13 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ){
 					y.parent = x
-					insert(x,hValue)
+					insert(y,hValue)
 				}else{
 					if((y.parent != x && y.h > hValue) && (x.tag == Tag.Closed ) )
 						insert(x,x.h)
 					else
-						if(lessThanTest(temp,cost(y)))
+						if( (y.parent != x && x.h > y.h + c) && (x.tag == Tag.Closed ) &&
+								lessThanTest(temp,cost(y)))
 							insert(y,y.h)
 				}
 			}

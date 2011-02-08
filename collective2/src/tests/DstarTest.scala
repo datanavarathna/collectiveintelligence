@@ -43,23 +43,8 @@ class DstarTest extends JUnitSuite{
 	var goal: Coordinate = null
 	
 	@Test(timeout = 2000) def noInfiniteRecursion {
-		/*
-		val msTimeout: Long = 2000
-		//create timer actor to fail test if takes too long
-		var timer = actor {
-			var startTime = System.currentTimeMillis
-			reactWithin(msTimeout){
-				case 'finished => exit
-				case _ => {
-					print(System.currentTimeMillis - startTime)
-					fail
-					exit
-				}
-			}
-		}*/
 		start = factory.createCoordinate(0, 0)
 		goal = factory.createCoordinate(2, 2)
-		//timer ! 'finished
 	}
 	
 	@Test def neighbors{
@@ -88,7 +73,7 @@ class DstarTest extends JUnitSuite{
 		assertTrue(adjacent+"!="+coordNeighbors,coordNeighbors.sameElements(adjacent))
 	}
 
-	@Test(timeout = 15000) def pathFindingNoObstacles{
+	@Test/*(timeout = 15000)*/ def pathFindingNoObstacles{
 		factory = new CoordinateCreator((0,0),(2,2))
 		dStar = new Cartesian1DiagonalTest(factory)
 		start = factory.getCoordinate(0, 0)
