@@ -117,7 +117,7 @@ class ReachedGoal extends Goal {
 	
 }
 
-abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasEpsilon: Double = Double.Epsilon) {
+abstract class focusedDstar(stateTransitionOperation: => Boolean,implicit val biasEpsilon: Double = Double.Epsilon) {
 	var goal: State = _
 	private var initialAgentState: State = null
 	//var biasedF: Double
@@ -149,9 +149,9 @@ abstract class focusedDstar(stateTransitionOperation: => Unit,implicit val biasE
 	
 	def transitionToState(next: State): State = {
 		path.addStateToPath(next)
-		currentState = next
-		stateTransitionOperation
-		next
+		if(stateTransitionOperation)
+			currentState = next//successfully transitioned to the next state
+		currentState
 	}
 	
 	def updateCostOfTransversal(x: State, y: State, costValue: Double) /*= {

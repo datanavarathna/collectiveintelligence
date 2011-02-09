@@ -73,7 +73,7 @@ class DstarTest extends JUnitSuite{
 		assertTrue(adjacent+"!="+coordNeighbors,coordNeighbors.sameElements(adjacent))
 	}
 
-	@Test/*(timeout = 15000)*/ def pathFindingNoObstacles{
+	@Test def pathFindingNoObstacles{
 		factory = new CoordinateCreator((0,0),(2,2))
 		dStar = new Cartesian1DiagonalTest(factory)
 		start = factory.getCoordinate(0, 0)
