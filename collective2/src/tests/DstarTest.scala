@@ -11,7 +11,7 @@ import scala.actors.Actor
 import scala.actors.Actor._
 
 class Cartesian1DiagonalTest(var factory: CoordinateCreator) extends 
-	CartesianCoordinateOneUnitDiagonalDStar( {} )
+	CartesianCoordinateOneUnitDiagonalDStar( {true} )
 {
 	def sensor: Map[(State,State),Double] = {
 		currentState match {
