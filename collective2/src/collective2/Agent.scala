@@ -9,9 +9,10 @@ import scala.util.Random
 
 case class detectedObstacles()
 
-abstract class Agent(val environment: Actor, val collectiveMap: Actor,
+class Agent(val environment: Actor, val collectiveMap: Actor,
             val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double) extends Actor
 {
+	link(environment)
 	private[this] var exploredArea = new QuadBitSet
 	
 	def explored(x: Int, y: Int): Boolean = {
@@ -27,6 +28,8 @@ abstract class Agent(val environment: Actor, val collectiveMap: Actor,
 	//add detected elements to map
 	//navigate, then return to scan
 	
-	
+	def act() {
+		
+	}
 	
 }

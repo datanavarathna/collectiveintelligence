@@ -25,7 +25,7 @@ import scala.collection.mutable
 
 /*
 case class Pheromone(locationX: Int,LocationY: Int,targetX: Int, targetY: Int)
-case class MoveCommand(sender: Agent, x: Int, y: Int )
+
 */
 case class Displacement(x: Measurement, y: Measurement) {
     def canEqual(other: Any): Boolean = { other.isInstanceOf[Displacement] }
@@ -106,13 +106,29 @@ case class CollectiveObstacle(val obstacleType: Int,private var relations: mutab
 		return true
 	}
 }
-/*
+
+case class AgentWithLocation(agent: Agent, x: Int, y: Int){
+	override def toString = "AgentWithLocation: agent="+agent+" x="+x+" y="+y
+}
+
+case class AgentUpdate(oldX: Int, oldY: Int, newX: Int, newY: Int){
+    override def toString = " x=" +oldX+ " y=" +oldY+ " x=" +newX+ " y=" +newY
+}
+
 case class Obstacle(obstacleType: Int, x: Double, y: Double){
 	override def toString = "Obstacle: obstacleType="+obstacleType+" x="+x+" y="+y
 }
-case class Move(agent: Actor, x: Measurement, y: Measurement) 
+
+case class MoveCommand(sender: Agent, x: Int, y: Int )
+case class UpdateSensor(sender: Agent, range: Double, sensorDeltaAngle: Double, sensorRange: Double)
 case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType:Int)
 case class AgentReading(angle: Measurement, distance: Measurement) 
+case class Scan(scannedArea: QuadBitSet,detectedObstacles: List[ObjectReading],detectedAgents: List[AgentReading])
+
+case class Goal(goal:Obstacle)
+/*
+
+
 case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement){
     def inverse() : TopologicalEntry = {
@@ -126,12 +142,12 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
         IdentifiedObject(identifier2,identifier1,vector.inverse)
     }
 }
-case class UpdateSensor(sender: Agent, range: Double, sensorDeltaAngle: Double, sensorRange: Double) 
-
-
  
 
-case class Goal(goal:Obstacle)
+case class Move(agent: Actor, x: Measurement, y: Measurement) 
+ 
+
+
 case class FindGoal(obstacleType: Int,rootIdentifier: Int)
 case class GoalNotFound()
 
