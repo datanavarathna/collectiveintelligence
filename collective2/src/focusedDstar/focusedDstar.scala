@@ -118,7 +118,8 @@ class ReachedGoal extends Goal {
 	
 }
 
-abstract class focusedDstar(implicit val biasEpsilon: Double = Double.Epsilon) {
+trait focusedDstar {
+	val biasEpsilon: Double = Double.Epsilon
 	var goal: State = _
 	private var initialAgentState: State = null
 	//var biasedF: Double

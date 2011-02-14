@@ -5,7 +5,7 @@ import scala.swing.event._
 import scala.actors._
 import Actor._
 
-import definitions._
+import collective2.definitions._
 
 case class AgentDestoyed(b: RegionButton) extends Event
 case class ClickedAgentButton(agentButton: RegionButton) extends Event
@@ -188,6 +188,7 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
                        obstacles = new Obstacle(button.obstacleType,button.x,button.y) :: obstacles
                     }
                 }//end for
+                println("worldButtons initialized")
             }
             else if(b eq startButton){
                 //start simulation

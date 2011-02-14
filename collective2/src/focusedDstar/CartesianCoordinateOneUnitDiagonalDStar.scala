@@ -54,7 +54,7 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstru
 	override def toString: String = coordinates.values.toString
 }
 
-abstract class CartesianCoordinateOneUnitDiagonalDStar() extends focusedDstar {
+trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 
 	private var passabilityMap = mutable.Map.empty[(CoordinateState,CoordinateState),Double]
 	

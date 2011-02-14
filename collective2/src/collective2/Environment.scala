@@ -8,6 +8,7 @@ import Actor._
 class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,val scalaGui: Actor) extends Actor{
   def this( maxX: Int, maxY: Int,scalaGui: Actor) = this(0,0, maxX, maxY,scalaGui)
 
+  
   import scala.collection.mutable.Map
   import scala.collection.immutable.TreeMap
 
@@ -21,15 +22,14 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 
   private val epsilon = 0.001
   
-  //self.trapExit = true//receives termination notification in mailbox
-  link(scalaGui)
-  
   def dimensions: (Int,Int) = {
 	  (maxX-minX,maxY-minY)
   }
   
   def act()
   {
+	//self.trapExit = true//receives termination notification in mailbox
+	link(scalaGui)
     println("Environment("+minX+"-"+maxX+","+minY+"-"+maxY+") running")
 	loop
 		{

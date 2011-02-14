@@ -4,7 +4,7 @@ import scala.actors._
 import Actor._
 import uncertaintyMath.Measurement
 import uncertaintyMath.Measurement._
-import definitions._
+import collective2.definitions._
 import scala.util.Random
 import focusedDstar._
 
@@ -12,10 +12,8 @@ case class detectedObstacles()
 
 class Agent(val environment: Actor, val collectiveMap: Actor,
             val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double) 
-            extends CartesianCoordinateOneUnitDiagonalDStar with Actor
+            extends  Actor with CartesianCoordinateOneUnitDiagonalDStar
 {
-	link(environment)
-	
 	private[this] var exploredArea = new QuadBitSet
 	
 	private[this] var exploreMode = true
@@ -35,6 +33,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	private var lastSensorReadings: Map[(State,State),Double] = _
 	
 	private var stateFactory: CoordinateCreator = _
+	println("Getting world dimensions")
 	val worldDimensions: (Int,Int) = (environment !! 'Dimensions).inputChannel.react{
 		case (x: Int,y: Int) => {
 			//worldWidth = x
@@ -224,8 +223,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	
 	
 	def act() {
+		link(environment)
 		println("Agent running")
-        
+		
 		loop 
 		{
 			react
