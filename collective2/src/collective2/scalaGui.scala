@@ -63,6 +63,7 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
             }
             case Started() => {
             	//when simulation starts, change GUI from control mode to display
+            	println("Changing GUI from control mode to display mode")
                 for(button <- worldButtons){
                     deafTo(button)
                 }

@@ -6,6 +6,7 @@ import Actor._
 class ScalaGUIhelperActor(gui: ScalaGUI) extends Actor{
  def act()
     {
+	 	println("scalaGUIhelperActor started")
         loop
 		{
 			react

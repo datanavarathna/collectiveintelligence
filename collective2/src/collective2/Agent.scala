@@ -33,14 +33,21 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	private var lastSensorReadings: Map[(State,State),Double] = _
 	
 	private var stateFactory: CoordinateCreator = _
-	println("Getting world dimensions")
-	val worldDimensions: (Int,Int) = (environment !! 'Dimensions).inputChannel.react{
-		case (x: Int,y: Int) => {
-			//worldWidth = x
-			//worldHeight = y
-			stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
-		}
+	
+	def worldDimensions {
+    	  println("Getting world dimensions")
+    	  val worldDimensionsFuture = (environment !! 'Dimensions)
+    	  println("Got worldDimensionsFuture")
+    	  worldDimensionsFuture.inputChannel.react{
+    	  	case (x: Int,y: Int) => {
+    	  		//worldWidth = x
+    	  		//worldHeight = y
+    	  		stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
+    	  	}
+    	  	case other => throw new Exception(other+" returned when (x,y) expected")
+    	  }
 	}
+	
 	
 	private[this] var goalIncrement = sensorRange.toInt
 	private[this] var goalXAdjustment = 0

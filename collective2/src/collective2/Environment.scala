@@ -35,7 +35,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 		{
 			react
 			{
-				case 'Dimensions => reply( dimensions )
+			  case 'Dimensions => reply( dimensions )
 				
 			  case MoveCommand(senderAgent,x,y) =>
 			  {
