@@ -13,7 +13,11 @@ package object definitions {
 		return y*sizeX+x
 	}
 	
-	
+	import uncertaintyMath.Measurement
+	import uncertaintyMath.Measurement._
+	def PolarToCartesian(angle: Measurement, distance: Measurement): Displacement =  {
+      Displacement(distance * cos(angle), distance * sin(angle))
+  }
 }
 
 import scala.actors._
@@ -48,6 +52,10 @@ case class Displacement(x: Measurement, y: Measurement) {
 
     def inverse(): Displacement = {
         Displacement(-1*this.x, -1*this.y)
+    }
+    
+    def toIntInt(): (Int,Int) = {
+    	(x.value.toInt,y.value.toInt)
     }
 }
 case class Coordinate(x: Int, y: Int) 

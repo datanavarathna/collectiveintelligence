@@ -72,7 +72,7 @@ abstract class State(factory: StateConstructor) /*extends Ordering[State]*/
 	*/
 }
 
-class Goal(){
+case class Goal(){
 	private var pathList: List[State] = Nil
 	
 	def path = pathList
@@ -81,6 +81,7 @@ class Goal(){
 	}
 	
 	def isEmpty: Boolean = pathList.isEmpty
+	def size: Int = pathList.size
 	
 	override def equals(other: Any): Boolean = {
 		other match{
@@ -98,11 +99,11 @@ class Goal(){
 }
 
 object Goal{
-	def apply() = new Goal
+	//def apply() = new Goal
 	def NoPath = new NoPath
 }
 
-class NoPath extends Goal {
+case class NoPath() extends Goal {
 	override val isEmpty = true
 	
 	override def equals(other: Any): Boolean = {
@@ -117,7 +118,7 @@ class ReachedGoal extends Goal {
 	
 }
 
-abstract class focusedDstar(stateTransitionOperation: => Boolean,implicit val biasEpsilon: Double = Double.Epsilon) {
+abstract class focusedDstar(implicit val biasEpsilon: Double = Double.Epsilon) {
 	var goal: State = _
 	private var initialAgentState: State = null
 	//var biasedF: Double
@@ -126,6 +127,13 @@ abstract class focusedDstar(stateTransitionOperation: => Boolean,implicit val bi
 	private var bias = new WeakHashMap[State,Double]()//key State, value = Double
 	val noPath = 'NoPath
 	val path: Goal = new Goal
+	
+	private[this] var stateTransitionOperation: ( State => Boolean) = _
+	
+	def setStateTransitionOperation( transitionOperation: State => Boolean){
+		//must be called before moveAgent
+		stateTransitionOperation  = transitionOperation
+	}
 	
 	private var open: TreeSet[State] = TreeSet.empty[State](State.ordering)
 	var accruedBias: Double = _
@@ -149,7 +157,7 @@ abstract class focusedDstar(stateTransitionOperation: => Boolean,implicit val bi
 	
 	def transitionToState(next: State): State = {
 		path.addStateToPath(next)
-		if(stateTransitionOperation)
+		if( stateTransitionOperation(next) )
 			currentState = next//successfully transitioned to the next state
 		currentState
 	}

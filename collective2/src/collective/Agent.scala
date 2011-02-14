@@ -128,7 +128,7 @@ class Agent(val environment: Actor, val map: Actor,
 
   def flattenToOne(num: Double): Int =
   {
-    if(Math.abs(num) < 0.001)
+    if(math.abs(num) < 0.001)
         return 0
     else if(num > 0)
         return 1

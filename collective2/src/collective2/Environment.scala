@@ -24,6 +24,10 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
   //self.trapExit = true//receives termination notification in mailbox
   link(scalaGui)
   
+  def dimensions: (Int,Int) = {
+	  (maxX-minX,maxY-minY)
+  }
+  
   def act()
   {
     println("Environment("+minX+"-"+maxX+","+minY+"-"+maxY+") running")
@@ -31,6 +35,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 		{
 			react
 			{
+				case 'Dimensions => reply( dimensions )
+				
 			  case MoveCommand(senderAgent,x,y) =>
 			  {
 				  
@@ -150,8 +156,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 							//create coordinates relative distances from agent
 						    val vectorX: Double = obstacle.x - agentCoordinate.x
 						    val vectorY: Double = obstacle.y - agentCoordinate.y
-						  	val angle = new Measurement(Math.atan2(vectorX, vectorY),sensorDeltaAngle*Math.Pi/180)
-						    val distance = new Measurement(Math.sqrt(vectorX*vectorX + vectorY*vectorY),sensorDeltaRange)
+						  	val angle = new Measurement(math.atan2(vectorX, vectorY),sensorDeltaAngle*math.Pi/180)
+						    val distance = new Measurement(math.sqrt(vectorX*vectorX + vectorY*vectorY),sensorDeltaRange)
 						    val objectReading = ObjectReading(angle, distance, obstacle.obstacleType)
                             //println("sent objectReading" + objectReading)
                             detectedObstacles= objectReading :: detectedObstacles
@@ -180,10 +186,10 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                                      //println("agentInMap: (" + coordinate.x + "," + coordinate.y + ")")
                                      if(vectorX != 0 || vectorY != 0)
                                      {
-                                         val distance = Math.sqrt(vectorX*vectorX + vectorY*vectorY)
+                                         val distance = math.sqrt(vectorX*vectorX + vectorY*vectorY)
                                          if(distance < sensorRange)
                                          {
-                                            val angle = new Measurement(Math.atan2(vectorY, vectorX))
+                                            val angle = new Measurement(math.atan2(vectorY, vectorX))
                                             val distanceMeasurement = new Measurement(distance)
                                             val agentReading = AgentReading(angle, distance)
                                             detectedAgents = agentReading :: detectedAgents

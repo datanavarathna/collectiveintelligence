@@ -11,11 +11,13 @@ import scala.actors.Actor
 import scala.actors.Actor._
 
 class Cartesian1DiagonalTest(var factory: CoordinateCreator) extends 
-	CartesianCoordinateOneUnitDiagonalDStar( {true} )
+	CartesianCoordinateOneUnitDiagonalDStar
 {
+	setStateTransitionOperation({next: State => true})
+	
 	def sensor: Map[(State,State),Double] = {
 		currentState match {
-			case state @ Coordinate(x,y,_,_) => {
+			case state @ CoordinateState(x,y,_,_) => {
 				var tempMap = mutable.Map.empty[(State,State),Double]
 				for (horiz <- (x-1) to (x+1);vert <- (y-1) to (y+1);
 					if(!(horiz == x && vert == y ) && factory.withinBounds(horiz,vert) ) ) 
@@ -39,8 +41,8 @@ class Cartesian1DiagonalTest(var factory: CoordinateCreator) extends
 class DstarTest extends JUnitSuite{
 	var factory = new CoordinateCreator((0,0),(2,2))
 	var dStar = new Cartesian1DiagonalTest(factory)
-	var start: Coordinate = null
-	var goal: Coordinate = null
+	var start: CoordinateState = null
+	var goal: CoordinateState = null
 	
 	@Test(timeout = 2000) def noInfiniteRecursion {
 		start = factory.createCoordinate(0, 0)

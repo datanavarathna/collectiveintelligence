@@ -107,4 +107,46 @@ class QuadBitSet(maxX:Int = 32) {
 		var (absX,absY,data) = assignQuadrant(x,y)
 		data(xyToIndex(absX,absY,sizeX))
 	}
+	
+	def += (other:QuadBitSet): QuadBitSet = {
+		//adds elements from this to elements of that 
+		posXPosY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			other.add(x,y)
+		})
+		posXNegY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			other.add(x,y)
+		})
+		negXPosY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			other.add(x,y)
+		})
+		negXNegY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			other.add(x,y)
+		})
+		other
+	}
+	
+	def XYs(): List[(Int,Int)] = {
+		var result: List[(Int,Int)] = Nil
+		posXPosY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			result = (x,y) :: result
+		})
+		posXNegY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			result = (x,-1*y) :: result
+		})
+		negXPosY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			result = (-1*x,y) :: result
+		})
+		negXNegY.foreach(index => {
+			val (x,y) = indexToXY(sizeX,index)
+			result = (-1*x,-1*y) :: result
+		})
+		return result
+	}
 }
