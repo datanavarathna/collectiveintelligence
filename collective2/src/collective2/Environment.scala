@@ -214,11 +214,13 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                         throw new Exception(senderAgent+" senderAgent not recognized")
 			  }
 			  //from scalaGUI 
-			  case obstacleList @ List(Obstacle(_,_,_), _*) =>
+			  case listOfObstacles @ List(Obstacle(_,_,_), _*) =>
 			  {
 			 	println("Received obstacleList")
-                for(obstacle <- obstacleList.asInstanceOf[List[Obstacle]])
+			 	val obstacleList = listOfObstacles.asInstanceOf[List[Obstacle]]
+                for(obstacle <- obstacleList)
                 {
+                	println("Processing "+obstacle)
                     if(obstacle.obstacleType > 1){
                         goalObstacle = obstacle
                         goalObstacleSet = true
@@ -226,7 +228,8 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                     val obstacleX = obstacle.x.toInt
                     val obstacleY = obstacle.y.toInt
                     obstacles.add(obstacleX,obstacleY,obstacle)
-                    if( obstacles(obstacleX,obstacleY)== obstacle)
+                    println("Completed obstacles.add operation")
+                    if( obstacles(obstacleX,obstacleY)== Some(obstacle))//the QuadTree apply method is hanging
                         println("Added " + obstacle)
                     else
                         println("Failed to add " + obstacle)

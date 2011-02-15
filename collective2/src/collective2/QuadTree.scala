@@ -56,7 +56,7 @@ class QuadTree[T] {
 	def apply(x: Int, y: Int): Option[T] = {
 		data.get(x) match{
 			case None => return None
-			case map: Map[_,_] => {
+			case Some(map: Map[_,_]) => {
 				var yMap = map.asInstanceOf[Map[Int,T]]
 				return yMap.get(y)
 			}

@@ -14,6 +14,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double) 
             extends  Actor with CartesianCoordinateOneUnitDiagonalDStar
 {
+	setStateTransitionOperation(moveTo)//must execute before moveAgent called
 	private[this] var exploredArea = new QuadBitSet
 	
 	private[this] var exploreMode = true
@@ -43,9 +44,11 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
     	  		//worldWidth = x
     	  		//worldHeight = y
     	  		stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
+    	  		println("Created stateFactory")
     	  	}
     	  	case other => throw new Exception(other+" returned when (x,y) expected")
-    	  }
+    	  } 
+    	   
 	}
 	
 	
@@ -82,6 +85,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	
 	def explore(goal: State){
+		println("Exploring to "+goal)
+		println("Executing moveAgent(currentState,goal)")//freezes after
 		moveAgent(currentState,goal) match {
 			/*
 			case path: NoPath => {
@@ -90,6 +95,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			*/
 			case path: Goal => {
 				//(path.size <= 1)
+				println("Pathfinding returned a path")
 				currentState match{
 					case CoordinateState(x,y,_,_) => {
 						adjustGoal
@@ -126,9 +132,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	//add detected elements to map
 	//navigate, then return to scan
 	
-	setStateTransitionOperation(moveTo)//must execute before moveAgent called
-	
 	def moveTo(next: State): Boolean = {
+		println("moveTo "+next)
 		next match{
 			case state: CoordinateState => {
 				currentState match{
@@ -238,8 +243,14 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			react
 			{
               case "Start" => {
-            	  worldDimensions
-            	  explore(stateFactory.getCoordinate(0, goalIncrement))
+            	  worldDimensions andThen{
+            	 	  println("Ended worldDimensionsFuture.inputChannel.react")
+            	 	  println("Creating initial goal")
+            	 	  val goal = stateFactory.getCoordinate(0, goalIncrement)
+            	 	  println("Got initial goal")
+            	 	  explore(goal)
+            	  }
+            	  
                   
               }//end case "Start"
 			}//end react
