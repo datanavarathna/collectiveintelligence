@@ -18,7 +18,7 @@ class ScalaGUIhelperActor(gui: ScalaGUI) extends Actor{
                 }
                 case AgentUpdate(oldX, oldY, newX, newY) =>{
                         //update relevant button
-                        //println("GUI UPDATE: (" +oldX+","+oldY+")->("+newX+","+newY+")")
+                        println("GUI UPDATE: (" +oldX+","+oldY+")->("+newX+","+newY+")")
                         val oldLoc = gui.worldButtons(oldY*gui.environmentX+oldX)
                         val newLoc = gui.worldButtons(newY*gui.environmentX+newX)
                         //println(oldLoc.status +" -> "+ newLoc.status)

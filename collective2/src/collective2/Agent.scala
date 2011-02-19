@@ -18,6 +18,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	private[this] var exploredArea = new QuadBitSet
 	
 	private[this] var exploreMode = true
+	
+	private[this] val mainActor = self
 	/*
 	private var relativeLocationX: Measurement = new Measurement(0.00000001,0)
 	private var relativeLocationY: Measurement = new Measurement(0.00000001,0)
@@ -39,16 +41,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
     	  println("Getting world dimensions")
     	  val worldDimensionsFuture = (environment !! 'Dimensions)
     	  println("Got worldDimensionsFuture")
-    	  worldDimensionsFuture.inputChannel.react{
-    	  	case (x: Int,y: Int) => {
-    	  		//worldWidth = x
-    	  		//worldHeight = y
-    	  		stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
-    	  		println("Created stateFactory")
-    	  	}
-    	  	case other => throw new Exception(other+" returned when (x,y) expected")
-    	  } 
-    	   
+    	  val (x: Int,y: Int) = worldDimensionsFuture()
+    	  stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
+    	  println("Created stateFactory")
 	}
 	
 	
@@ -84,41 +79,34 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}
 	}
 	
-	def explore(goal: State){
+	def explore(start: State, goal: State){
 		println("Exploring to "+goal)
-		println("Executing moveAgent(currentState,goal)")//freezes after
-		moveAgent(currentState,goal) match {
+		scan
+		println("Executing moveAgent(currentState,goal)")
+		moveAgent(start,goal) match {
 			/*
-			case path: NoPath => {
-				
+				case path: NoPath => {
+
+				}
+			 */
+		case path: Goal => {
+			//(path.size <= 1)
+			println("Pathfinding returned a path")
+			currentState match{
+			case CoordinateState(x,y,_,_) => {
+				adjustGoal
+				if(exploreMode)
+					explore(currentState,stateFactory.getCoordinate(x+goalXAdjustment, y+goalYAdjustment) )
 			}
-			*/
-			case path: Goal => {
-				//(path.size <= 1)
-				println("Pathfinding returned a path")
-				currentState match{
-					case CoordinateState(x,y,_,_) => {
-						adjustGoal
-						if(exploreMode)
-							explore(stateFactory.getCoordinate(x+goalXAdjustment, y+goalYAdjustment) )
-					}
-					case state => {
-						throw new Exception(state+" is an incompatable State")
-					}
-				}//end currentState match
+			case state => {
+				throw new Exception(state+" is an incompatable State")
 			}
-			case other => throw new Exception(other+" returned by moveAgent instead of a Goal")
-		}
-	}
-	/*
-	def sensorXYCoordinates = {
-		var relativeX = relativeLocationX.value
-		var xRange = (relativeX - sensorRange).toInt to (relativeX + sensorRange).toInt
-		var relativeY = relativeLocationY.value
-		var yRange = (relativeY - sensorRange).toInt to (relativeY + sensorRange).toInt
-		(xRange,yRange)
-	}
-	*/
+			}//end currentState match
+		}//end case path
+		case other => throw new Exception(other+" returned by moveAgent instead of a Goal")
+		}//end match moveAgent
+	}//end explore(start,goal)
+	
 	def explored(x: Int, y: Int): Boolean = {
 		exploredArea.contains(x,y)
 	}
@@ -138,8 +126,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			case state: CoordinateState => {
 				currentState match{
 					case CoordinateState(x,y,_,_) => {
-						if(move(state.x -x,state.y-y) )
-							return true//moved
+						if( move(state.x -x,state.y-y) )
+							return true
 						else{//hit an object/edge of map
 							updateCostOfTransversal(state, next, Double.PositiveInfinity)
 							return false
@@ -156,14 +144,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	
 	def move(x: Int,y: Int): Boolean = {
 		scan
-		(environment !! MoveCommand(this,x,y)).inputChannel.react(
-			{
-				case Displacement( deltaX, deltaY) => {
-					(deltaX != 0) && (deltaY != 0)//moved if true
-				}
-				case other => throw new Exception("MoveCommand reply was " +other+" instead of a Displacement")
-			}
-		)
+		println("Sending move command")
+		val Displacement( deltaX, deltaY) = (environment !! MoveCommand(this,x,y))()
+		println("Moved ("+deltaX+","+deltaY+")")
+		(deltaX != 0) || (deltaY != 0)//moved if true
 	}
 	
 	def sensor: Map[(State,State),Double] = lastSensorReadings
@@ -181,56 +165,58 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	
 	def scan(){
+		println("Scanning")
 		val scanFuture = environment !! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
-		scanFuture.inputChannel.react{
-			case Scan(scannedArea,detectedObstacles,detectedAgents) =>{
-				exploredArea += scannedArea
-				
-				import scala.collection.mutable
-				var tempMap = mutable.Map.empty[(State,State),Double]
-				
-				currentState match {
-					case state @ CoordinateState(x,y,_,_) => {
-						//add costs to all areas scanned, assuming empty
-						scannedArea.XYs().foreach(
-								xy => {
-									val (relativeX,relativeY) = xy
-									val horiz = x + relativeX
-									val vert = y + relativeY
-									val cost = math.max(math.abs(x-relativeX), math.abs(y-relativeY))
-									tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), cost)
-								}
-						)//end scannedArea
-						//updating cost for areas with obstalces detected
-						processDetectedObstacles(detectedObstacles).foreach( 
-								xy => {
-									val (relativeX,relativeY) = xy
-									val horiz = x + relativeX
-									val vert = y + relativeY
-									tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), Double.PositiveInfinity)
-								}
-						)//end processDetectedObstacles
-						processDetectedAgents(detectedAgents).foreach( 
-								xy => {
-									val (relativeX,relativeY) = xy
-									val horiz = x + relativeX
-									val vert = y + relativeY
-									tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), Double.PositiveInfinity)
-								}
-						)//end processDetectedAgents
-						lastSensorReadings = tempMap.toMap[(State,State),Double]
-					}//end case state
+		val Scan(scannedArea,detectedObstacles,detectedAgents) = scanFuture()
+		println("Updating explored area")
+		exploredArea += scannedArea
+		
+		import scala.collection.mutable
+		var tempMap = mutable.Map.empty[(State,State),Double]
+		//println("Getting currentState")
+		currentState match {
+			case state @ CoordinateState(x,y,_,_) => {
+				//add costs to all areas scanned, assuming empty
+				//println("Adding all costs as passable transitions")
+				scannedArea.XYs().foreach(
+						xy => {
+							val (relativeX,relativeY) = xy
+							val horiz = x + relativeX
+							val vert = y + relativeY
+							val cost = math.max(math.abs(x-relativeX), math.abs(y-relativeY))
+							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), cost)
+						}
+				)//end scannedArea
+				//updating cost for areas with obstalces detected
+				//println("Updating costs for detected obstacles")
+				processDetectedObstacles(detectedObstacles).foreach( 
+						xy => {
+							val (relativeX,relativeY) = xy
+							val horiz = x + relativeX
+							val vert = y + relativeY
+							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), Double.PositiveInfinity)
+						}
+				)//end processDetectedObstacles
+				//println("processing detected agents")
+				processDetectedAgents(detectedAgents).foreach( 
+						xy => {
+							val (relativeX,relativeY) = xy
+							val horiz = x + relativeX
+							val vert = y + relativeY
+							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), Double.PositiveInfinity)
+						}
+				)//end processDetectedAgents
+				println("Updating lastSensorReadings")
+				lastSensorReadings = tempMap.toMap[(State,State),Double]
+				println("lastSensorReadings = "+lastSensorReadings)
+			}//end case state
 
-					case state => {
-						throw new Exception(state+" is an incompatable State")
-					}
-				}//end currentState match
-				
-			}//end case Scan
-			
-			case improperValue => throw new Exception("Sensor scan returned the imnproper value: "+improperValue)
-		}
-	}
+			case state => {
+				throw new Exception(state+" is an incompatable State")
+			}
+		}//end currentState match
+		println("Finished processing scan")
+	}//end scan()
 	
 	
 	
@@ -243,16 +229,16 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			react
 			{
               case "Start" => {
-            	  worldDimensions andThen{
-            	 	  println("Ended worldDimensionsFuture.inputChannel.react")
-            	 	  println("Creating initial goal")
-            	 	  val goal = stateFactory.getCoordinate(0, goalIncrement)
-            	 	  println("Got initial goal")
-            	 	  explore(goal)
-            	  }
-            	  
-                  
+            	  worldDimensions 
+            	  println("Creating initial state")
+            	  val initial = stateFactory.getCoordinate(0, 0)
+            	  currentState = initial
+            	  println("Creating initial goal")
+            	  val goal = stateFactory.getCoordinate(0, goalIncrement)
+            	  println("Got initial goal")
+            	  explore(initial,goal)
               }//end case "Start"
+              
 			}//end react
 		}//end loop
 	}

@@ -118,7 +118,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                       if(deltaY != new Measurement(newY-oldY))
                         println(deltaY+"="+newY + "-" + oldY + "false")
                       */
-                      if(deltaX != new Measurement(0) && deltaY != new Measurement(0)){
+                      if(deltaX != new Measurement(0) || deltaY != new Measurement(0)){
                         /*
                         println(deltaX+"="+ new Measurement(newX-oldX))
                         println(deltaY+"="+ new Measurement(newY-oldY))
@@ -152,7 +152,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 							 val agent = world(senderAgent)
 							 val vectorX = obstacleX - agent.x
 							 val vectorY = obstacleY - agent.y
-							 val angle = new Measurement(math.atan2(vectorX, vectorY))
+							 val angle = new Measurement(math.atan2(vectorY, vectorX))
 							 val distance = new Measurement(math.sqrt(vectorX*vectorX + vectorY*vectorY))
 							 ObjectReading(angle, distance)
 						 }
@@ -177,7 +177,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                             //println("detectedObstacle: " + obstacle)
 						    val vectorX: Double = obstacle.x - agent.x
 						    val vectorY: Double = obstacle.y - agent.y
-						  	val angle = new Measurement(math.atan2(vectorX, vectorY),sensorDeltaAngle*math.Pi/180)
+						  	val angle = new Measurement(math.atan2(vectorY, vectorX),sensorDeltaAngle*math.Pi/180)
 						    val distance = new Measurement(math.sqrt(vectorX*vectorX + vectorY*vectorY),sensorDeltaRange)
 						    val objectReading = ObjectReading(angle, distance, obstacle.obstacleType)
                             //println("sent objectReading" + objectReading)

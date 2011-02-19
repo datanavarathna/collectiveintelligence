@@ -39,7 +39,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 				
 			  case MoveCommand(senderAgent,x,y) =>
 			  {
-				  
+				  println("Environment received MoveCommand")
                   if(world.contains(senderAgent))
 				  {
 					  var deltaX: Measurement = new Measurement(x,epsilon)
@@ -114,14 +114,16 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                           println("newX="+newX+" newY="+newY)
                           println("x="+x+" y="+y)
                       }
-					  reply( Displacement( deltaX, deltaY) )
+                      val replyMessage = Displacement( deltaX, deltaY)
+                      //println("Replied to MoveCommand with "+replyMessage)
+					  reply( replyMessage )
                       /*
                       if(deltaX != new Measurement(newX-oldX))
                         println(deltaX+"="+newX + "-" + oldX + "false")
                       if(deltaY != new Measurement(newY-oldY))
                         println(deltaY+"="+newY + "-" + oldY + "false")
                       */
-                      if(deltaX != new Measurement(0) && deltaY != new Measurement(0)){//if agent moved
+                      if(deltaX != new Measurement(0) || deltaY != new Measurement(0)){//if agent moved
                         /*
                         println(deltaX+"="+ new Measurement(newX-oldX))
                         println(deltaY+"="+ new Measurement(newY-oldY))
@@ -140,7 +142,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 			  }//end case MoveCommand
 			  case UpdateSensor(senderAgent, sensorRange, sensorDeltaAngle, sensorDeltaRange) =>
 			  {
-				   //println("UpdateSensor")
+				   println("UpdateSensor received")
 					 
 					 if(world.contains(senderAgent))
 					 {
@@ -156,7 +158,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 							//create coordinates relative distances from agent
 						    val vectorX: Double = obstacle.x - agentCoordinate.x
 						    val vectorY: Double = obstacle.y - agentCoordinate.y
-						  	val angle = new Measurement(math.atan2(vectorX, vectorY),sensorDeltaAngle*math.Pi/180)
+						  	val angle = new Measurement(math.atan2(vectorY, vectorX),sensorDeltaAngle*math.Pi/180)
 						    val distance = new Measurement(math.sqrt(vectorX*vectorX + vectorY*vectorY),sensorDeltaRange)
 						    val objectReading = ObjectReading(angle, distance, obstacle.obstacleType)
                             //println("sent objectReading" + objectReading)
