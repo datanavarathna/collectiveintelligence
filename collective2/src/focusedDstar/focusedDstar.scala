@@ -85,7 +85,7 @@ case class Goal(){
 	
 	override def equals(other: Any): Boolean = {
 		other match{
-			case that: NoPath => false
+			//case that: NoPath => false
 			case that: Goal => {
 				val thatPath = that.path
 				(pathList.size == thatPath.size) && 
@@ -97,14 +97,15 @@ case class Goal(){
 	
 	override def toString = path.toString
 }
-
+/*
 object Goal{
 	//def apply() = new Goal
 	def NoPath = new NoPath
 }
-
-case class NoPath() extends Goal {
-	override val isEmpty = true
+*/
+/*
+case class NoPath() {
+	 val isEmpty = true
 	
 	override def equals(other: Any): Boolean = {
 		other match{
@@ -113,7 +114,7 @@ case class NoPath() extends Goal {
 		}
 	}
 }
-
+*/
 class ReachedGoal extends Goal {
 	
 }
@@ -183,51 +184,7 @@ trait focusedDstar {
 	//g(x,y)
 	//estimated path cost from state X to state Y
 	def focussingHeuristic(x: State, y: State) = costOfTransversal(x,y)
-	/*
-	//f(X,Ri)
-	//estimated agent path cost
-	private def estimateAgentPathCost(x: State, agent: State): Double = {
-		heuristic(x) + focussingHeuristic(x,agent)
-	}
 	
-	//fB(X,Ri)
-	private def biasedEstimatedAgentPathCost(x: State, agent: State): Double = {
-		estimateAgentPathCost(x,agent) + accruedBias(agent)
-	}
-	
-	//d(Ri,R0)
-	private def accruedBias(agentState: State, initialAgentState: State = this.initialAgentState): Double = {
-		if(bias.isEmpty)
-			bias += (agentState -> 0.0 )
-		bias.getOrElseUpdate(currentState,
-			{
-				focussingHeuristic(agentState,agentStates.head)+ biasEpsilon + accruedBias(agentStates.head)
-				/*
-				//not performance optimized
-				var tempBias: Double = 0
-				var agentStateIndex = agentStates.indexOf(agentState)
-				var sequence = {
-					if(agentStateIndex < 0){
-						tempBias += focussingHeuristic(agentState,agentStates.head)+ biasEpsilon
-						agentStates
-					}else
-						agentStates.drop(agentStateIndex)
-				}
-				var iterator = sequence.iterator
-				var newerState: State = null
-				var currentState: State = iterator.next
-				while(iterator.hasNext){
-					newerState = currentState
-					currentState = iterator.next
-					tempBias += focussingHeuristic(newerState,currentState)
-				}
-				tempBias += sequence.size*biasEpsilon
-				return tempBias
-				*/
-			}
-		)
-	}//end accruedBias
-	*/
 	private def delete(x: State) = {
 		x.tag = Tag.Closed
 		//remove from open
@@ -316,7 +273,7 @@ trait focusedDstar {
 	
 	def moveAgent(start: State, goal: State): Goal = {
 		println("Executing moveAgent( "+start+" , "+goal+" )")
-		println("Initiailize")
+		println("Initialize")
 		//initialize
 		accruedBias = 0
 		initializeCurrentState(start)//currentState = start
@@ -331,7 +288,7 @@ trait focusedDstar {
 		if(start.tag == Tag.New )//goal is an unreachable state
 		{
 			println("Goal is unreachable")
-			return Goal.NoPath
+			return new Goal
 		}
 		var agentState = start
 		path.addStateToPath(start)
@@ -339,14 +296,18 @@ trait focusedDstar {
 			println("Check for discrepancies between sensor readings and state transistion costs")
 			//check that sensor is not empty
 			val sensorReadings = sensor
-			if(sensor == null)
+			if(sensor == null){
+				println("Sensor was empty")
 				throw new Exception("Sensor was empty")
+			}
+			println("SensorReadings: "+sensorReadings)
 			var discrepancies = sensorReadings.filter( element => {
 					val ((x: State, y: State), cost: Double) = element
 					(cost != costOfTransversal(x,y)) 
 				}
 			)
 			println("Sensor readings have been filtered")
+			println("Discrepancies: "+discrepancies)
 			if(!discrepancies.isEmpty)//if sensor readings disagree with model
 			{
 				println("Discrepancies exist")

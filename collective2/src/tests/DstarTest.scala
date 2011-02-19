@@ -85,7 +85,8 @@ class DstarTest extends JUnitSuite{
 		expectedPath.addStateToPath(factory.getCoordinate(0, 0))
 		expectedPath.addStateToPath(factory.getCoordinate(1, 1))
 		expectedPath.addStateToPath(factory.getCoordinate(2, 2))
-		assertTrue("Planned path was not a path",plannedPath != Goal.NoPath)
+		val emptyGoal = new Goal
+		assertTrue("Planned path was not a path",plannedPath != emptyGoal)
 		assertTrue(plannedPath+" != "+expectedPath, plannedPath == expectedPath)
 	}
 }

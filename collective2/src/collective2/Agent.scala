@@ -28,6 +28,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	//private[this] var worldWidth: Int = _
 	//private[this] var worldHeight: Int = _
 	
+	
+	
 	private val randomGenerator: Random = new Random
 	def randomPositiveNegative1(): Int = {
       return randomGenerator.nextInt(3) - 1
@@ -79,32 +81,42 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}
 	}
 	
+	def changeGoal(){
+		currentState match{
+			case CoordinateState(x,y,_,_) => {
+				adjustGoal
+				if(exploreMode)
+					explore(currentState,stateFactory.getCoordinate(x+goalXAdjustment, y+goalYAdjustment) )
+				}
+			case state => {
+				throwException(state+" is an incompatable State")
+			}
+		}//end currentState match
+	}
+	
 	def explore(start: State, goal: State){
 		println("Exploring to "+goal)
 		scan
 		println("Executing moveAgent(currentState,goal)")
 		moveAgent(start,goal) match {
 			/*
-				case path: NoPath => {
-
-				}
-			 */
-		case path: Goal => {
-			//(path.size <= 1)
-			println("Pathfinding returned a path")
-			currentState match{
-			case CoordinateState(x,y,_,_) => {
-				adjustGoal
-				if(exploreMode)
-					explore(currentState,stateFactory.getCoordinate(x+goalXAdjustment, y+goalYAdjustment) )
+			case path: NoPath => {
+				println("Pathfinding returned NoPath")
+				changeGoal
+				
 			}
-			case state => {
-				throw new Exception(state+" is an incompatable State")
+			*/
+			case path: Goal => {
+				//(path.size <= 1)
+				println("Pathfinding returned a path")
+				changeGoal
+				
+			}//end case path
+			case other => {
+				throwException(other+" returned by moveAgent instead of a Goal")
 			}
-			}//end currentState match
-		}//end case path
-		case other => throw new Exception(other+" returned by moveAgent instead of a Goal")
 		}//end match moveAgent
+		
 	}//end explore(start,goal)
 	
 	def explored(x: Int, y: Int): Boolean = {
@@ -134,11 +146,11 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						}
 					}
 					case state => {
-						throw new Exception(state+" is an incompatable State")
+						throwException(state+" is an incompatable State")
 					}
 				}//end currentState match
 			}//end case state: CoordinateState
-			case state => throw new Exception(state+"passed into moveTo is not a CoordinateState")
+			case state => throwException(state+" passed into moveTo is not a CoordinateState")
 		}
 	}
 	
@@ -183,7 +195,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							val (relativeX,relativeY) = xy
 							val horiz = x + relativeX
 							val vert = y + relativeY
-							val cost = math.max(math.abs(x-relativeX), math.abs(y-relativeY))
+							val cost = math.max(math.abs(x-horiz), math.abs(y-vert))
 							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), cost)
 						}
 				)//end scannedArea
@@ -212,7 +224,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			}//end case state
 
 			case state => {
-				throw new Exception(state+" is an incompatable State")
+				throwException(state+" is an incompatable State")
 			}
 		}//end currentState match
 		println("Finished processing scan")

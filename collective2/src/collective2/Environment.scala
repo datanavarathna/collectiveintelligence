@@ -247,8 +247,10 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                     world += (agent -> Coordinate(x,y))
                     println("Added following to world: " + agent + " x="+x+" y="+y)
                     agent.start
+                    /*
                     if(goalObstacleSet)
                         agent ! Goal(goalObstacle)
+                     */
                 }
                 println("Agents in World: " + world)
                 //send "Start" message to every agent in the world

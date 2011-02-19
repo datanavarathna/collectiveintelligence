@@ -1,6 +1,11 @@
 package collective2
 
 package object definitions {
+	def throwException(message: String) = {
+		println("Exception: "+message)
+		throw new Exception(message)
+	}
+	
 	def indexToXY(sizeX: Int, index: Int): (Int, Int) = {
 		require (sizeX > 0)
 		val x: Int = index % sizeX
@@ -133,7 +138,7 @@ case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType
 case class AgentReading(angle: Measurement, distance: Measurement) 
 case class Scan(scannedArea: QuadBitSet,detectedObstacles: List[ObjectReading],detectedAgents: List[AgentReading])
 
-case class Goal(goal:Obstacle)
+//case class Goal(goal:Obstacle)
 /*
 
 

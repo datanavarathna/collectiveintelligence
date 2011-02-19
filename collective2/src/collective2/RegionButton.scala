@@ -17,9 +17,9 @@ class RegionButton(val x: Int, val y: Int) extends Button {
     var obstacleType: Int = _
     val defaultBackground = background
 
-    var sensorRange: Double = 5
-    var sensorDeltaRange: Double = 0.5
-    var sensorDeltaAngle: Double = 0.2 //degree
+    var sensorRange: Double = 1
+    var sensorDeltaRange: Double = 0
+    var sensorDeltaAngle: Double = 0 //degree
 
 
     override def toString = "RegionButton - Status: " + status
