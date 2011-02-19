@@ -39,7 +39,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 				
 			  case MoveCommand(senderAgent,x,y) =>
 			  {
-				  println("Environment received MoveCommand")
+				  //println("Environment received MoveCommand")
                   if(world.contains(senderAgent))
 				  {
 					  var deltaX: Measurement = new Measurement(x,epsilon)
@@ -142,7 +142,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 			  }//end case MoveCommand
 			  case UpdateSensor(senderAgent, sensorRange, sensorDeltaAngle, sensorDeltaRange) =>
 			  {
-				   println("UpdateSensor received")
+				   //println("UpdateSensor received")
 					 
 					 if(world.contains(senderAgent))
 					 {

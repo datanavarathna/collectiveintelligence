@@ -122,13 +122,14 @@ class ReachedGoal extends Goal {
 trait focusedDstar {
 	val biasEpsilon: Double = Double.Epsilon
 	var goal: State = _
-	private var initialAgentState: State = null
+	//private var initialAgentState: State = null
 	//var biasedF: Double
 	//private var numOfAgentState: Int = 0
 	private var agentStates = new ListBuffer[State]() //zero based
-	private var bias = new WeakHashMap[State,Double]()//key State, value = Double
-	val noPath = 'NoPath
-	val path: Goal = new Goal
+	//private var bias = new WeakHashMap[State,Double]()//key State, value = Double
+	//val noPath = 'NoPath
+	var path: Goal = new Goal
+	private[this] var closedList: List[State] = Nil
 	
 	private[this] var stateTransitionOperation: ( State => Boolean) = _
 	
@@ -142,9 +143,11 @@ trait focusedDstar {
 	
 	def currentState: State = agentStates.head //Rcurr
 	def currentState_=(currentState: State) = {
-		println("Set currentState to "+currentState)
+		//println("Set currentState to "+currentState)
+		/*
 		if(agentStates.isEmpty)
 			initialAgentState = currentState
+		*/
 		agentStates.prepend(currentState)
 	}
 	def initializeCurrentState(state: State) = {
@@ -159,17 +162,17 @@ trait focusedDstar {
 	def costOfTransversal(x: State, y: State): Double //= x transitionCostTo y
 	
 	def transitionToState(next: State): State = {
-		println("Executing transitionToState")
-		println("CurrentState = "+currentState)
+		//println("Executing transitionToState")
+		//println("CurrentState = "+currentState)
 		if( stateTransitionOperation(next) ){
 			currentState = next//successfully transitioned to the next state
 			path.addStateToPath(currentState)
 		}else{
-			println("Failed to move to transition to ")
+			println("Failed to move to transition to "+next)
 		}
 		println("path= "+path)
-		println("CurrentState = "+currentState)
-		println("Exited stateTransitionOperation")
+		//println("CurrentState = "+currentState)
+		//println("Exited stateTransitionOperation")
 		currentState
 	}
 	
@@ -189,6 +192,7 @@ trait focusedDstar {
 		x.tag = Tag.Closed
 		//remove from open
 		open = open - x
+		closedList = x :: closedList
 	}
 	
 	private def putState(x: State){
@@ -271,15 +275,26 @@ trait focusedDstar {
 			return a1 <= b1	
 	}
 	
+	private def resetCheckedStates(){
+		open = TreeSet.empty[State](State.ordering)
+		for(state <- closedList){
+			state.tag = Tag.New 
+		}
+		closedList = Nil
+	}
+	
 	def moveAgent(start: State, goal: State): Goal = {
 		println("Executing moveAgent( "+start+" , "+goal+" )")
-		println("Initialize")
+		//println("Initialize")
 		//initialize
+		path = new Goal
+		resetCheckedStates()
+		
 		accruedBias = 0
 		initializeCurrentState(start)//currentState = start
 		insert(goal,0)
 		var temp: Option[(Double,Double)] = Some(0.0,0.0)
-		println("Find optimal path")
+		//println("Find optimal path")
 		//find optimal path
 		while(start.tag != Tag.Closed &&
 				temp != None /*unobstructed path exists to goal from start*/){
@@ -293,37 +308,37 @@ trait focusedDstar {
 		var agentState = start
 		path.addStateToPath(start)
 		while(agentState != goal){
-			println("Check for discrepancies between sensor readings and state transistion costs")
+			//println("Check for discrepancies between sensor readings and state transistion costs")
 			//check that sensor is not empty
 			val sensorReadings = sensor
 			if(sensor == null){
 				println("Sensor was empty")
 				throw new Exception("Sensor was empty")
 			}
-			println("SensorReadings: "+sensorReadings)
+			//println("SensorReadings: "+sensorReadings)
 			var discrepancies = sensorReadings.filter( element => {
 					val ((x: State, y: State), cost: Double) = element
 					(cost != costOfTransversal(x,y)) 
 				}
 			)
-			println("Sensor readings have been filtered")
-			println("Discrepancies: "+discrepancies)
+			//println("Sensor readings have been filtered")
+			//println("Discrepancies: "+discrepancies)
 			if(!discrepancies.isEmpty)//if sensor readings disagree with model
 			{
-				println("Discrepancies exist")
+				//println("Discrepancies exist")
 				if(agentState != currentState){
-					println("Update focal point of agentState")
+					//println("Update focal point of agentState")
 					accruedBias = accruedBias + focussingHeuristic(agentState,currentState) + biasEpsilon
 					currentState = agentState//update focal point
 				}
-				println("Update state transition costs")
+				//println("Update state transition costs")
 				discrepancies.foreach(element => {
 						val ((x: State, y: State), cost: Double) = element
 						temp = modifyCost(x,y,cost)
 					}
 				)//end processing discrepancies
 				//update costs and replan
-				println("Replan")
+				//println("Replan")
 				while( temp != None /*unobstructed path exists to goal from current state*/ && {
 							var Some(doubleDouble) = temp
 							lessThanTest(doubleDouble, cost(agentState))
@@ -333,15 +348,16 @@ trait focusedDstar {
 				}
 			}//end if discrepancies exist
 			else
-				println("No discrepancies detected")
+				//println("No discrepancies detected")
+			//println("AgentState before transitionToState "+agentState)	
 			agentState = transitionToState(agentState.parent)
 		}//end while state not goal
-		println("Returning path")	
+		//println("Returning path")	
 		return path
 	}
 	
 	private def processState(): Option[(Double,Double)] = {
-		println("Executing processState")
+		//println("Executing processState")
 		//lowest pathCost removed from open
 		var x = minState()
 		if (x == null) return None

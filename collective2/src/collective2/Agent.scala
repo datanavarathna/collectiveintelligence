@@ -14,6 +14,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double) 
             extends  Actor with CartesianCoordinateOneUnitDiagonalDStar
 {
+	private[this] val waitTime: Long = 100//ms
+	
 	setStateTransitionOperation(moveTo)//must execute before moveAgent called
 	private[this] var exploredArea = new QuadBitSet
 	
@@ -42,7 +44,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	def worldDimensions {
     	  println("Getting world dimensions")
     	  val worldDimensionsFuture = (environment !! 'Dimensions)
-    	  println("Got worldDimensionsFuture")
+    	  //println("Got worldDimensionsFuture")
     	  val (x: Int,y: Int) = worldDimensionsFuture()
     	  stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
     	  println("Created stateFactory")
@@ -95,9 +97,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	
 	def explore(start: State, goal: State){
-		println("Exploring to "+goal)
+		//println("Exploring to "+goal)
 		scan
-		println("Executing moveAgent(currentState,goal)")
+		//println("Executing moveAgent(currentState,goal)")
 		moveAgent(start,goal) match {
 			/*
 			case path: NoPath => {
@@ -108,7 +110,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			*/
 			case path: Goal => {
 				//(path.size <= 1)
-				println("Pathfinding returned a path")
+				//println("Pathfinding returned a path")
 				changeGoal
 				
 			}//end case path
@@ -133,7 +135,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	//navigate, then return to scan
 	
 	def moveTo(next: State): Boolean = {
-		println("moveTo "+next)
+		//println("moveTo "+next)
 		next match{
 			case state: CoordinateState => {
 				currentState match{
@@ -156,9 +158,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	
 	def move(x: Int,y: Int): Boolean = {
 		scan
-		println("Sending move command")
+		Thread.sleep(waitTime)
+		//println("Sending move command")
 		val Displacement( deltaX, deltaY) = (environment !! MoveCommand(this,x,y))()
-		println("Moved ("+deltaX+","+deltaY+")")
+		//println("Moved ("+deltaX+","+deltaY+")")
 		(deltaX != 0) || (deltaY != 0)//moved if true
 	}
 	
@@ -177,10 +180,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	
 	def scan(){
-		println("Scanning")
+		//println("Scanning")
 		val scanFuture = environment !! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
 		val Scan(scannedArea,detectedObstacles,detectedAgents) = scanFuture()
-		println("Updating explored area")
+		//println("Updating explored area")
 		exploredArea += scannedArea
 		
 		import scala.collection.mutable
@@ -218,16 +221,16 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), Double.PositiveInfinity)
 						}
 				)//end processDetectedAgents
-				println("Updating lastSensorReadings")
+				//println("Updating lastSensorReadings")
 				lastSensorReadings = tempMap.toMap[(State,State),Double]
-				println("lastSensorReadings = "+lastSensorReadings)
+				//println("lastSensorReadings = "+lastSensorReadings)
 			}//end case state
 
 			case state => {
 				throwException(state+" is an incompatable State")
 			}
 		}//end currentState match
-		println("Finished processing scan")
+		//println("Finished processing scan")
 	}//end scan()
 	
 	
