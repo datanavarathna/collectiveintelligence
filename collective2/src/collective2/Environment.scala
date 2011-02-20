@@ -22,6 +22,16 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 
   private val epsilon = 0.001
   
+  //creat border of obstacles around world limit
+  for(y <- (minY-1) to (maxY+1)){
+	  obstacles.add(minX-1,y,new Obstacle(1,minX-1,y))
+	  obstacles.add(maxX+1,y,new Obstacle(1,maxX+1,y))
+  }
+  for(x <- (minX-1) to (maxX+1)){
+	  obstacles.add(x,minY-1,new Obstacle(1,x,minY-1))
+	  obstacles.add(x,maxY+1,new Obstacle(1,x,maxY+1))
+  }
+  
   def dimensions: (Int,Int) = {
 	  (maxX-minX,maxY-minY)
   }
@@ -167,7 +177,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 						 //computer scanned space
 						 val scannedArea = new QuadBitSet
 						 val range = sensorRange.toInt
-						 for(x <- 0 to range; y <- 0 to range; if(math.sqrt(x*x+y*y) <= range)){
+						 for( x <- (-range) to range; y <- (-range) to range; if(math.sqrt(x*x+y*y) <= range) ){
 							scannedArea.add(x,y) 
 						 }
 

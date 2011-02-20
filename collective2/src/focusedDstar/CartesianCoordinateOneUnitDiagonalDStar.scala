@@ -63,14 +63,27 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 	def costOfTransversal(x: State, y: State): Double = {
 		(x,y) match {
 			case (a: CoordinateState, b: CoordinateState) => {
-				passabilityMap.getOrElse((a,b),
-						if(a.passable && b.passable )
-							math.max(math.abs(a.x-b.x), math.abs(a.y-b.y))
+				val result = passabilityMap.getOrElse((a,b),
+						if(a.passable && b.passable ){
+							val aX = a.x 
+							val aY = a.y 
+							val bX = b.x 
+							val bY = b.y 
+							val diffX = math.abs(aX-bX)
+							val diffY = math.abs(aY-bY)
+							var cost: Double = math.max(diffX, diffY)
+							if(diffX > 0 && diffY > 0)
+								cost = cost + 0.0001
+							cost
+						}	
 						else{
 							updateCostOfTransversal(a,b,Double.PositiveInfinity)
 							Double.PositiveInfinity
 						}
 				)
+				//if((a.x == 0 && a.y == -1) || (b.x == 0 && b.y == -1) )
+				//	println("cost ("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+result )
+				result
 			}
 			
 			case _ => throw new Exception(x+" and "+y+" are not CoordinateState")
@@ -81,6 +94,11 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 		(x,y) match {
 			case (a: CoordinateState, b: CoordinateState) => {
 				passabilityMap +=((a,b) -> costValue)
+				//passabilityMap +=((b,a) -> costValue)
+				if((a.x == 0 && a.y == -1) || (b.x == 0 && b.y == -1) ){
+					println("update("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+costValue )
+					//println("update("+b.x+","+b.y+")->("+a.x+","+a.y+")= "+costValue )
+				}
 			}
 			
 			case _ => throw new Exception(x+" and "+y+" are not CoordinateStates")

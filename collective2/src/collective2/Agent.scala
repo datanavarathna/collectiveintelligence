@@ -44,7 +44,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	def worldDimensions {
     	  println("Getting world dimensions")
     	  val worldDimensionsFuture = (environment !! 'Dimensions)
-    	  //println("Got worldDimensionsFuture")
+    	  println("Got worldDimensionsFuture")
     	  val (x: Int,y: Int) = worldDimensionsFuture()
     	  stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
     	  println("Created stateFactory")
@@ -97,9 +97,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	
 	def explore(start: State, goal: State){
-		//println("Exploring to "+goal)
+		println("Exploring to "+goal)
 		scan
-		//println("Executing moveAgent(currentState,goal)")
+		println("Executing moveAgent(currentState,goal)")
+		//println("Obstacle: "+stateFactory.getCoordinate(0, -1))
 		moveAgent(start,goal) match {
 			/*
 			case path: NoPath => {
@@ -110,7 +111,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			*/
 			case path: Goal => {
 				//(path.size <= 1)
-				//println("Pathfinding returned a path")
+				println("Pathfinding returned a path")
 				changeGoal
 				
 			}//end case path
@@ -135,7 +136,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	//navigate, then return to scan
 	
 	def moveTo(next: State): Boolean = {
-		//println("moveTo "+next)
+		println("moveTo "+next)
 		next match{
 			case state: CoordinateState => {
 				currentState match{
@@ -159,9 +160,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	def move(x: Int,y: Int): Boolean = {
 		scan
 		Thread.sleep(waitTime)
-		//println("Sending move command")
+		println("Sending move command")
 		val Displacement( deltaX, deltaY) = (environment !! MoveCommand(this,x,y))()
-		//println("Moved ("+deltaX+","+deltaY+")")
+		println("Moved ("+deltaX+","+deltaY+")")
 		(deltaX != 0) || (deltaY != 0)//moved if true
 	}
 	
@@ -180,19 +181,44 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	
 	def scan(){
-		//println("Scanning")
+		println("Scanning")
 		val scanFuture = environment !! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
 		val Scan(scannedArea,detectedObstacles,detectedAgents) = scanFuture()
-		//println("Updating explored area")
+		println("Updating explored area")
 		exploredArea += scannedArea
 		
 		import scala.collection.mutable
 		var tempMap = mutable.Map.empty[(State,State),Double]
-		//println("Getting currentState")
+		println("Getting currentState")
 		currentState match {
 			case state @ CoordinateState(x,y,_,_) => {
 				//add costs to all areas scanned, assuming empty
-				//println("Adding all costs as passable transitions")
+				println("Adding all costs as passable transitions")
+				//println("scannedArea: "+scannedArea.XYs)
+				var scannedStates: List[(Int,Int)] = for(xy <- scannedArea.XYs)yield {
+					val (relativeX,relativeY) = xy
+					val horiz = x + relativeX
+					val vert = y + relativeY
+					(horiz,vert)
+				}
+				var scannedStatesIterator = scannedStates.toIterator
+				while(scannedStatesIterator.hasNext)
+				{
+					val (horiz,vert) = scannedStatesIterator.next
+					for(xy <- scannedStates; if{
+							val (horiz2: Int,vert2: Int) = xy
+							((horiz,vert) != xy ) && math.abs(horiz-horiz2)<=1 && math.abs(vert-vert2)<=1
+						} ){
+						val (horiz2: Int,vert2: Int) = xy
+						val cost = math.max(math.abs(horiz2-horiz), math.abs(vert2-vert))
+						val state1 = stateFactory.getCoordinate(horiz,vert)
+						val state2 = stateFactory.getCoordinate(horiz2,vert2)
+						if(state1 != null && state2 != null)
+							tempMap.put((state1,state2), cost)
+						//tempMap.put((stateFactory.getCoordinate(horiz2,vert2),stateFactory.getCoordinate(horiz,vert)), cost)
+					}
+				}
+				/*
 				scannedArea.XYs().foreach(
 						xy => {
 							val (relativeX,relativeY) = xy
@@ -202,35 +228,60 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), cost)
 						}
 				)//end scannedArea
+				*/
 				//updating cost for areas with obstalces detected
-				//println("Updating costs for detected obstacles")
+				println("Updating costs for detected obstacles")
 				processDetectedObstacles(detectedObstacles).foreach( 
 						xy => {
 							val (relativeX,relativeY) = xy
 							val horiz = x + relativeX
 							val vert = y + relativeY
-							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), Double.PositiveInfinity)
+							for(xy <- scannedStates; if{
+								val (horiz2: Int,vert2: Int) = xy
+								((horiz,vert) != xy ) && math.abs(horiz-horiz2)<=1 && math.abs(vert-vert2)<=1
+							} ){
+								val (horiz2,vert2) = xy
+								println("("+horiz+","+vert+")->("+horiz2+","+vert2+") obstacle")
+								val state1 = stateFactory.getCoordinate(horiz,vert)
+								val state2 = stateFactory.getCoordinate(horiz2,vert2)
+								if(state1 != null && state2 != null){
+									tempMap.put((state1,state2), Double.PositiveInfinity)
+									tempMap.put((state2,state1), Double.PositiveInfinity)
+								}
+							}
 						}
 				)//end processDetectedObstacles
-				//println("processing detected agents")
+				println("processing detected agents")
 				processDetectedAgents(detectedAgents).foreach( 
 						xy => {
 							val (relativeX,relativeY) = xy
 							val horiz = x + relativeX
 							val vert = y + relativeY
-							tempMap.put((state,stateFactory.getCoordinate(horiz,vert)), Double.PositiveInfinity)
+							for(xy <- scannedStates; if{
+								val (horiz2: Int,vert2: Int) = xy
+								((horiz,vert) != xy ) && math.abs(horiz-horiz2)<=1 && math.abs(vert-vert2)<=1
+							} ){
+								val (horiz2,vert2) = xy
+								println("("+horiz+","+vert+")->("+horiz2+","+vert2+") agent")
+								val state1 = stateFactory.getCoordinate(horiz,vert)
+								val state2 = stateFactory.getCoordinate(horiz2,vert2)
+								if(state1 != null && state2 != null){
+									tempMap.put((state1,state2), Double.PositiveInfinity)
+									tempMap.put((state2,state1), Double.PositiveInfinity)
+								}
+							}
 						}
 				)//end processDetectedAgents
-				//println("Updating lastSensorReadings")
+				println("Updating lastSensorReadings")
 				lastSensorReadings = tempMap.toMap[(State,State),Double]
-				//println("lastSensorReadings = "+lastSensorReadings)
+				println("lastSensorReadings = "+lastSensorReadings)
 			}//end case state
 
 			case state => {
 				throwException(state+" is an incompatable State")
 			}
 		}//end currentState match
-		//println("Finished processing scan")
+		println("Finished processing scan")
 	}//end scan()
 	
 	

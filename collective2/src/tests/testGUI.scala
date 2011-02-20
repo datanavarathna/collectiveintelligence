@@ -7,8 +7,8 @@ import collective2._
 object testGUI extends SimpleGUIApplication{
     val width = 600
     val height = 400
-    val environmentX = 10
-    val environmentY = 10
+    val environmentX = 1
+    val environmentY = 2
 
     def top = new MainFrame{
         title = "Scala Collective"
