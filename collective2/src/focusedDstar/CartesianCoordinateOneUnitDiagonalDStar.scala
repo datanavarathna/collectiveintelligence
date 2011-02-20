@@ -84,7 +84,7 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 						}
 				)
 				//if((a.x == 0 && a.y == -1) || (b.x == 0 && b.y == -1) )
-					println("cost ("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+result )
+					//println("cost ("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+result )
 				result
 			}
 			
