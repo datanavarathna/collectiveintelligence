@@ -177,7 +177,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 						 //computer scanned space
 						 val scannedArea = new QuadBitSet
 						 val range = sensorRange.toInt
-						 for( x <- (-range) to range; y <- (-range) to range; if(math.sqrt(x*x+y*y) <= range) ){
+						 for( x <- (-range) to range; y <- (-range) to range; if(math.sqrt(x*x+y*y) <= sensorRange) ){
 							scannedArea.add(x,y) 
 						 }
 

@@ -175,7 +175,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		(deltaX != 0) || (deltaY != 0)//moved if true
 	}
 	
-	def sensor: Map[(State,State),Double] = lastSensorReadings
+	def sensor: Map[(State,State),Double] = scan
 	
 	def processDetectedObstacles(detectedObstacles: List[ObjectReading]): Iterable[(Int,Int)] = {
 		return for(obstacle <- detectedObstacles) yield{
@@ -189,7 +189,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}
 	}
 	
-	def scan(){
+	def scan(): Map[(State,State),Double] = {
 		println("Scanning")
 		val scanFuture = environment !! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
 		val Scan(scannedArea,detectedObstacles,detectedAgents) = scanFuture()
@@ -293,6 +293,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			}
 		}//end currentState match
 		println("Finished processing scan")
+		lastSensorReadings
 	}//end scan()
 	
 	
@@ -313,6 +314,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  println("Creating initial goal")
             	  val goal = stateFactory.getCoordinate(0, -goalIncrement)
             	  println("Got initial goal")
+            	  scan
+            	  initialScan
             	  explore(initial,goal)
               }//end case "Start"
               

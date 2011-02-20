@@ -5,7 +5,7 @@ import scala.collection.mutable
 case class CoordinateState(val x: Int, val y: Int, var passable: Boolean = true,
 		factory: StateConstructor) extends State(factory){
 	
-	override def toString = "CoordinateState("+x+","+y+","+"passable="+passable+")"
+	override def toString = "CoordinateState("+x+","+y+","+"passable="+passable+","+super.toString+")"
 	
 }
 
