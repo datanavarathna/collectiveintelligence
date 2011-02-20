@@ -11,7 +11,8 @@ import focusedDstar._
 case class detectedObstacles()
 
 class Agent(val environment: Actor, val collectiveMap: Actor,
-            val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double) 
+            val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double,
+            override val obstacleCost: Double = 1E6) 
             extends  Actor with CartesianCoordinateOneUnitDiagonalDStar
 {
 	private[this] val waitTime: Long = 100//ms
@@ -86,10 +87,18 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	def changeGoal(){
 		currentState match{
 			case CoordinateState(x,y,_,_) => {
-				adjustGoal
-				if(exploreMode)
-					explore(currentState,stateFactory.getCoordinate(x+goalXAdjustment, y+goalYAdjustment) )
-				}
+				var index = 0
+				var goal: CoordinateState = null
+				do{
+					adjustGoal
+					index += 1
+					goal = stateFactory.getCoordinate(x+goalXAdjustment, y+goalYAdjustment)
+				}while(goal == null && index <4)
+				if(exploreMode && index <4){
+					explore(currentState,goal)
+				}else
+					println("Finished Exploring")
+			}
 			case state => {
 				throwException(state+" is an incompatable State")
 			}
@@ -144,7 +153,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						if( move(state.x -x,state.y-y) )
 							return true
 						else{//hit an object/edge of map
-							updateCostOfTransversal(state, next, Double.PositiveInfinity)
+							modifyCost(currentState, next, obstacleCost)
 							return false
 						}
 					}
@@ -189,11 +198,11 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		
 		import scala.collection.mutable
 		var tempMap = mutable.Map.empty[(State,State),Double]
-		println("Getting currentState")
+		//println("Getting currentState")
 		currentState match {
 			case state @ CoordinateState(x,y,_,_) => {
 				//add costs to all areas scanned, assuming empty
-				println("Adding all costs as passable transitions")
+				//println("Adding all costs as passable transitions")
 				//println("scannedArea: "+scannedArea.XYs)
 				var scannedStates: List[(Int,Int)] = for(xy <- scannedArea.XYs)yield {
 					val (relativeX,relativeY) = xy
@@ -230,7 +239,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				)//end scannedArea
 				*/
 				//updating cost for areas with obstalces detected
-				println("Updating costs for detected obstacles")
+				//println("Updating costs for detected obstacles")
 				processDetectedObstacles(detectedObstacles).foreach( 
 						xy => {
 							val (relativeX,relativeY) = xy
@@ -241,17 +250,18 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 								((horiz,vert) != xy ) && math.abs(horiz-horiz2)<=1 && math.abs(vert-vert2)<=1
 							} ){
 								val (horiz2,vert2) = xy
-								println("("+horiz+","+vert+")->("+horiz2+","+vert2+") obstacle")
+								//println("("+horiz+","+vert+")->("+horiz2+","+vert2+") obstacle")
 								val state1 = stateFactory.getCoordinate(horiz,vert)
 								val state2 = stateFactory.getCoordinate(horiz2,vert2)
+								//println("state1: "+state1+ " state2: "+state2)
 								if(state1 != null && state2 != null){
-									tempMap.put((state1,state2), Double.PositiveInfinity)
-									tempMap.put((state2,state1), Double.PositiveInfinity)
+									tempMap.put((state1,state2), obstacleCost)
+									tempMap.put((state2,state1), obstacleCost)
 								}
 							}
 						}
 				)//end processDetectedObstacles
-				println("processing detected agents")
+				//println("processing detected agents")
 				processDetectedAgents(detectedAgents).foreach( 
 						xy => {
 							val (relativeX,relativeY) = xy
@@ -262,19 +272,20 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 								((horiz,vert) != xy ) && math.abs(horiz-horiz2)<=1 && math.abs(vert-vert2)<=1
 							} ){
 								val (horiz2,vert2) = xy
-								println("("+horiz+","+vert+")->("+horiz2+","+vert2+") agent")
+								//println("("+horiz+","+vert+")->("+horiz2+","+vert2+") agent")
 								val state1 = stateFactory.getCoordinate(horiz,vert)
 								val state2 = stateFactory.getCoordinate(horiz2,vert2)
+								//println("state1: "+state1+ " state2: "+state2)
 								if(state1 != null && state2 != null){
-									tempMap.put((state1,state2), Double.PositiveInfinity)
-									tempMap.put((state2,state1), Double.PositiveInfinity)
+									tempMap.put((state1,state2), obstacleCost)
+									tempMap.put((state2,state1), obstacleCost)
 								}
 							}
 						}
 				)//end processDetectedAgents
-				println("Updating lastSensorReadings")
+				//println("Updating lastSensorReadings")
 				lastSensorReadings = tempMap.toMap[(State,State),Double]
-				println("lastSensorReadings = "+lastSensorReadings)
+				//println("lastSensorReadings = "+lastSensorReadings)
 			}//end case state
 
 			case state => {
@@ -300,7 +311,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  val initial = stateFactory.getCoordinate(0, 0)
             	  currentState = initial
             	  println("Creating initial goal")
-            	  val goal = stateFactory.getCoordinate(0, goalIncrement)
+            	  val goal = stateFactory.getCoordinate(0, -goalIncrement)
             	  println("Got initial goal")
             	  explore(initial,goal)
               }//end case "Start"

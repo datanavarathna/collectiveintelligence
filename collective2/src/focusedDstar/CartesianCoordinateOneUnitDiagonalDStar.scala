@@ -14,6 +14,8 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstru
 	val (maxX,maxY)= maxXY
 	var coordinates = mutable.WeakHashMap.empty[(Int,Int),CoordinateState]
 	
+	println("CoordinateCreator( ("+minX+","+minY+"), ("+maxX+","+maxY+") )")
+	
 	def withinBounds(x: Int, y: Int): Boolean = {
 		minX <= x && x <= maxX &&  minY <= y && y <= maxY
 	}
@@ -55,7 +57,7 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstru
 }
 
 trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
-
+	
 	private var passabilityMap = mutable.Map.empty[(CoordinateState,CoordinateState),Double]
 	
 	def sensor: Map[(State,State),Double] 
@@ -77,12 +79,12 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 							cost
 						}	
 						else{
-							updateCostOfTransversal(a,b,Double.PositiveInfinity)
-							Double.PositiveInfinity
+							updateCostOfTransversal(a,b,obstacleCost)
+							obstacleCost
 						}
 				)
 				//if((a.x == 0 && a.y == -1) || (b.x == 0 && b.y == -1) )
-				//	println("cost ("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+result )
+					println("cost ("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+result )
 				result
 			}
 			
@@ -95,10 +97,10 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 			case (a: CoordinateState, b: CoordinateState) => {
 				passabilityMap +=((a,b) -> costValue)
 				//passabilityMap +=((b,a) -> costValue)
-				if((a.x == 0 && a.y == -1) || (b.x == 0 && b.y == -1) ){
+				//if((a.x == 0 && a.y == -1) || (b.x == 0 && b.y == -1) ){
 					println("update("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+costValue )
 					//println("update("+b.x+","+b.y+")->("+a.x+","+a.y+")= "+costValue )
-				}
+				//}
 			}
 			
 			case _ => throw new Exception(x+" and "+y+" are not CoordinateStates")
