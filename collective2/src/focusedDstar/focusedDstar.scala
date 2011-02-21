@@ -147,7 +147,7 @@ trait focusedDstar {
 	
 	private[this] var stateTransitionOperation: ( State => Boolean) = _
 	
-	private[this] var failedToTransition = false
+	private[this] var failedToTransition = 0
 	
 	var maxProcessNumber : Int = 20
 	private[this] var processNumber: Int = 0
@@ -193,12 +193,12 @@ trait focusedDstar {
 		if( stateTransitionOperation(next) ){
 			currentState = next//successfully transitioned to the next state
 			path.addStateToPath(currentState)
-			failedToTransition = false
+			failedToTransition = 0  
 		}else{
 			println("FAILED to move to transition to "+next)
 			println("path= "+path)
-			failedToTransition = true
-			throw new Exception("Failed to move to transition state")
+			failedToTransition += 1 
+			//throw new Exception("Failed to move to transition state")
 		}
 		//println("path= "+path)
 		//println("CurrentState = "+currentState)
@@ -404,7 +404,7 @@ trait focusedDstar {
 		//initialize
 		path = new Goal
 		resetCheckedStates()
-		failedToTransition = false
+		failedToTransition = 0
 		
 		accruedBias = 0
 		initializeCurrentState(start)//currentState = start
@@ -444,7 +444,7 @@ trait focusedDstar {
 		}
 		var agentState = start
 		path.addStateToPath(start)
-		while(agentState != goal && stateReachable(goal)){
+		while(agentState != goal && stateReachable(goal) && failedToTransition < 5){
 			//println("Check for discrepancies between sensor readings and state transistion costs")
 			//check that sensor is not empty
 			val sensorReadings = sensor
@@ -460,7 +460,7 @@ trait focusedDstar {
 			)
 			//println("Sensor readings have been filtered")
 			//println("Discrepancies: "+discrepancies)
-			if(!discrepancies.isEmpty || failedToTransition)//if sensor readings disagree with model
+			if(!discrepancies.isEmpty || failedToTransition > 0)//if sensor readings disagree with model
 			{
 				//println("Discrepancies exist")
 				if(agentState != currentState){
