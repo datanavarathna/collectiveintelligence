@@ -107,7 +107,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	
 	def explore(start: State, goal: State){
 		println("Exploring to "+goal)
-		scan
+		//scan
 		println("Executing moveAgent(currentState,goal)")
 		//println("Obstacle: "+stateFactory.getCoordinate(0, -1))
 		moveAgent(start,goal) match {
@@ -167,7 +167,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	
 	def move(x: Int,y: Int): Boolean = {
-		scan
+		//scan
 		Thread.sleep(waitTime)
 		println("Sending move command")
 		val Displacement( deltaX, deltaY) = (environment !! MoveCommand(this,x,y))()
@@ -314,8 +314,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  println("Creating initial goal")
             	  val goal = stateFactory.getCoordinate(0, -goalIncrement)
             	  println("Got initial goal")
-            	  scan
-            	  initialScan
+            	  //scan
+            	  //initialScan
             	  explore(initial,goal)
               }//end case "Start"
               

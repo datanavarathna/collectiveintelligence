@@ -57,6 +57,7 @@ abstract class State(factory: StateConstructor) /*extends Ordering[State]*/
 	var agentStateWhenModified: State = null
 	
 	override def toString() = "State(tag="+tag+",k="+k+",h="+h+",f="+estimatedPathCost+",fB="+biasedEstimatedPathCost+")"
+	//"State(tag="+tag+",k=%5.1,f=%5.1f,fb=%5.1f),".format(k,h,estimatedPathCost,biasedEstimatedPathCost)
 	
 	lazy val neighbors: Seq[State] = factory.getNeighbors(this)
 	/*
@@ -158,7 +159,7 @@ trait focusedDstar {
 	
 	def currentState: State = agentStates.head //Rcurr
 	def currentState_=(currentState: State) = {
-		//println("Set currentState to "+currentState)
+		println("Set currentState to "+currentState)
 		/*
 		if(agentStates.isEmpty)
 			initialAgentState = currentState
@@ -184,19 +185,21 @@ trait focusedDstar {
 	}
 	
 	def transitionToState(next: State): State = {
-		//println("Executing transitionToState")
-		//println("CurrentState = "+currentState)
+		println("Executing transitionToState")
+		println("CurrentState = "+currentState)
 		if( stateTransitionOperation(next) ){
 			currentState = next//successfully transitioned to the next state
 			path.addStateToPath(currentState)
 			failedToTransition = false
 		}else{
 			println("FAILED to move to transition to "+next)
+			println("path= "+path)
 			failedToTransition = true
+			throw new Exception("Failed to move to transition state")
 		}
-		//println("path= "+path)
-		//println("CurrentState = "+currentState)
-		//println("Exited stateTransitionOperation")
+		println("path= "+path)
+		println("CurrentState = "+currentState)
+		println("Exited stateTransitionOperation")
 		currentState
 	}
 	
@@ -231,25 +234,39 @@ trait focusedDstar {
 	//estimate of cost from state X to Goal, always positive
 	def heuristic(x: State): Double = costOfTransversal(x,goal)
 	
+	/*
+	//works same as x.h
+	private[this] var heuristicValues = collection.mutable.WeakHashMap.empty[State,Double]
+	def h(x: State):Double = heuristicValues.getOrElseUpdate(x,{
+		if(goal != null)
+			heuristic(x)
+		else
+			0.0
+	})
+	def h(x: State, value: Double){
+		heuristicValues += (x->value)
+	}
+	*/
+	
 	//g(x,y)
 	//estimated path cost from state X to state Y
 	def focussingHeuristic(x: State, y: State) = costOfTransversal(x,y)
 	
 	private def delete(x: State) = {
-		//println("delete( "+x+" )")
+		println("delete( "+x+" )")
 		x.tag = Tag.Closed
 		//remove from open
 		open = open - x
-		//println("open: "+open)
+		println("open: "+open)
 		closedList = x :: closedList
-		//println("closed: "+closedList)
+		println("closed: "+closedList)
 	}
 	
 	private def putState(x: State){
-		//println("putState( "+x+" )")
+		println("putState( "+x+" )")
 		x.tag = Tag.Open 
 		open = open + x
-		//println("open: "+open)
+		println("open: "+open)
 	}
 	
 	private def insert(x: State, newH: Double){
@@ -258,7 +275,7 @@ trait focusedDstar {
 			//update(x)
 		}
 		//hTest(x,"x")
-		//println("insert ( "+x+", "+newH+")")
+		println("insert ( "+x+", "+newH+")")
 		
 		if(x.tag == Tag.New )
 			x.k = newH
@@ -273,15 +290,15 @@ trait focusedDstar {
 		x.agentStateWhenModified = currentState
 		x.estimatedPathCost = x.k + focussingHeuristic(x,currentState)
 		x.biasedEstimatedPathCost = x.estimatedPathCost + accruedBias//accruedBias(currentState)
-		//println("x.h= "+x.h)
-		//println("x.agentStateWhenModified= "+x.agentStateWhenModified)
-		//println("x.estimatedPathCost= "+x.estimatedPathCost)
-		//println("x.biasedEstimatedPathCost= "+x.biasedEstimatedPathCost)
+		println("x.h= "+x.h)
+		println("x.agentStateWhenModified= "+x.agentStateWhenModified)
+		println("x.estimatedPathCost= "+x.estimatedPathCost)
+		println("x.biasedEstimatedPathCost= "+x.biasedEstimatedPathCost)
 		putState(x)
 	}//end insert
 	
 	private def minState(): State = {
-		//println("minState")
+		println("minState")
 		var result: State = null
 		var foundResult = false
 		while(!open.isEmpty && !foundResult){
@@ -299,7 +316,7 @@ trait focusedDstar {
 				foundResult = true
 			}
 		}
-		//println(" = "+result)
+		println(" = "+result)
 		return result
 	}
 	
@@ -311,16 +328,16 @@ trait focusedDstar {
 				}else
 					None
 		}
-		//println("minValue = "+result)
+		println("minValue = "+result)
 		result
 	}
 	
 	def modifyCost(x: State, y: State, costValue: Double): Option[(Double,Double)] = {
-		//println("modifyCost( "+x+", "+y+", "+costValue+" )")
+		println("modifyCost( "+x+", "+y+", "+costValue+" )")
 		updateTransition(x,y,costValue)
-		//println("Updates( "+x+", "+y+", "+costValue+" )")
+		println("Updates( "+x+", "+y+", "+costValue+" )")
 		if(x.tag == Tag.Closed ){
-			//println("x.tag = Tag.Closed")
+			println("x.tag = Tag.Closed")
 			hTest(x,"x")
 			insert(x,x.h)
 		}
@@ -328,13 +345,13 @@ trait focusedDstar {
 	}
 	
 	private def cost(x: State): (Double, Double) = {
-		//println("cost( "+x+" )")
+		println("cost( "+x+" )")
 		//update(x)
 		hTest(x,"x")
 		var guess= x.h
 		var estimatedPathCost = guess + focussingHeuristic(x, currentState)
 		x.estimatedPathCost = estimatedPathCost
-		//println("= ("+estimatedPathCost+","+guess+")")
+		println("= ("+estimatedPathCost+","+guess+")")
 		return (estimatedPathCost, guess)
 	}
 	
@@ -357,12 +374,15 @@ trait focusedDstar {
 	}
 	
 	private def resetCheckedStates(){
-		//println("resetCheckedStates")
+		println("resetCheckedStates")
 		open = TreeSet.empty[State](State.ordering)
 		for(state <- closedList){
 			state.reset()
+			state.neighbors.foreach( neighbor => neighbor.reset())
 		}
 		closedList = Nil
+		
+		//heuristicValues = collection.mutable.WeakHashMap.empty[State,Double]
 	}
 	
 	def initialScan(){
@@ -393,7 +413,7 @@ trait focusedDstar {
 			temp = processState()
 		}
 		{
-			//println("if(start.h >= obstacleCost)")
+			println("if(start.h >= obstacleCost)")
 			hTest(start,"start")
 			if(start.h >= obstacleCost){
 				println("NO UNOBSTRUCTED PATH EXISTS from "+start+" to "+goal)
@@ -416,13 +436,13 @@ trait focusedDstar {
 				println("Sensor was empty")
 				throw new Exception("Sensor was empty")
 			}
-			//println("SensorReadings: "+sensorReadings)
+			println("SensorReadings: "+sensorReadings)
 			var discrepancies = sensorReadings.filter( element => {
 					val ((x: State, y: State), cost: Double) = element
 					(cost != costOfTransversal(x,y)) 
 				}
 			)
-			//println("Sensor readings have been filtered")
+			println("Sensor readings have been filtered")
 			println("Discrepancies: "+discrepancies)
 			if(!discrepancies.isEmpty || failedToTransition)//if sensor readings disagree with model
 			{
@@ -448,7 +468,7 @@ trait focusedDstar {
 					temp = processState() 
 				}
 				{
-					//println("if(agentState.h >= obstacleCost)")
+					println("if(agentState.h >= obstacleCost)")
 					hTest(agentState,"agentState")
 					if(agentState.h >= obstacleCost){
 						println("NO UNOBSTRUCTED PATH EXISTS from "+agentState+" to "+goal)
@@ -460,7 +480,7 @@ trait focusedDstar {
 			else{
 				println("No discrepancies detected")
 			}
-			//println("AgentState before transitionToState "+agentState)	
+			println("AgentState before transitionToState "+agentState)	
 			agentState = transitionToState(agentState.parent)
 		}//end while state not goal
 		println("Goal reached")	
@@ -486,28 +506,28 @@ trait focusedDstar {
 		var x = minState()
 		if (x == null) return None
 		//update(x)
-		//println("x: "+x)
+		println("x: "+x)
 		var kval = x.k
-		//println("  kval: "+kval)
+		println("  kval: "+kval)
 		var temp = (x.estimatedPathCost , kval  )
-		//println("  temp: "+temp)
+		println("  temp: "+temp)
 		delete(x)
 		//see if x.h can be reduced
 		hTest(x,"x")
 		if(kval < x.h )
 		{
-			//println("RAISE State")
-			//println("(kval < x.h): ( "+kval+" < "+x.h+")")
+			println("RAISE State")
+			println("(kval < x.h): ( "+kval+" < "+x.h+")")
 			for(y <- x.neighbors )
 			{
 				//update(y)
-				//println("  y: "+y)
+				println("  y: "+y)
 				var c = costOfTransversal(y,x)
-				//println("     c: "+c)
+				println("     c: "+c)
 				hTest(y,"y")
 				if((y.tag  != Tag.New ) && lessThanEqualTest(cost(y),temp) && 
 						x.h > y.h + c){
-					//println("     "+x+"->"+y )
+					println("     "+x+"->"+y )
 					x.parent = y
 					x.h = y.h + c
 				}
@@ -515,22 +535,22 @@ trait focusedDstar {
 		}
 		//see if pathCost can be lowered for neighbor Y of X
 		if(kval == x.h){
-			//println("LOWER State")
-			//println("(kval == x.h): ( "+kval+" == "+x.h+")")
+			println("LOWER State")
+			println("(kval == x.h): ( "+kval+" == "+x.h+")")
 			for(y <- x.neighbors )
 			{
 				//update(y)
-				//println("  y: "+y)
+				println("  y: "+y)
 				var c = costOfTransversal(x,y)
-				//println("     c: "+c)
+				println("     c: "+c)
 				hTest(x,"x")
 				var hValue = x.h + c
-				//println("     hValue: "+hValue)
+				println("     hValue: "+hValue)
 				hTest(y,"y")
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ||
 						(y.parent != x && y.h > hValue) ){
-					//println("     "+y+"->"+x )
+					println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
 				}
@@ -541,16 +561,16 @@ trait focusedDstar {
 			{
 				//cost changes propagate to New states
 				//update(y)
-				//println("  y: "+y)
+				println("  y: "+y)
 				var c = costOfTransversal(x,y)
-				//println("     c: "+c)
+				println("     c: "+c)
 				hTest(x,"x")
 				var hValue = x.h + c
-				//println("     hValue: "+hValue)
+				println("     hValue: "+hValue)
 				hTest(y,"y")
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ){
-					//println("     "+y+"->"+x )
+					println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
 				}else{
