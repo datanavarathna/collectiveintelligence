@@ -198,7 +198,7 @@ trait focusedDstar {
 			println("FAILED to move to transition to "+next)
 			println("path= "+path)
 			failedToTransition = true
-			//throw new Exception("Failed to move to transition state")
+			throw new Exception("Failed to move to transition state")
 		}
 		//println("path= "+path)
 		//println("CurrentState = "+currentState)
@@ -384,6 +384,7 @@ trait focusedDstar {
 		for(state <- closedList){
 			state.reset()
 			state.neighbors.foreach( neighbor => neighbor.reset())
+			//insert(state,state.k )//causes fail to move upon subsequent moveAgent calls
 		}
 		closedList = Nil
 		
@@ -414,7 +415,15 @@ trait focusedDstar {
 		processNumber =0
 		while(start.tag != Tag.Closed &&
 				temp != None /*unobstructed path exists to goal from start*/ 
-				&& processNumber <= maxProcessNumber
+				&& stateReachable(goal)
+				&& {
+						if(processNumber <= maxProcessNumber)
+							true
+						else{
+							println("Initial planning surpassed maxProcessNumber")
+							false
+						}
+					}
 		){
 			processNumber += 1
 			temp = processState()
@@ -472,7 +481,14 @@ trait focusedDstar {
 							var Some(doubleDouble) = temp
 							lessThanTest(doubleDouble, cost(agentState))
 						}&& stateReachable(goal)
-						&& processNumber <= maxProcessNumber
+						&& {
+							if(processNumber <= maxProcessNumber)
+								true
+							else{
+								println("Replanning surpassed maxProcessNumber")
+								false
+							}
+						}
 				){
 					processNumber += 1
 					temp = processState() 
@@ -524,6 +540,7 @@ trait focusedDstar {
 		delete(x)
 		//see if x.h can be reduced
 		hTest(x,"x")
+		//update(x)
 		if(kval < x.h )
 		{
 			//println("RAISE State")
@@ -537,6 +554,7 @@ trait focusedDstar {
 				hTest(y,"y")
 				if((y.tag  != Tag.New ) && lessThanEqualTest(cost(y),temp) && 
 						x.h > y.h + c){
+					println("Set parent to better neighbor")
 					//println("     "+x+"->"+y )
 					x.parent = y
 					x.h = y.h + c
@@ -560,6 +578,7 @@ trait focusedDstar {
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ||
 						(y.parent != x && y.h > hValue) ){
+					println("Updated child cost")
 					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
@@ -567,6 +586,7 @@ trait focusedDstar {
 			}
 		}
 		else{
+			//println("RAISE State")
 			for(y <- x.neighbors )
 			{
 				//cost changes propagate to New states
@@ -580,6 +600,7 @@ trait focusedDstar {
 				hTest(y,"y")
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ){
+					println("Inserted a neighbor with a new cost value")
 					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
@@ -587,15 +608,19 @@ trait focusedDstar {
 					//lower path cost for non-immediate descendants
 					hTest(x,"x")
 					hTest(y,"y")
-					if((y.parent != x && y.h > hValue) && (x.tag == Tag.Closed ) )
+					if((y.parent != x && y.h > hValue) && (x.tag == Tag.Closed ) ){
+						println("Inserted self as a holding action")
 						insert(x,x.h)
+					}
 					//reduce path cost using suboptimal neighbor
 					else{
 						hTest(x,"x")
 						hTest(y,"y")
 						if( (y.parent != x && x.h > y.h + costOfTransversal(y,x)) && (x.tag == Tag.Closed ) &&
-								lessThanTest(temp,cost(y)))
+								lessThanTest(temp,cost(y))){
+							println("Inserted neighbor as a holding action")
 							insert(y,y.h)
+						}
 					}
 				}
 			}
