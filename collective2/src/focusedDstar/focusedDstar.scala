@@ -176,6 +176,13 @@ trait focusedDstar {
 	//cost of moving from state X to state Y, always positive
 	def costOfTransversal(x: State, y: State): Double //= x transitionCostTo y
 	
+	def hTest(x: State,xString: String){
+		if(x.h != heuristic(x)){
+			println(xString+".h= "+x.h+" h("+xString+")= "+heuristic(x))
+			//update(x)
+		}
+	}
+	
 	def transitionToState(next: State): State = {
 		//println("Executing transitionToState")
 		//println("CurrentState = "+currentState)
@@ -193,14 +200,27 @@ trait focusedDstar {
 		currentState
 	}
 	
+	def update(x: State){
+		if(goal != null)
+			x.h = heuristic(x)
+		//x.estimatedPathCost = x.k + focussingHeuristic(x,currentState)
+		//x.biasedEstimatedPathCost = x.estimatedPathCost + accruedBias	
+	}
+	
 	def updateTransition(x: State, y: State, costValue: Double){
 		updateCostOfTransversal(x,y,costValue)
 		
+		//update X
 		x.estimatedPathCost = x.k + focussingHeuristic(x,currentState)
 		x.biasedEstimatedPathCost = x.estimatedPathCost + accruedBias
+
 		
-		//x.k = 0
-		//x.h = 0
+		//update Y
+		y.estimatedPathCost = y.k + focussingHeuristic(y,currentState)
+		y.biasedEstimatedPathCost = y.estimatedPathCost + accruedBias
+		//if(goal != null)
+		//	y.h = heuristic(x)
+		//y.k = 0
 	}
 	
 	def updateCostOfTransversal(x: State, y: State, costValue: Double) /*= {
@@ -233,16 +253,22 @@ trait focusedDstar {
 	}
 	
 	private def insert(x: State, newH: Double){
-		//println("insert ( "+x+", "+newH+")")
-		if(newH == 0)
+		if(newH == 0){
 			goal = x
+			//update(x)
+		}
+		//hTest(x,"x")
+		//println("insert ( "+x+", "+newH+")")
+		
 		if(x.tag == Tag.New )
 			x.k = newH
 		else if(x.tag == Tag.Open ){
 			x.k = math.min(x.k,newH)
 			delete(x)
-		}else
+		}else{
+			hTest(x,"x")
 			x.k = math.min(x.h,newH)
+		}
 		x.h = newH
 		x.agentStateWhenModified = currentState
 		x.estimatedPathCost = x.k + focussingHeuristic(x,currentState)
@@ -255,13 +281,16 @@ trait focusedDstar {
 	}//end insert
 	
 	private def minState(): State = {
-		//print("minState")
+		//println("minState")
 		var result: State = null
 		var foundResult = false
 		while(!open.isEmpty && !foundResult){
 			var x = open.min(State.ordering)
+			//update(x)
+			//hTest(x,"x")
 			if(x.agentStateWhenModified != currentState){
-				var newH = x.h 
+				var newH = x.h
+				hTest(x,"x")
 				x.h = x.k 
 				delete(x)
 				insert(x,newH)
@@ -289,15 +318,20 @@ trait focusedDstar {
 	def modifyCost(x: State, y: State, costValue: Double): Option[(Double,Double)] = {
 		//println("modifyCost( "+x+", "+y+", "+costValue+" )")
 		updateTransition(x,y,costValue)
-		if(x.tag == Tag.Closed )
+		//println("Updates( "+x+", "+y+", "+costValue+" )")
+		if(x.tag == Tag.Closed ){
+			//println("x.tag = Tag.Closed")
+			hTest(x,"x")
 			insert(x,x.h)
+		}
 		return minValue
 	}
 	
 	private def cost(x: State): (Double, Double) = {
 		//println("cost( "+x+" )")
-		var guess = heuristic(x)
-		x.h = guess//not sure if correct
+		//update(x)
+		hTest(x,"x")
+		var guess= x.h
 		var estimatedPathCost = guess + focussingHeuristic(x, currentState)
 		x.estimatedPathCost = estimatedPathCost
 		//println("= ("+estimatedPathCost+","+guess+")")
@@ -359,12 +393,14 @@ trait focusedDstar {
 			temp = processState()
 		}
 		{
-				if(start.h >= obstacleCost){
-					println("NO UNOBSTRUCTED PATH EXISTS from "+start+" to "+goal)
-					return new Goal
-				}else
-					true
-			}
+			//println("if(start.h >= obstacleCost)")
+			hTest(start,"start")
+			if(start.h >= obstacleCost){
+				println("NO UNOBSTRUCTED PATH EXISTS from "+start+" to "+goal)
+				return new Goal
+			}else
+				true
+		}
 		if(start.tag == Tag.New )//goal is an unreachable state
 		{
 			println("Goal is unreachable")
@@ -412,6 +448,8 @@ trait focusedDstar {
 					temp = processState() 
 				}
 				{
+					//println("if(agentState.h >= obstacleCost)")
+					hTest(agentState,"agentState")
 					if(agentState.h >= obstacleCost){
 						println("NO UNOBSTRUCTED PATH EXISTS from "+agentState+" to "+goal)
 						return new Goal
@@ -435,7 +473,7 @@ trait focusedDstar {
 		}
 		neighborCosts.find(element => element < obstacleCost) match {
 			case None => {
-				println(goal+" is unreachable")
+				println(goal+" is UNREACHABLE")
 				false
 			}
 			case _ => true
@@ -446,25 +484,30 @@ trait focusedDstar {
 		println("Executing processState")
 		//lowest pathCost removed from open
 		var x = minState()
-		println("x: "+x)
 		if (x == null) return None
+		//update(x)
+		//println("x: "+x)
 		var kval = x.k
-		println("  kval: "+kval)
+		//println("  kval: "+kval)
 		var temp = (x.estimatedPathCost , kval  )
-		println("  temp: "+temp)
+		//println("  temp: "+temp)
 		delete(x)
 		//see if x.h can be reduced
+		hTest(x,"x")
 		if(kval < x.h )
 		{
-			println("(kval < x.h): ( "+kval+" < "+x.h+")")
+			//println("RAISE State")
+			//println("(kval < x.h): ( "+kval+" < "+x.h+")")
 			for(y <- x.neighbors )
 			{
-				println("  y: "+y)
+				//update(y)
+				//println("  y: "+y)
 				var c = costOfTransversal(y,x)
-				println("     c: "+c)
+				//println("     c: "+c)
+				hTest(y,"y")
 				if((y.tag  != Tag.New ) && lessThanEqualTest(cost(y),temp) && 
 						x.h > y.h + c){
-					println("     "+x+"->"+y )
+					//println("     "+x+"->"+y )
 					x.parent = y
 					x.h = y.h + c
 				}
@@ -472,18 +515,22 @@ trait focusedDstar {
 		}
 		//see if pathCost can be lowered for neighbor Y of X
 		if(kval == x.h){
-			println("(kval == x.h): ( "+kval+" == "+x.h+")")
+			//println("LOWER State")
+			//println("(kval == x.h): ( "+kval+" == "+x.h+")")
 			for(y <- x.neighbors )
 			{
-				println("  y: "+y)
+				//update(y)
+				//println("  y: "+y)
 				var c = costOfTransversal(x,y)
-				println("     c: "+c)
+				//println("     c: "+c)
+				hTest(x,"x")
 				var hValue = x.h + c
-				println("     hValue: "+hValue)
+				//println("     hValue: "+hValue)
+				hTest(y,"y")
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ||
 						(y.parent != x && y.h > hValue) ){
-					println("     "+y+"->"+x )
+					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
 				}
@@ -493,25 +540,33 @@ trait focusedDstar {
 			for(y <- x.neighbors )
 			{
 				//cost changes propagate to New states
-				println("  y: "+y)
+				//update(y)
+				//println("  y: "+y)
 				var c = costOfTransversal(x,y)
-				println("     c: "+c)
+				//println("     c: "+c)
+				hTest(x,"x")
 				var hValue = x.h + c
-				println("     hValue: "+hValue)
+				//println("     hValue: "+hValue)
+				hTest(y,"y")
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ){
-					println("     "+y+"->"+x )
+					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
 				}else{
 					//lower path cost for non-immediate descendants
+					hTest(x,"x")
+					hTest(y,"y")
 					if((y.parent != x && y.h > hValue) && (x.tag == Tag.Closed ) )
 						insert(x,x.h)
 					//reduce path cost using suboptimal neighbor
-					else
+					else{
+						hTest(x,"x")
+						hTest(y,"y")
 						if( (y.parent != x && x.h > y.h + costOfTransversal(y,x)) && (x.tag == Tag.Closed ) &&
 								lessThanTest(temp,cost(y)))
 							insert(y,y.h)
+					}
 				}
 			}
 		}
