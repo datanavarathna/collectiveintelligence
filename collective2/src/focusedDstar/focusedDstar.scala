@@ -149,6 +149,9 @@ trait focusedDstar {
 	
 	private[this] var failedToTransition = false
 	
+	var maxProcessNumber : Int = 20
+	private[this] var processNumber: Int = 0
+	
 	def setStateTransitionOperation( transitionOperation: State => Boolean){
 		//must be called before moveAgent
 		stateTransitionOperation  = transitionOperation
@@ -290,10 +293,12 @@ trait focusedDstar {
 		x.agentStateWhenModified = currentState
 		x.estimatedPathCost = x.k + focussingHeuristic(x,currentState)
 		x.biasedEstimatedPathCost = x.estimatedPathCost + accruedBias//accruedBias(currentState)
+		/*
 		println("x.h= "+x.h)
 		println("x.agentStateWhenModified= "+x.agentStateWhenModified)
 		println("x.estimatedPathCost= "+x.estimatedPathCost)
 		println("x.biasedEstimatedPathCost= "+x.biasedEstimatedPathCost)
+		*/
 		putState(x)
 	}//end insert
 	
@@ -333,7 +338,7 @@ trait focusedDstar {
 	}
 	
 	def modifyCost(x: State, y: State, costValue: Double): Option[(Double,Double)] = {
-		println("modifyCost( "+x+", "+y+", "+costValue+" )")
+		//println("modifyCost( "+x+", "+y+", "+costValue+" )")
 		updateTransition(x,y,costValue)
 		println("Updates( "+x+", "+y+", "+costValue+" )")
 		if(x.tag == Tag.Closed ){
@@ -346,7 +351,7 @@ trait focusedDstar {
 	
 	private def cost(x: State): (Double, Double) = {
 		println("cost( "+x+" )")
-		//update(x)
+		update(x)
 		hTest(x,"x")
 		var guess= x.h
 		var estimatedPathCost = guess + focussingHeuristic(x, currentState)
@@ -406,10 +411,12 @@ trait focusedDstar {
 		var temp: Option[(Double,Double)] = Some(0.0,0.0)
 		println("Find optimal path")
 		//find optimal path
+		processNumber =0
 		while(start.tag != Tag.Closed &&
 				temp != None /*unobstructed path exists to goal from start*/ 
-			
+				&& processNumber <= maxProcessNumber
 		){
+			processNumber += 1
 			temp = processState()
 		}
 		{
@@ -460,11 +467,14 @@ trait focusedDstar {
 				)//end processing discrepancies
 				//update costs and replan
 				println("Replan")
+				processNumber = 0
 				while( temp != None /*unobstructed path exists to goal from current state*/ && {
 							var Some(doubleDouble) = temp
 							lessThanTest(doubleDouble, cost(agentState))
 						}&& stateReachable(goal)
+						&& processNumber <= maxProcessNumber
 				){
+					processNumber += 1
 					temp = processState() 
 				}
 				{
