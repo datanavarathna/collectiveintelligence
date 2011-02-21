@@ -616,7 +616,7 @@ trait focusedDstar {
 					else{
 						hTest(x,"x")
 						hTest(y,"y")
-						if( (y.parent != x && x.h > y.h + costOfTransversal(y,x)) && (x.tag == Tag.Closed ) &&
+						if( (y.parent != x && x.h > y.h + costOfTransversal(y,x)) && (y.tag == Tag.Closed ) &&
 								lessThanTest(temp,cost(y))){
 							println("Inserted neighbor as a holding action")
 							insert(y,y.h)
