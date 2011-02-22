@@ -65,9 +65,13 @@ case class Displacement(x: Measurement, y: Measurement) {
 }
 case class Coordinate(x: Int, y: Int) 
 
-case class CollectiveObstacle(val obstacleType: Int,private var relations: mutable.Map[Displacement,CollectiveObstacle], sensorArea: List[Coordinate])
+import collection.immutable.TreeMap
+
+case class CollectiveObstacle(val obstacleType: Int,
+		private var relations: TreeMap[Displacement,CollectiveObstacle],
+		sensorArea: List[Coordinate])
 {
-	private[this] var exploredArea = new QuadBitSet
+	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)
 	
 	def insideSavedBoundaries(vector: Displacement): Boolean = {
@@ -90,7 +94,7 @@ case class CollectiveObstacle(val obstacleType: Int,private var relations: mutab
 	}
 	
 	def addRelations(newRelations: (Displacement,CollectiveObstacle) *){
-		relations ++= newRelations
+		newRelations.foreach( relation => relations + relation)
 	}
 	
 	def update(newRelations: mutable.Map[Displacement,CollectiveObstacle], area: Seq[Coordinate]){
@@ -107,16 +111,17 @@ case class CollectiveObstacle(val obstacleType: Int,private var relations: mutab
 		}
 	}
 	
-	def possibleMatch(relationsToCheck: List[(Displacement,Int)], insideDetectedBoundaries: => Boolean): Boolean = {
+	def possibleMatch(relationsToCheck: List[(Displacement,Int)] /*,
+			insideDetectedBoundaries: => Boolean */): Boolean = {
 		relationsToCheck.foreach(relation => {
 				val (vector,obstacleType) = relation
 				if(insideSavedBoundaries(vector)){
-					if(containsRelation(vector,obstacleType))
+					if(!containsRelation(vector,obstacleType))
 						return false
 				}
 			}//end function
 		)//end foreach
-		return true
+		return true //if no missing relationship within saved range
 	}
 }
 
@@ -138,9 +143,17 @@ case class ObjectReading(angle: Measurement, distance: Measurement, obstacleType
 case class AgentReading(angle: Measurement, distance: Measurement) 
 case class Scan(scannedArea: QuadBitSet,detectedObstacles: List[ObjectReading],detectedAgents: List[AgentReading])
 
+case class CollectiveMapSize(size: Int, lastRead: Long)
+case class PickName(identifier: Int, obstacleType: Int)
+case class RemoveName(identifier: Int)
+case class MapSize()
+case class Size(size: Int)
+case class GetIdentifierType(identifier: Int)
+case class IdentifierType(identifier: Int,objectType: Int)
+case class noType(identifier: Int)
+
 //case class Goal(goal:Obstacle)
 /*
-
 
 case class TopologicalEntry(obstacle1Type: Int,obstacle2Type: Int,
                             deltaX: Measurement, deltaY: Measurement){
@@ -155,12 +168,8 @@ case class IdentifiedObject(identifier1: Int, identifier2: Int,
         IdentifiedObject(identifier2,identifier1,vector.inverse)
     }
 }
- 
-
 case class Move(agent: Actor, x: Measurement, y: Measurement) 
  
-
-
 case class FindGoal(obstacleType: Int,rootIdentifier: Int)
 case class GoalNotFound()
 
@@ -168,21 +177,12 @@ case class Relationship(identifier1Temp: Int, identifier2Temp: Int, vector: Disp
 case class InternalIdentifiedObject(name: Int, objectType: Int, vectorFromAgent: Displacement)
 case class IdentifiedObjects(lastUpdate: Long, identifiedObjects: List[IdentifiedObject])
 
-case class CollectiveMapSize(size: Int, lastUpdate: Long)
-
 case class PossibleMatches(	lastUpdate: Long,matches : List[IdentifiedStored], entries: List[Relationship],
 							cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
-case class PickName(identifier: Int, obstacleType: Int)
-case class RemoveName(identifier: Int)
-case class MapSize()
-case class Size(size: Int)
-case class GetIdentifierType(identifier: Int)
 case class Add(	lastUpdate: Long,identifiedObjects: List[IdentifiedObject],
 				cartesianObjectReadings: List[InternalIdentifiedObject], sensorRange: Double)
 case class Contains(identifiers: Identifiers)
 case class Matches(entries: TopologicalEntry *)
-case class IdentifierType(identifier: Int,objectType: Int)
-case class noType(identifier: Int)
 
 case class TargetDisplacement(x: Measurement, y: Measurement)
 case class TimeSinceLastUpdate(time: Long)
