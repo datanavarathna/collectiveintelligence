@@ -188,26 +188,59 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}
 	}
 	private[this]var newObstacles: List[(Int,Int,Int)]= Nil
-	def createCollectiveMapSensorReadings(): List[(Int,Displacement,Int)] = {
+	def createCollectiveMapSensorReadings(): List[ScannedObstacle] = {
 		var result: List[(Int,Displacement,Int)] = Nil
 		val obstacleList = obstacles.toList
-		for(newObstacle <- newObstacles)
+		for(newObstacle <- newObstacles)yield
 		{
 			var (newObstacleX,newObstacleY,newObstacleType) = newObstacle
-			for(obstacle <- obstacleList){
-				var ((obstacleX,obstacleY),obstacleType) = obstacle
-				//prevent relationship with self
-				if(!(obstacleX == newObstacleX && obstacleY == newObstacleY &&
-						newObstacleType == obstacleType)){
-					result = (newObstacleType,
-							new Displacement(newObstacleX-obstacleX,newObstacleY-obstacleY),
-							obstacleType)::result
-				}//end if self
-			}//end for obstacleList
-			
+			ScannedObstacle(newObstacleX,newObstacleY,newObstacleType,
+				{
+					var relations: List[(Displacement,Int)]=Nil
+					for(obstacle <- obstacleList){
+						var ((obstacleX,obstacleY),obstacleType) = obstacle
+						//prevent relationship with self
+						if(!(obstacleX == newObstacleX && obstacleY == newObstacleY &&
+							newObstacleType == obstacleType)){
+								relations = (new Displacement(newObstacleX-obstacleX,
+									newObstacleY-obstacleY),obstacleType)::relations
+						}//end if self	
+					}//end for
+					relations
+				}
+			)//end ScannedObstacle	
 		}//end for newObstacles
-		newObstacles = Nil
-		result
+	}
+	
+	def testPotentialCollectiveMapMatches(): Boolean = {
+		false
+	}
+	
+	def submitDataToCollectiveMap(): Boolean = {
+		false
+	}
+	
+	def expandCollectiveMap(){
+		val transaction = new Transaction("Scan"+scanNumber+" Transaction",maxTransactionAttempts)
+				transaction.setOperations(
+					{
+						var possibleResultsFuture = (collectiveMap !! 
+							GetPossibleStates(transaction,createCollectiveMapSensorReadings) )
+						possibleResultsFuture() match {
+							case OperationResult(true,pMatches) => {
+								var potentialMatches = pMatches.asInstanceOf[List[PotentialMatch]]
+								if(testPotentialCollectiveMapMatches)
+									submitDataToCollectiveMap
+								else
+									return false
+							}
+							case OperationResult(false,_) => {false}
+							case error => throwException("Transaction "+transaction.name+
+														" expected OperationResult but "+
+														"received CollectiveMap reply of "+error)
+						}//end match possibleResultsFuture()
+					}
+				)//end setOperations
 	}
 	
 	def scan(): Map[(State,State),Double] = {
@@ -284,25 +317,6 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							}
 						}
 				)//end processDetectedObstacles
-				val transaction = new Transaction("Scan"+scanNumber+" Transaction",maxTransactionAttempts)
-				transaction.setOperations(
-					{
-						var possibleResultsFuture = (collectiveMap !! 
-							GetPossibleStates(transaction,createCollectiveMapSensorReadings()) )
-						possibleResultsFuture() match {
-							case OperationResult(true,pMatches) => {
-								var potentialMatches = pMatches.asInstanceOf[List[CollectiveObstacle]]
-								//explore to rule out potential matches
-								//submit new data to collectiveMap
-							}
-							case OperationResult(false,_) => {/*As mentioned at printout,operation failed*/}
-							case error => throwException("Transaction "+transaction.name+
-														" expected OperationResult but "+
-														"received CollectiveMap reply of "+error)
-						}
-						false
-					}
-				)//end transaction
 				
 				//println("processing detected agents")
 				processDetectedAgents(detectedAgents).foreach( 

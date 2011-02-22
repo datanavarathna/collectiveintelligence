@@ -112,11 +112,16 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 			  }
 			  case GetPossibleStates(transaction,scanResults) => {
 			 	  if(read(transaction)){
-			 	 	  reply( OperationResult(true,data.filter(
-			 	 	 		  collectiveObstacle => collectiveObstacle.possibleMatch(scanResults) ).toList ) 
-			 	 	 		)
-			 	  }
-			 	  reply( OperationResult(false,null) )
+			 	 	  reply( OperationResult(true,{
+			 	 		  		var result: List[PotentialMatch] = Nil
+			 	 		  		data.foreach(collectiveObstacle => 
+			 	 		  			result = collectiveObstacle.possibleMatch(scanResults) ++ result 
+			 	 		  		)//end foreach
+			 	 		  		result
+			 	 		  	  })//end OperationResult 
+			 	 	  )//end reply	 		  
+			 	  }else
+			 		  reply( OperationResult(false,null) )
 			  }
 			  case "getSize" => reply(getSize)
 			  case catchall => println("CollectiveMap catchall: " + catchall) 

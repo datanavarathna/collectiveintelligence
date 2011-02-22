@@ -67,7 +67,9 @@ case class Displacement(x: Measurement, y: Measurement) {
 }
 case class Coordinate(x: Int, y: Int) 
 
-case class GetPossibleStates(transaction: Transaction,relationsToCheck: List[(Int,Displacement,Int)])
+case class GetPossibleStates(transaction: Transaction,relationsToCheck: List[ScannedObstacle])
+case class ScannedObstacle(x: Int,y: Int,obstacleType: Int,scannedRelations: List[(Displacement,Int)])
+case class PotentialMatch(x: Int, y: Int, mapObstacle: CollectiveObstacle)
 
 import collection.immutable.TreeMap
 case class CollectiveObstacle(val obstacleType: Int,
@@ -114,19 +116,38 @@ case class CollectiveObstacle(val obstacleType: Int,
 		}
 	}
 	
-	def possibleMatch(relationsToCheck: List[(Int,Displacement,Int)] /*,
-			insideDetectedBoundaries: => Boolean */): Boolean = {
-		relationsToCheck.foreach(relation => {
-				val (thisObstacleType,vector,obstacle2Type) = relation
-				if(thisObstacleType != obstacleType)
-					false
-				if(insideSavedBoundaries(vector)){
-					if(!containsRelation(vector,obstacle2Type))
-						return false
-				}
-			}//end function
-		)//end foreach
-		return true //if no missing relationship within saved range
+	def possibleMatch(scannedRelations: List[(Displacement,Int)]): Boolean = {
+		var relationsToCheck = scannedRelations
+		var possible = true
+		while(possible){
+
+			val relation = relationsToCheck.head
+			relationsToCheck = relationsToCheck.tail
+			val (vector,obstacle2Type) = relation
+
+			if(insideSavedBoundaries(vector)){
+				if(!containsRelation(vector,obstacle2Type))
+					possible = false
+			}//end if insideSavedBoundaries
+		}//end whle possible match
+		possible
+	}
+	
+	def possibleMatch(obstaclesToCheck: List[ScannedObstacle] /*,
+			insideDetectedBoundaries: => Boolean */): List[PotentialMatch] = {
+		var result: List[PotentialMatch] = Nil
+		for(scannedObstacle <-obstaclesToCheck) 
+		{
+			var ScannedObstacle(x,y,thisObstacleType,relationsToCheck) = scannedObstacle
+			if(thisObstacleType == obstacleType && //scannedObstacle is possible match
+				{
+					possibleMatch(relationsToCheck)
+				}//end if scannedObstacle boolean function
+			){
+				result = PotentialMatch(x,y,this)::result
+			}	
+		}//end for
+		result
 	}
 }
 
