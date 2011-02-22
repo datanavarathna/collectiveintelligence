@@ -56,6 +56,10 @@ case class Displacement(x: Measurement, y: Measurement) {
     def - (that: Displacement): Displacement = {
         new Displacement(this.x - that.x,this.y-that.y)
     }
+    
+    def + (that: Displacement): Displacement = {
+        new Displacement(this.x + that.x,this.y+that.y)
+    }
 
     def inverse(): Displacement = {
         Displacement(-1*this.x, -1*this.y)
@@ -78,6 +82,8 @@ case class CollectiveObstacle(val obstacleType: Int,
 {
 	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)
+	
+	def relationsVectors(): List[Displacement] = relations.keys.toList
 	
 	def insideSavedBoundaries(vector: Displacement): Boolean = {
 		insideSavedBoundaries(vector.x.value.toInt,vector.y.value.toInt  )
@@ -116,7 +122,7 @@ case class CollectiveObstacle(val obstacleType: Int,
 		}
 	}
 	
-	def possibleMatch(scannedRelations: List[(Displacement,Int)]): Boolean = {
+	def possibleMatchTest(scannedRelations: List[(Displacement,Int)]): Boolean = {
 		var relationsToCheck = scannedRelations
 		var possible = true
 		while(possible){
@@ -133,15 +139,14 @@ case class CollectiveObstacle(val obstacleType: Int,
 		possible
 	}
 	
-	def possibleMatch(obstaclesToCheck: List[ScannedObstacle] /*,
-			insideDetectedBoundaries: => Boolean */): List[PotentialMatch] = {
+	def possibleMatch(obstaclesToCheck: List[ScannedObstacle]): List[PotentialMatch] = {
 		var result: List[PotentialMatch] = Nil
 		for(scannedObstacle <-obstaclesToCheck) 
 		{
 			var ScannedObstacle(x,y,thisObstacleType,relationsToCheck) = scannedObstacle
 			if(thisObstacleType == obstacleType && //scannedObstacle is possible match
 				{
-					possibleMatch(relationsToCheck)
+					possibleMatchTest(relationsToCheck)
 				}//end if scannedObstacle boolean function
 			){
 				result = PotentialMatch(x,y,this)::result

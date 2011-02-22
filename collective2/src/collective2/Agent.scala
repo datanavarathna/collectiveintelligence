@@ -104,6 +104,11 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}//end currentState match
 	}
 	
+	def resetExplore(){
+		explorationCycle = 1
+		adjustmentCycle = 0
+	}
+	
 	def explore(start: State, goal: State){
 		println("Exploring to "+goal)
 		//scan
@@ -212,25 +217,91 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}//end for newObstacles
 	}
 	
-	def testPotentialCollectiveMapMatches(): Boolean = {
-		false
+	def testPotentialCollectiveMapMatches(potentialMatches: List[PotentialMatch]): (Boolean,Option[PotentialMatch]) = {
+		var successful = true
+		val remainingMatches = potentialMatches.filter( potentialMatch => 
+			{
+				val PotentialMatch(x, y, mapObstacle) = potentialMatch
+				var possible = true
+				var relationVectors = mapObstacle.relationsVectors
+				while(possible){
+					var vector = relationVectors.head
+					relationVectors = relationVectors.tail
+					val relationX = x + vector.x.value.toInt
+					val relationY = y + vector.y.value.toInt
+					var firstIteration = true
+					resetExplore()
+					while(!explored(relationX,relationY) ){
+						//move until explored((relationX,relationY)==true
+						if(firstIteration)
+							firstIteration = false
+						else
+							changeGoal
+						moveAgent(currentState,stateFactory.getCoordinate(relationX, relationY))
+					}
+					//if relation not seen, not match
+					if(!obstacles.containsElementAt(x,y))
+						possible = false
+					val relation: Displacement = vector + new Displacement(x,y)
+					if( obstacles.containsElementAt(x,y) &&
+						!mapObstacle.possibleMatchTest( List( (relation, obstacles(x,y).asInstanceOf[Int]) ) ) ){
+						possible = false
+					}
+				}//end while possible
+				possible
+			}
+		)//end filter potentialMatches
+		if(remainingMatches.size > 1){
+			println("Several possiblilities remain")
+			(false,None)
+		}else{
+			if(!remainingMatches.isEmpty)
+				(true,Some(remainingMatches.head))
+			else
+				(true,None)
+		}
 	}
 	
-	def submitDataToCollectiveMap(): Boolean = {
-		false
+	def submitDataToCollectiveMap(remainingMatch: Option[PotentialMatch],
+			scannedObstacles: List[ScannedObstacle]): Boolean = {
+		for(scannedObstacle <- scannedObstacles){
+			//scannedObstacle is really an unsubmitted object
+			//ScannedObstacle(x: Int,y: Int,obstacleType: Int,scannedRelations: List[(Displacement,Int)])
+			/*CollectiveObstacle(val obstacleType: Int,
+				private var relations: TreeMap[Displacement,CollectiveObstacle],
+				sensorArea: List[Coordinate])
+			*/
+			val ScannedObstacle(scannnedX,scannedY,scannedType,scannedRelations) = scannedObstacle
+			remainingMatch match {
+				case Some(PotentialMatch(x, y, mapObstacle: CollectiveObstacle)) =>{
+					//create new CollectiveObstacles, except mapObstacle
+				//match them with the appropriate Displacements in Seq[(Displacement,CollectiveObstacle]
+				//mapObstacle.addRelations(list)
+				}
+				case None => {
+					//create new CollectiveObstacles, except mapObstacle
+				//match them with the appropriate Displacements in Seq[(Displacement,CollectiveObstacle]
+				//mapObstacle.addRelations(list)//send a message instead
+				}
+				case error => throwException("Expected PotentialMatch but received"+error)
+			}	
+		}
+		false//change to reflect actual success
 	}
 	
 	def expandCollectiveMap(){
 		val transaction = new Transaction("Scan"+scanNumber+" Transaction",maxTransactionAttempts)
 				transaction.setOperations(
 					{
+						val scannedObstacles = createCollectiveMapSensorReadings
 						var possibleResultsFuture = (collectiveMap !! 
-							GetPossibleStates(transaction,createCollectiveMapSensorReadings) )
+							GetPossibleStates(transaction,scannedObstacles) )
 						possibleResultsFuture() match {
 							case OperationResult(true,pMatches) => {
 								var potentialMatches = pMatches.asInstanceOf[List[PotentialMatch]]
-								if(testPotentialCollectiveMapMatches)
-									submitDataToCollectiveMap
+								val (successful,remainingMatch) =testPotentialCollectiveMapMatches(potentialMatches)
+								if(successful)
+									submitDataToCollectiveMap(remainingMatch,scannedObstacles)
 								else
 									return false
 							}
