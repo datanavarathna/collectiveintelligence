@@ -1,10 +1,15 @@
 package timestampConcurrency
 
+case class OperationResult(success: Boolean,result: Object)
+
 trait TimeStampConcurrency {
-	private var writeTimeStamp: Long = 0
-	private var readTimeStamp: Long = 0
+	private[this] var writeTimeStamp: Long = 0
+	private[this] var readTimeStamp: Long = 0
 	
 	//System.nanoTime() //.currentTimeMillis()
+	
+	def lastRead = readTimeStamp
+	def lastWrite = writeTimeStamp
 	
 	def read(t: Transaction): Boolean = {
 		val timestamp = t.timestamp

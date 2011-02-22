@@ -26,7 +26,7 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
 
     //initial primary actors
     val helpActor: ScalaGUIhelperActor = new ScalaGUIhelperActor( this)
-    val map: Actor = new CollectiveMap
+    val map: Actor = new CollectiveMap(helpActor)
     val world: Environment = new Environment( environmentX-1, environmentY-1, helpActor)
      
     //initialize lists

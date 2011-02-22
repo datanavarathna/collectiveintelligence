@@ -5,6 +5,18 @@ class QuadTree[T] {
 	
 	var data = Map.empty[Int,Map[Int,T]]
 	
+	def toList(): List[((Int,Int),T)] = {
+		var result: List[((Int,Int),T)]=Nil
+		var yMap: Map[Int,T] = null
+		for(x <- data.keys){
+			yMap = data(x)
+			for(y<-yMap.keys){
+				result = ((x,y),yMap(y)) :: result
+			}
+		}
+		result
+	}
+	
 	def add(x: Int, y: Int, element: T): T = {
 		var yMap = data.getOrElseUpdate(x, Map[Int,T](y -> element) )
 		var returnedElement = yMap.getOrElseUpdate(y, element)

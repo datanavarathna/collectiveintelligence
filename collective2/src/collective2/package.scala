@@ -29,6 +29,7 @@ import scala.actors._
 import Actor._
 import uncertaintyMath.Measurement
 import uncertaintyMath.Measurement._
+import timestampConcurrency._
 
 import scala.collection.mutable
 
@@ -37,7 +38,8 @@ case class Pheromone(locationX: Int,LocationY: Int,targetX: Int, targetY: Int)
 
 */
 case class Displacement(x: Measurement, y: Measurement) {
-    def canEqual(other: Any): Boolean = { other.isInstanceOf[Displacement] }
+    
+	def canEqual(other: Any): Boolean = { other.isInstanceOf[Displacement] }
 	override def equals(other:Any):Boolean =
 	{
 		other match {
@@ -65,8 +67,9 @@ case class Displacement(x: Measurement, y: Measurement) {
 }
 case class Coordinate(x: Int, y: Int) 
 
-import collection.immutable.TreeMap
+case class GetPossibleStates(transaction: Transaction,relationsToCheck: List[(Int,Displacement,Int)])
 
+import collection.immutable.TreeMap
 case class CollectiveObstacle(val obstacleType: Int,
 		private var relations: TreeMap[Displacement,CollectiveObstacle],
 		sensorArea: List[Coordinate])
@@ -111,12 +114,14 @@ case class CollectiveObstacle(val obstacleType: Int,
 		}
 	}
 	
-	def possibleMatch(relationsToCheck: List[(Displacement,Int)] /*,
+	def possibleMatch(relationsToCheck: List[(Int,Displacement,Int)] /*,
 			insideDetectedBoundaries: => Boolean */): Boolean = {
 		relationsToCheck.foreach(relation => {
-				val (vector,obstacleType) = relation
+				val (thisObstacleType,vector,obstacle2Type) = relation
+				if(thisObstacleType != obstacleType)
+					false
 				if(insideSavedBoundaries(vector)){
-					if(!containsRelation(vector,obstacleType))
+					if(!containsRelation(vector,obstacle2Type))
 						return false
 				}
 			}//end function

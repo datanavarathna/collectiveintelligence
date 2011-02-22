@@ -6,11 +6,11 @@ import java.util.ArrayList
 import uncertaintyMath.Measurement
 import uncertaintyMath.Measurement._
 import timestampConcurrency._
+import scala.collection.mutable.ListBuffer
 
-class CollectiveMap extends Actor with TimeStampConcurrency
+class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 {
 	
-	private var updateTime: Long = System.currentTimeMillis()
 	private var size: Int = 0
 
     import scala.collection.mutable.Map
@@ -23,6 +23,8 @@ class CollectiveMap extends Actor with TimeStampConcurrency
     //private var obstacle1TypeMap = Map.empty[Int,HashMap[Int,UncertaintyMap[Identifiers]]]//key,value obstacleType1->obstacleType2->relationship->Identifiers
     //private var identifierRelationshipsGraph = Map.empty[Int,UncertaintyMap[Int]]//identifier1->relationships->identifier2
     
+	private[this] var data = ListBuffer.empty[CollectiveObstacle]
+	
     override def toString = {
     		var result = "Collective Map \n"
     		result += "\n  identifierType\n" + identifierType
@@ -31,7 +33,7 @@ class CollectiveMap extends Actor with TimeStampConcurrency
     
     private def getSize(): CollectiveMapSize =
     {
-        new CollectiveMapSize(size,updateTime)
+        new CollectiveMapSize(data.size,lastWrite)
     }
     
     private def pickName(identifier: Int, obstacleType: Int): Boolean =
@@ -73,12 +75,13 @@ class CollectiveMap extends Actor with TimeStampConcurrency
 
     def act()
 	{
+    	link(scalaGui)
 		println("CollectiveMap Running")
 		
 		loop
 		{
 			react{
-				case PickName(identifier,obstacleType) => {
+			  case PickName(identifier,obstacleType) => {
 				  if(pickName(identifier,obstacleType))
 				  {
 					  println("Added name " + identifier + " with type " + obstacleType)
@@ -96,18 +99,29 @@ class CollectiveMap extends Actor with TimeStampConcurrency
 				  else
 					  println("Failed to remove " + identifier)
 			  }
+			   /*
 			  case MapSize => {
 				  println("Map size: " + size)
 				  reply(Size(size))
-			  }
+			  }*/
 			  case GetIdentifierType(identifier: Int) => {
 				  getIdentifierType(identifier) match {
 				    case Some(objectType) => reply(IdentifierType(identifier,objectType))
 				    case None => reply(noType(identifier))
 				  }
 			  }
-			}
-		}
+			  case GetPossibleStates(transaction,scanResults) => {
+			 	  if(read(transaction)){
+			 	 	  reply( OperationResult(true,data.filter(
+			 	 	 		  collectiveObstacle => collectiveObstacle.possibleMatch(scanResults) ).toList ) 
+			 	 	 		)
+			 	  }
+			 	  reply( OperationResult(false,null) )
+			  }
+			  case "getSize" => reply(getSize)
+			  case catchall => println("CollectiveMap catchall: " + catchall) 
+			}//end react
+		}//end loop
 		
 	}//end act
 	

@@ -5,23 +5,22 @@ import Actor._
 import uncertaintyMath.Measurement
 import uncertaintyMath.Measurement._
 import collective2.definitions._
-import scala.util.Random
 import focusedDstar._
-
-case class detectedObstacles()
+import timestampConcurrency._
 
 class Agent(val environment: Actor, val collectiveMap: Actor,
             val sensorRange: Double, val sensorDeltaAngle: Double, val sensorDeltaRange: Double,
-            override val obstacleCost: Double = 1E6) 
+            override val obstacleCost: Double = 1E6, val maxTransactionAttempts: Int = 20) 
             extends  Actor with CartesianCoordinateOneUnitDiagonalDStar
 {
 	private[this] val waitTime: Long = 100//ms
 	
 	setStateTransitionOperation(moveTo)//must execute before moveAgent called
 	private[this] var exploredArea = new QuadBitSet
+	private[this] var obstacles = new QuadTree[Int]//Stores obstacle type at obstacle location
 	
 	private[this] var exploreMode = true
-	
+	private[this] var scanNumber: Int = 0
 	private[this] val mainActor = self
 	/*
 	private var relativeLocationX: Measurement = new Measurement(0.00000001,0)
@@ -32,7 +31,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	//private[this] var worldHeight: Int = _
 	
 	
-	
+	import scala.util.Random
 	private val randomGenerator: Random = new Random
 	def randomPositiveNegative1(): Int = {
       return randomGenerator.nextInt(3) - 1
@@ -177,9 +176,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	
 	def sensor: Map[(State,State),Double] = scan
 	
-	def processDetectedObstacles(detectedObstacles: List[ObjectReading]): Iterable[(Int,Int)] = {
+	def processDetectedObstacles(detectedObstacles: List[ObjectReading]): Iterable[((Int,Int),Int)] = {
 		return for(obstacle <- detectedObstacles) yield{
-			 PolarToCartesian(obstacle.angle,obstacle.distance).toIntInt	
+			 (PolarToCartesian(obstacle.angle,obstacle.distance).toIntInt,obstacle.obstacleType)	
 		}
 	}
 	
@@ -187,6 +186,28 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		return for(agent <- detectedAgents) yield{
 			 PolarToCartesian(agent.angle,agent.distance).toIntInt	
 		}
+	}
+	private[this]var newObstacles: List[(Int,Int,Int)]= Nil
+	def createCollectiveMapSensorReadings(): List[(Int,Displacement,Int)] = {
+		var result: List[(Int,Displacement,Int)] = Nil
+		val obstacleList = obstacles.toList
+		for(newObstacle <- newObstacles)
+		{
+			var (newObstacleX,newObstacleY,newObstacleType) = newObstacle
+			for(obstacle <- obstacleList){
+				var ((obstacleX,obstacleY),obstacleType) = obstacle
+				//prevent relationship with self
+				if(!(obstacleX == newObstacleX && obstacleY == newObstacleY &&
+						newObstacleType == obstacleType)){
+					result = (newObstacleType,
+							new Displacement(newObstacleX-obstacleX,newObstacleY-obstacleY),
+							obstacleType)::result
+				}//end if self
+			}//end for obstacleList
+			
+		}//end for newObstacles
+		newObstacles = Nil
+		result
 	}
 	
 	def scan(): Map[(State,State),Double] = {
@@ -242,9 +263,11 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				//println("Updating costs for detected obstacles")
 				processDetectedObstacles(detectedObstacles).foreach( 
 						xy => {
-							val (relativeX,relativeY) = xy
+							val ((relativeX,relativeY),obstacleType) = xy
 							val horiz = x + relativeX
 							val vert = y + relativeY
+							obstacles.add(horiz,vert,obstacleType)
+							newObstacles = (horiz,vert,obstacleType)::newObstacles
 							for(xy <- scannedStates; if{
 								val (horiz2: Int,vert2: Int) = xy
 								((horiz,vert) != xy ) && math.abs(horiz-horiz2)<=1 && math.abs(vert-vert2)<=1
@@ -261,6 +284,26 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							}
 						}
 				)//end processDetectedObstacles
+				val transaction = new Transaction("Scan"+scanNumber+" Transaction",maxTransactionAttempts)
+				transaction.setOperations(
+					{
+						var possibleResultsFuture = (collectiveMap !! 
+							GetPossibleStates(transaction,createCollectiveMapSensorReadings()) )
+						possibleResultsFuture() match {
+							case OperationResult(true,pMatches) => {
+								var potentialMatches = pMatches.asInstanceOf[List[CollectiveObstacle]]
+								//explore to rule out potential matches
+								//submit new data to collectiveMap
+							}
+							case OperationResult(false,_) => {/*As mentioned at printout,operation failed*/}
+							case error => throwException("Transaction "+transaction.name+
+														" expected OperationResult but "+
+														"received CollectiveMap reply of "+error)
+						}
+						false
+					}
+				)//end transaction
+				
 				//println("processing detected agents")
 				processDetectedAgents(detectedAgents).foreach( 
 						xy => {
@@ -293,6 +336,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			}
 		}//end currentState match
 		println("Finished processing scan")
+		scanNumber += 1
 		lastSensorReadings
 	}//end scan()
 	
