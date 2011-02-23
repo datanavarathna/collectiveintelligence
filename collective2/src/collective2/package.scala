@@ -75,11 +75,15 @@ case class GetPossibleStates(transaction: Transaction,relationsToCheck: List[Sca
 case class ScannedObstacle(x: Int,y: Int,obstacleType: Int,scannedRelations: List[(Displacement,Int)])
 case class PotentialMatch(x: Int, y: Int, mapObstacle: CollectiveObstacle)
 
+case class GetCollectiveObstacle(identifier: Int)
+
 import collection.immutable.TreeMap
 case class CollectiveObstacle(val obstacleType: Int,
 		private var relations: TreeMap[Displacement,CollectiveObstacle],
 		sensorArea: List[Coordinate])
 {
+	def this(obstacleType: Int,sensorArea: List[Coordinate]) = this(obstacleType,null,sensorArea)
+	
 	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)
 	

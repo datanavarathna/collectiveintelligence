@@ -261,9 +261,46 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				(true,None)
 		}
 	}
+	private[this] var collectiveObstacles = new QuadTree[CollectiveObstacle]
+	
+	def createNewCollectiveObstacle(val obstacleType: Int): (Int,CollectiveObstacle){
+		var obstacleName  = randomGenerator.nextInt
+		var collectiveObstacle: Option(CollectiveObstacle) = {
+			(collectiveMap !! GetCollectiveObstacle(obstacleName)()
+		}
+		while(collectiveObstacle != None){
+			obstacleName  = randomGenerator.nextInt
+			collectiveObstacle: Option(CollectiveObstacle) = {
+				(collectiveMap !! GetCollectiveObstacle(obstacleName)()
+			}
+		}
+		val sensorArea: List[Coordinate] = {
+			exploredArea.XYs.map(xy => {
+					val (x,y) = xy
+					Displacement(x,y)
+				}
+			)
+		}
+		(obstacleName,new CollectiveObstacle(obstacleType,sensorArea) )
+	}
+	
+	def createCollectiveObstacles(scannedObstacles: List[ScannedObstacle]){
+		var obstacleCoordinates = new QuadBitSet
+		for(scannedObstacle <- scannedObstacles){
+			val ScannedObstacle(scannedX,scannedY,scannedType,scannedRelations) = scannedObstacle
+			val scannedVectors: List[Displacement] = scannedRelations.map( scannedRelation => scannedRelation._1)
+			obstacleCoordinates.add(scannedX,scannedY)
+			scannedVectors.foreach( vector => {
+					val Displacement(x,y) = vector
+					obstacleCoordinates.add(scannedX+x.value.toInt,scannedY+y.value.toInt)
+				}
+			)//end foreach scannedVectors
+		}//end for scannedObstacles
+	}
 	
 	def submitDataToCollectiveMap(remainingMatch: Option[PotentialMatch],
 			scannedObstacles: List[ScannedObstacle]): Boolean = {
+		
 		for(scannedObstacle <- scannedObstacles){
 			//scannedObstacle is really an unsubmitted object
 			//ScannedObstacle(x: Int,y: Int,obstacleType: Int,scannedRelations: List[(Displacement,Int)])
@@ -276,6 +313,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				case Some(PotentialMatch(x, y, mapObstacle: CollectiveObstacle)) =>{
 					//create new CollectiveObstacles, except mapObstacle
 				//match them with the appropriate Displacements in Seq[(Displacement,CollectiveObstacle]
+					val scannedVectors: List[Displacement] = scannedRelations.map( scannedRelation => scannedRelation._1 )
+					val newObstacleRelations = mapObstacle.relationsVectors.diff(scannedVectors)
+					
 				//mapObstacle.addRelations(list)
 				}
 				case None => {

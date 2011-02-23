@@ -86,6 +86,11 @@ class QuadBitSet(maxX:Int = 32) {
 		return (absX,absY,data)
 	}
 
+	def remove(x: Int, y: Int){
+		var (absX,absY,data) = assignQuadrant(x,y)
+		data.remove(xyToIndex(absX,absY,sizeX))
+	}
+	
 	def add(x: Int, y: Int){
 		
 		if(x>sizeX)

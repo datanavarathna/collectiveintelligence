@@ -23,7 +23,7 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
     //private var obstacle1TypeMap = Map.empty[Int,HashMap[Int,UncertaintyMap[Identifiers]]]//key,value obstacleType1->obstacleType2->relationship->Identifiers
     //private var identifierRelationshipsGraph = Map.empty[Int,UncertaintyMap[Int]]//identifier1->relationships->identifier2
     
-	private[this] var data = ListBuffer.empty[CollectiveObstacle]
+	private[this] var data = Map.empty[Int,CollectiveObstacle]
 	
     override def toString = {
     		var result = "Collective Map \n"
@@ -81,6 +81,7 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 		loop
 		{
 			react{
+			  case GetCollectiveObstacle(identifier) => reply(data.get(identifier))
 			  case PickName(identifier,obstacleType) => {
 				  if(pickName(identifier,obstacleType))
 				  {
@@ -114,7 +115,7 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 			 	  if(read(transaction)){
 			 	 	  reply( OperationResult(true,{
 			 	 		  		var result: List[PotentialMatch] = Nil
-			 	 		  		data.foreach(collectiveObstacle => 
+			 	 		  		data.values.foreach(collectiveObstacle => 
 			 	 		  			result = collectiveObstacle.possibleMatch(scanResults) ++ result 
 			 	 		  		)//end foreach
 			 	 		  		result
