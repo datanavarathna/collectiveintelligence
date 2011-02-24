@@ -1,20 +1,44 @@
-package collective
+package tests
+
+import  collective2._
 
 import scala.swing._
 import scala.swing.event._
 import scala.actors._
 import Actor._
 
+import collective2.definitions._
+
 case class AgentDestroyed(b: RegionButton) extends Event
 case class ClickedAgentButton(agentButton: RegionButton) extends Event
 case class Started() extends Event
+
+
+import scala.swing._
+import java.awt.Dimension
+import collective2._
+
+object AgentNavigationTest extends SimpleGUIApplication{
+    val width = 600
+    val height = 400
+    val environmentX = 3
+    val environmentY = 3
+
+    def top = new MainFrame{
+        title = "Scala Collective"
+        contents = new AgentNavigationTest(environmentX,environmentY,width-20,height-50,
+        		List( (3,2)), List( (3,2)),3,2 )
+        preferredSize = new Dimension(width,height)
+    }
+}
 
 //environmentX - number of columns in environment
 //environmentY - number of rows in environment
 //width - frame width in pixels
 //height - frame height in pixels
-class ScalaGUI(val environmentX: Int, val environmentY: Int,
-               val width: Int, val height: Int) extends FlowPanel{
+class AgentNavigationTest(val environmentX: Int, val environmentY: Int,
+               val width: Int, val height: Int,
+               agentLocations: List[(Int,Int)],obstacleLocations: List[(Int,Int)],relativeX: Int,relativeY: Int) extends AbstractScalaGUI{
      require(width > 60)
      require(height > 10)
      val sideBarWidth = 170;
@@ -23,9 +47,9 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
      //println("ScalaGUI envX: " + environmentX + " envY: " + environmentY)
 
     //initial primary actors
-    //val helpActor: ScalaGUIhelperActor = new ScalaGUIhelperActor(map, world, this)
-    //val map: Actor = new CollectiveMap
-    //val world: Environment = new Environment( environmentX-1, environmentY-1, helpActor)
+    val helpActor: ScalaGUIhelperActor = new ScalaGUIhelperActor( this)
+    val map: Actor = new CollectiveMap(helpActor)
+    val world: Environment = new Environment( environmentX-1, environmentY-1, helpActor)
      
     //initialize lists
     var agentsWithLocations: List[AgentWithLocation] = Nil
@@ -33,24 +57,31 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
 
     //initialize new world of RegionButtons 
     var worldButtons = new Array[RegionButton](environmentX*environmentY)
+    def getWorldButton(index: Int) = worldButtons(index)
+    def getEnvironmentX =environmentX
      for(i <- 0 until (environmentX*environmentY)){
-        val x: Int = i % environmentX
-        val y: Int = i / environmentX
+        val (x,y) = indexToXY(environmentX,i)
         worldButtons(i) = new RegionButton(x,y)
+        if(agentLocations.exists( _ == (x,y)) ){
+        	worldButtons(i).status = RegionButton.Agent
+        }else if(agentLocations.exists( _ == (x,y))){
+        	worldButtons(i).status = RegionButton.Obstacle
+        }
+        worldButtons(i).update
      }
 
      val worldView = new GridPanel(environmentX,environmentY){
         //register worldButtons for worldView
+    	 
     	 for(button <- worldButtons){
             contents += button
-            listenTo(button) 
+            //listenTo(button) 
         }
         reactions += {
             case ButtonClicked(b) => {
             	b match {
             		case rb: RegionButton => {
             			rb.incrementStatus
-            			rb.update
             			if(rb.status == RegionButton.Agent){
             				publish(ClickedAgentButton(rb))
             			}else if(rb.status == RegionButton.Obstacle ){
@@ -63,6 +94,7 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
             }
             case Started() => {
             	//when simulation starts, change GUI from control mode to display
+            	println("Changing GUI from control mode to display mode")
                 for(button <- worldButtons){
                     deafTo(button)
                 }
@@ -176,33 +208,46 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
                 println("Initialize clicked")
                 for(button <- worldButtons){
                     if(button.status == RegionButton.Agent){
-                    	//apppend new agent to agentsWithLocations list
-                        /*
+                    	//append new agent to agentsWithLocations list
+                        
                          agentsWithLocations = AgentWithLocation(
                             new Agent(world, map, button.sensorRange,
-                                  button.sensorDeltaAngle, button.sensorDeltaRange),
+                                  button.sensorDeltaAngle, button.sensorDeltaRange,testMode = true),
                                     button.x,button.y) :: agentsWithLocations
-                        */
+                        
                     }
                     else if(button.status > RegionButton.Agent){
                        obstacles = new Obstacle(button.obstacleType,button.x,button.y) :: obstacles
                     }
                 }//end for
+                println("worldButtons initialized")
             }
             else if(b eq startButton){
                 //start simulation
                 publish(Started())
-                /*
+                
                 map.start
                 world.start
                 world ! obstacles //send obstacles to world
                 world ! agentsWithLocations //send agentsWithLocations to world
                 helpActor.start
-                */
+                import scala.actors.Futures.future
+                val ft = future {
+                	Thread.sleep(1000)
+                }
+                ft()
+                agentsWithLocations.foreach(agentWithLocation => {
+                		val AgentWithLocation(agent,x,y) = agentWithLocation
+                		agent ! TestGoal(relativeX,relativeY)
+                	}
+                )
+                
             }
             else{
                 //run kill statements
-                //helpActor ! "Exit"
+                helpActor ! "Exit"
+            	//world ! "Exit"
+                map ! "Exit"
             }
         }
     }

@@ -37,6 +37,7 @@ import scala.collection.mutable
 case class Pheromone(locationX: Int,LocationY: Int,targetX: Int, targetY: Int)
 
 */
+
 case class Displacement(x: Measurement, y: Measurement) {
     
 	def canEqual(other: Any): Boolean = { other.isInstanceOf[Displacement] }
@@ -77,9 +78,14 @@ case class PotentialMatch(x: Int, y: Int, mapObstacle: CollectiveObstacle)
 
 case class GetCollectiveObstacle(identifier: Int)
 
-import collection.immutable.TreeMap
+case class UpdateCollectiveObstacle(transaction: Transaction,obstacle: CollectiveObstacle,
+		relations: Seq[(Displacement,(Int,Option[CollectiveObstacle]))])
+case class AddCollectionObstacle(transaction: Transaction,obstacleIdentifier: Int,
+		obstacle: CollectiveObstacle)
+		
+import collection.immutable.Map
 case class CollectiveObstacle(val obstacleType: Int,
-		private var relations: TreeMap[Displacement,CollectiveObstacle],
+		private var relations: Map[Displacement,(Int,Option[CollectiveObstacle])],
 		sensorArea: List[Coordinate])
 {
 	def this(obstacleType: Int,sensorArea: List[Coordinate]) = this(obstacleType,null,sensorArea)
@@ -87,7 +93,15 @@ case class CollectiveObstacle(val obstacleType: Int,
 	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)
 	
-	def relationsVectors(): List[Displacement] = relations.keys.toList
+	def relationsVectors(): List[(Displacement,Int)] = {
+		var result: List[(Displacement,Int)] = Nil
+		relations.foreach( pair => {
+				val(vector,(obstacleType,collectiveObstacle))=pair
+				result = (vector,obstacleType) :: result
+			}
+		)
+		result
+	}
 	
 	def insideSavedBoundaries(vector: Displacement): Boolean = {
 		insideSavedBoundaries(vector.x.value.toInt,vector.y.value.toInt  )
@@ -108,11 +122,11 @@ case class CollectiveObstacle(val obstacleType: Int,
 		exploredArea.contains(x,y)
 	}
 	
-	def addRelations(newRelations: (Displacement,CollectiveObstacle) *){
+	def addRelations(newRelations: (Displacement,(Int,Option[CollectiveObstacle])) *){
 		newRelations.foreach( relation => relations + relation)
 	}
 	
-	def update(newRelations: mutable.Map[Displacement,CollectiveObstacle], area: Seq[Coordinate]){
+	def update(newRelations: mutable.Map[Displacement,(Int,Option[CollectiveObstacle])], area: Seq[Coordinate]){
 		addRelations(newRelations.toSeq: _*)
 		addExploredArea(area)
 	}
@@ -120,7 +134,7 @@ case class CollectiveObstacle(val obstacleType: Int,
 	def containsRelation(vector: Displacement, relationObjectType: Int): Boolean = {
 		relations.get(vector) match {
 			case None => return false
-			case Some(collectiveObject) => {collectiveObject.obstacleType == relationObjectType
+			case Some((obstacleType,_)) => {obstacleType == relationObjectType
 				
 			}
 		}
@@ -186,6 +200,8 @@ case class Size(size: Int)
 case class GetIdentifierType(identifier: Int)
 case class IdentifierType(identifier: Int,objectType: Int)
 case class noType(identifier: Int)
+
+case class TestGoal(x: Int, y: Int)
 
 //case class Goal(goal:Obstacle)
 /*

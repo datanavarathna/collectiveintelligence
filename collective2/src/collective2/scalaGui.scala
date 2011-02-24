@@ -7,7 +7,7 @@ import Actor._
 
 import collective2.definitions._
 
-case class AgentDestoyed(b: RegionButton) extends Event
+case class AgentDestroyed(b: RegionButton) extends Event
 case class ClickedAgentButton(agentButton: RegionButton) extends Event
 case class Started() extends Event
 
@@ -16,14 +16,14 @@ case class Started() extends Event
 //width - frame width in pixels
 //height - frame height in pixels
 class ScalaGUI(val environmentX: Int, val environmentY: Int,
-               val width: Int, val height: Int) extends FlowPanel{
+               val width: Int, val height: Int) extends AbstractScalaGUI{
      require(width > 60)
      require(height > 10)
      val sideBarWidth = 170;
      val worldWidth = width - sideBarWidth
      val worldHeight = height - 5;
      //println("ScalaGUI envX: " + environmentX + " envY: " + environmentY)
-
+     
     //initial primary actors
     val helpActor: ScalaGUIhelperActor = new ScalaGUIhelperActor( this)
     val map: Actor = new CollectiveMap(helpActor)
@@ -32,9 +32,11 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
     //initialize lists
     var agentsWithLocations: List[AgentWithLocation] = Nil
     var obstacles: List[Obstacle] = Nil
-
+    
     //initialize new world of RegionButtons 
-    var worldButtons = new Array[RegionButton](environmentX*environmentY)
+     var worldButtons = new Array[RegionButton](environmentX*environmentY)
+     def getWorldButton(index: Int) = worldButtons(index)
+     def getEnvironmentX =environmentX
      for(i <- 0 until (environmentX*environmentY)){
         val (x,y) = indexToXY(environmentX,i)
         worldButtons(i) = new RegionButton(x,y)
@@ -54,7 +56,7 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
             			if(rb.status == RegionButton.Agent){
             				publish(ClickedAgentButton(rb))
             			}else if(rb.status == RegionButton.Obstacle ){
-            				publish(AgentDestoyed(rb))
+            				publish(AgentDestroyed(rb))
             			}
             		}
             		case _ => println("Not region button")//Should never execute
@@ -135,7 +137,7 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
                  visible = true 
                  contents.foreach(_.visible_=(true))
             }
-            case AgentDestoyed(b) => {
+            case AgentDestroyed(b) => {
             	contents.foreach(_.visible_=(false))//make agentStatusUpdate disappear
             }
             case ButtonClicked(b) => {

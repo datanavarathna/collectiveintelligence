@@ -60,9 +60,10 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
     		identifierType.get(identifier)
     }
 
-    private def add(): Boolean = 
+    private def add(identifier: Int,obstacle: CollectiveObstacle): Boolean = 
     {
-    	false
+    	data += (identifier -> obstacle)
+    	true
     }
 
     
@@ -82,6 +83,33 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 		{
 			react{
 			  case GetCollectiveObstacle(identifier) => reply(data.get(identifier))
+			  case GetPossibleStates(transaction,scanResults) => {
+			 	  if(read(transaction)){
+			 	 	  var result: List[PotentialMatch] = Nil
+			 	 	  for(scanResult <- scanResults){
+			 	 	 	  
+			 	 		  		data.values.foreach(collectiveObstacle => {
+			 	 		  				if(collectiveObstacle.possibleMatchTest(
+			 	 		  					scanResult.scannedRelations) )
+			 	 		  					result =  PotentialMatch(scanResult.x,scanResult.y,
+			 	 		  								collectiveObstacle) :: result
+			 	 		  			}
+			 	 		  		)//end foreach  		
+			 	 	  }
+			 	 	  reply( OperationResult(true,result) )	 		  
+			 	  }else
+			 		  reply( OperationResult(false,null) )
+			  }
+			  case UpdateCollectiveObstacle(transaction,obstacle,relations) => {
+			 	  if(write(transaction)){
+			 		  obstacle.addRelations(relations: _*)
+			 	  }
+			  }
+			  case AddCollectionObstacle(transaction,obstacleIdentifier,obstacle) => {
+			 	  if(write(transaction)){
+			 	 	  add(obstacleIdentifier,obstacle)
+			 	  }
+			  }
 			  case PickName(identifier,obstacleType) => {
 				  if(pickName(identifier,obstacleType))
 				  {
@@ -110,19 +138,6 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 				    case Some(objectType) => reply(IdentifierType(identifier,objectType))
 				    case None => reply(noType(identifier))
 				  }
-			  }
-			  case GetPossibleStates(transaction,scanResults) => {
-			 	  if(read(transaction)){
-			 	 	  reply( OperationResult(true,{
-			 	 		  		var result: List[PotentialMatch] = Nil
-			 	 		  		data.values.foreach(collectiveObstacle => 
-			 	 		  			result = collectiveObstacle.possibleMatch(scanResults) ++ result 
-			 	 		  		)//end foreach
-			 	 		  		result
-			 	 		  	  })//end OperationResult 
-			 	 	  )//end reply	 		  
-			 	  }else
-			 		  reply( OperationResult(false,null) )
 			  }
 			  case "getSize" => reply(getSize)
 			  case catchall => println("CollectiveMap catchall: " + catchall) 
