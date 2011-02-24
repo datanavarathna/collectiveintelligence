@@ -399,7 +399,7 @@ trait focusedDstar {
 	}
 	
 	def moveAgent(start: State, goal: State): Goal = {
-		//println("Executing moveAgent( "+start+" , "+goal+" )")
+		println("Executing moveAgent( "+start+" , "+goal+" )")
 		//println("Initialize")
 		//initialize
 		path = new Goal

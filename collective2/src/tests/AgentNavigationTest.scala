@@ -27,7 +27,7 @@ object AgentNavigationTest extends SimpleGUIApplication{
     def top = new MainFrame{
         title = "Scala Collective"
         contents = new AgentNavigationTest(environmentX,environmentY,width-20,height-50,
-        		List( (3,2)), List( (3,2)),3,2 )
+        		List( (1,2)), List( (1,1)),0,-2 )
         preferredSize = new Dimension(width,height)
     }
 }
@@ -59,13 +59,17 @@ class AgentNavigationTest(val environmentX: Int, val environmentY: Int,
     var worldButtons = new Array[RegionButton](environmentX*environmentY)
     def getWorldButton(index: Int) = worldButtons(index)
     def getEnvironmentX =environmentX
-     for(i <- 0 until (environmentX*environmentY)){
+     
+    for(i <- 0 until (environmentX*environmentY)){
         val (x,y) = indexToXY(environmentX,i)
         worldButtons(i) = new RegionButton(x,y)
         if(agentLocations.exists( _ == (x,y)) ){
-        	worldButtons(i).status = RegionButton.Agent
-        }else if(agentLocations.exists( _ == (x,y))){
-        	worldButtons(i).status = RegionButton.Obstacle
+        	println("Found Agent at ("+x+","+y+")")
+        	worldButtons(i).incrementStatus
+        }else if(obstacleLocations.exists( _ == (x,y))){
+        	println("Found Obstacle at ("+x+","+y+")")
+        	worldButtons(i).incrementStatus
+        	worldButtons(i).incrementStatus
         }
         worldButtons(i).update
      }

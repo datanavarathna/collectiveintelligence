@@ -22,7 +22,7 @@ package object definitions {
 	import uncertaintyMath.Measurement._
 	def PolarToCartesian(angle: Measurement, distance: Measurement): Displacement =  {
       Displacement(distance * cos(angle), distance * sin(angle))
-  }
+	}
 }
 
 import scala.actors._
@@ -37,6 +37,27 @@ import scala.collection.mutable
 case class Pheromone(locationX: Int,LocationY: Int,targetX: Int, targetY: Int)
 
 */
+
+object Displacement{
+	val ordering: Ordering[Displacement] = Ordering.fromLessThan[Displacement](Displacement.compare(_,_) < 0)
+	
+	def compare (a: Displacement, b: Displacement) : Int = { 
+		val polarA = a.cartesianToPolar//a.x is effectively a.radius, a.y is effectively a.theta
+		val polarB = b.cartesianToPolar//b.x is effectively b.radius, b.y is effectively b.theta
+		if(a.x == b.x)//if radii are equal
+		{
+			if(a.y == b.y)
+				return 0
+			else if(a.y < b.y)
+				return -1
+			else
+				return 1
+		}else if(a.x < b.x)
+			return -1
+		else
+			return 1	
+	}
+}
 
 case class Displacement(x: Measurement, y: Measurement) {
     
@@ -68,6 +89,10 @@ case class Displacement(x: Measurement, y: Measurement) {
     
     def toIntInt(): (Int,Int) = {
     	(x.value.toInt,y.value.toInt)
+    }
+    
+    def cartesianToPolar(): Displacement = {
+    	Displacement(x*x+y*y,atan2(y,x))
     }
 }
 case class Coordinate(x: Int, y: Int) 
