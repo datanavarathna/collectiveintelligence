@@ -189,13 +189,6 @@ trait focusedDstar {
 	//cost of moving from state X to state Y, always positive
 	def costOfTransversal(x: State, y: State): Double //= x transitionCostTo y
 	
-	def hTest(x: State,xString: String){
-		if(x.h != heuristic(x)){
-			//println(xString+".h= "+x.h+" h("+xString+")= "+heuristic(x))
-			//update(x)
-		}
-	}
-	
 	def transitionToState(next: State): State = {
 		//println("Executing transitionToState")
 		//println("CurrentState = "+currentState)
@@ -300,7 +293,6 @@ trait focusedDstar {
 			//update(x)
 		}
 		*/
-		//hTest(x,"x")
 		//println("insert ( "+x+", "+newH+")")
 		
 		if(x.tag == Tag.New )
@@ -309,7 +301,6 @@ trait focusedDstar {
 			x.k = math.min(x.k,newH)
 			delete(x)
 		}else{
-			hTest(x,"x")
 			x.k = math.min(x.h,newH)
 		}
 		x.h = newH
@@ -332,10 +323,8 @@ trait focusedDstar {
 		while(!open.isEmpty && !foundResult){
 			var x = open.min//(State.ordering)
 			//update(x)
-			//hTest(x,"x")
 			if(x.agentStateWhenModified != currentState){
 				var newH = x.h
-				hTest(x,"x")
 				x.h = x.k 
 				delete(x)
 				insert(x,newH)
@@ -366,20 +355,18 @@ trait focusedDstar {
 		//println("Updates( "+x+", "+y+", "+costValue+" )")
 		if(x.tag == Tag.Closed ){
 			//println("x.tag = Tag.Closed")
-			hTest(x,"x")
 			insert(x,heuristic(x))
 		}
 		return minValue
 	}
 	
 	protected def cost(x: State): (Double, Double) = {
-		println("cost( "+x+" )")
-		//update(x)
-		hTest(x,"x")
+		//println("cost( "+x+" )")
+		//update(x))
 		var guess= heuristic(x)
 		var estimatedPathCost = guess + focussingHeuristic(x, currentState)
 		x.estimatedPathCost = estimatedPathCost
-		println("= ("+estimatedPathCost+","+guess+")")
+		//println("= ("+estimatedPathCost+","+guess+")")
 		return (estimatedPathCost, guess)
 	}
 	
@@ -454,7 +441,6 @@ trait focusedDstar {
 		}
 		{
 			//println("if(start.h >= obstacleCost)")
-			hTest(start,"start")
 			if(start.h >= obstacleCost){
 				println("NO UNOBSTRUCTED PATH EXISTS from "+start+" to "+goal)
 				return new Goal
@@ -469,7 +455,7 @@ trait focusedDstar {
 		var agentState = start
 		path.addStateToPath(start)
 		while(agentState != goal && stateReachable(goal) && failedToTransition < 5){
-			if(failedToTransition > 0)
+			if(failedToTransition > 1)
 				println("FAILED TRANSITION NUMBER "+failedToTransition)
 			//println("Check for discrepancies between sensor readings and state transistion costs")
 			//check that sensor is not empty
@@ -505,7 +491,7 @@ trait focusedDstar {
 				processNumber = 0
 				while( temp != None /*unobstructed path exists to goal from current state*/ && {
 					var Some(doubleDouble) = temp
-					println("? "+temp+" < "+cost(agentState))
+					//println("? "+temp+" < "+cost(agentState))
 					lessThanEqualTest( doubleDouble, cost(agentState))//prevents replanning, COST is probably the problem
 				}&& stateReachable(goal)
 				&& {
@@ -522,7 +508,6 @@ trait focusedDstar {
 				}
 				{
 					//println("if(agentState.h >= obstacleCost)")
-					hTest(agentState,"agentState")
 					if(agentState.h >= obstacleCost){
 						println("NO UNOBSTRUCTED PATH EXISTS from "+agentState+" to "+goal)
 						return new Goal
@@ -554,35 +539,33 @@ trait focusedDstar {
 	}
 	
 	protected def processState(): Option[(Double,Double)] = {
-		println("Executing processState")
+		//println("Executing processState")
 		//lowest pathCost removed from open
 		var x = minState()
 		if (x == null) return None
 		//update(x)
-		println("x: "+x)
+		//println("x: "+x)
 		var kval = x.k
-		println("  kval: "+kval)
+		//println("  kval: "+kval)
 		var temp = (x.estimatedPathCost , kval  )
-		println("  temp: "+temp)
+		//println("  temp: "+temp)
 		delete(x)
 		//see if x.h can be reduced
-		hTest(x,"x")
 		//update(x)
 		if(kval < x.h )
 		{
-			println("RAISE State")
-			println("(kval < x.h): ( "+kval+" < "+x.h+")")
+			//println("RAISE State")
+			//println("(kval < x.h): ( "+kval+" < "+x.h+")")
 			for(y <- x.neighbors )
 			{
 				//update(y)
-				println("  y: "+y)
+				//println("  y: "+y)
 				var c = costOfTransversal(y,x)
-				println("     c: "+c)
-				hTest(y,"y")
+				//println("     c: "+c)
 				if((y.tag  != Tag.New ) && lessThanEqualTest(cost(y),temp) && 
 						x.h > y.h + c){
-					println("Set parent to better neighbor")
-					println("     "+x+"->"+y )
+					//println("Set parent to better neighbor")
+					//println("     "+x+"->"+y )
 					x.parent = y
 					x.h = y.h + c
 				}
@@ -590,23 +573,21 @@ trait focusedDstar {
 		}
 		//see if pathCost can be lowered for neighbor Y of X
 		if(kval == x.h){
-			println("LOWER State")
-			println("(kval == x.h): ( "+kval+" == "+x.h+")")
+			//println("LOWER State")
+			//println("(kval == x.h): ( "+kval+" == "+x.h+")")
 			for(y <- x.neighbors )
 			{
 				//update(y)
-				println("  y: "+y)
+				//println("  y: "+y)
 				var c = costOfTransversal(x,y)
-				println("     c: "+c)
-				hTest(x,"x")
+				//println("     c: "+c)
 				var hValue = x.h + c
-				println("     hValue: "+hValue)
-				hTest(y,"y")
+				//println("     hValue: "+hValue)
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ||
 						(y.parent != x && y.h > hValue) ){
-					println("Updated child cost")
-					println("     "+y+"->"+x )
+					//println("Updated child cost")
+					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
 				}
@@ -618,34 +599,28 @@ trait focusedDstar {
 			{
 				//cost changes propagate to New states
 				//update(y)
-				println("  y: "+y)
+				//println("  y: "+y)
 				var c = costOfTransversal(x,y)
-				println("     c: "+c)
-				hTest(x,"x")
+				//println("     c: "+c)
 				var hValue = x.h + c
-				println("     hValue: "+hValue)
-				hTest(y,"y")
+				//println("     hValue: "+hValue)
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ){
-					println("Inserted a neighbor with a new cost value")
-					println("     "+y+"->"+x )
+					//println("Inserted a neighbor with a new cost value")
+					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
 				}else{
 					//lower path cost for non-immediate descendants
-					hTest(x,"x")
-					hTest(y,"y")
 					if((y.parent != x && y.h > hValue) && (x.tag == Tag.Closed ) ){
-						println("Inserted self as a holding action")
+						//println("Inserted self as a holding action")
 						insert(x,x.h)
 					}
 					//reduce path cost using suboptimal neighbor
 					else{
-						hTest(x,"x")
-						hTest(y,"y")
 						if( (y.parent != x && x.h > y.h + costOfTransversal(y,x)) && (y.tag == Tag.Closed ) &&
 								lessThanTest(temp,cost(y))){
-							println("Inserted neighbor as a holding action")
+							//println("Inserted neighbor as a holding action")
 							insert(y,y.h)
 						}
 					}

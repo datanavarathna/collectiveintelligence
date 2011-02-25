@@ -99,7 +99,7 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 				passabilityMap +=((a,b) -> costValue)
 				//passabilityMap +=((b,a) -> costValue)
 				//if((a.x == 0 && a.y == -1) || (b.x == 0 && b.y == -1) ){
-					println("update("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+costValue )
+					//println("update("+a.x+","+a.y+")->("+b.x+","+b.y+")= "+costValue )
 					//println("update("+b.x+","+b.y+")->("+a.x+","+a.y+")= "+costValue )
 				//}
 			}
