@@ -8,6 +8,8 @@ class Transaction(val name: String,maxRetries: Int) {
 	private[this] var retries: Int = 0
 	private[this] var successful = false
 	
+	override def toString = "Transaction( "+name+")"
+	
 	def setOperations(operations: => Boolean){
 		do{
 		timeStamp = System.nanoTime()

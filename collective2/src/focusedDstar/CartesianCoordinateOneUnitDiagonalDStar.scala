@@ -7,6 +7,7 @@ case class CoordinateState(val x: Int, val y: Int, var passable: Boolean = true,
 	
 	override def toString = "CoordinateState("+x+","+y+","+"passable="+passable+","+super.toString+")"
 	
+	//override def compare (x: State) : Int = super.compare(x)
 }
 
 class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstructor{

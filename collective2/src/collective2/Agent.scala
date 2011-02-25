@@ -134,7 +134,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				throwException(other+" returned by moveAgent instead of a Goal")
 			}
 		}//end match moveAgent
-		expandCollectiveMap
+		//expandCollectiveMap
 		
 	}//end explore(start,goal)
 	
@@ -523,6 +523,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
               case TestGoal(x,y)=>{
             	  val goal = stateFactory.getCoordinate(x, y)
             	  println("Got initial goal")
+            	  //initialScan()
+            	  //pathfinding doesn't try to move through the obstacle if
+            	  //it is detected before any planning occurs
+            	  //otherwise tries to move through the obstacle as previously planned
             	  moveAgent(currentState,goal)
               }
               

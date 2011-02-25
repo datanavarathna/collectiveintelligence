@@ -8,46 +8,18 @@ import scala.math
 object Tag extends Enumeration{
 	val New, Closed, Open = Value
 }
-
-object State {
+/*
+ object State extends Ordering[State]{
 	val ordering: Ordering[State] = Ordering.fromLessThan[State](State.compare(_,_) < 0)
 	
-	def compare (x: State, y: State) : Int = { 
-		//(-) if x < y, (+) if x > y, 0 if x == y
-		var xTemp = x.biasedEstimatedPathCost
-		var yTemp = y.biasedEstimatedPathCost
-		if( xTemp == yTemp){
-			//compare estimatedPathCost
-			xTemp = x.estimatedPathCost 
-			yTemp = y.estimatedPathCost
-			if( xTemp == yTemp){
-				//compare k
-				xTemp = x.k 
-				yTemp = y.k 
-				if( xTemp == yTemp)
-					return 0
-				else if ( xTemp < yTemp)
-					return -1
-				else
-					return 1
-			}//end compare k
-			else if ( xTemp < yTemp)
-				return -1
-			else
-				return 1
-		}//end compare estimatedPathCost
-		else if ( xTemp < yTemp)
-			return -1
-		else
-			return 1
-	}//end compare
+	
 }
-
+*/
 abstract class StateConstructor(){
 	def getNeighbors(state: State): Seq[State]
 }
 
-abstract class State(factory: StateConstructor) /*extends Ordering[State]*/
+abstract class State(factory: StateConstructor) extends Ordered[State]/*extends Ordering[State]*/
 {
 	var parent: State = null
 	var tag = Tag.New
@@ -83,6 +55,41 @@ abstract class State(factory: StateConstructor) /*extends Ordering[State]*/
 		h = 0
 		agentStateWhenModified = null
 	}
+	/*
+	implicit def stateOrdering = new Ordering[State]{
+		def comare(a: State, b: State) = a.compare(b)
+	}
+	*/
+	
+	def compare (x: State) : Int = { 
+		//(-) if x < y, (+) if x > y, 0 if x == y
+		var xTemp = this.biasedEstimatedPathCost
+		var yTemp = x.biasedEstimatedPathCost
+		if( xTemp == yTemp){
+			//compare estimatedPathCost
+			xTemp = this.estimatedPathCost 
+			yTemp = x.estimatedPathCost
+			if( xTemp == yTemp){
+				//compare k
+				xTemp = this.k 
+				yTemp = x.k 
+				if( xTemp == yTemp)
+					return 0
+				else if ( xTemp < yTemp)
+					return -1
+				else
+					return 1
+			}//end compare k
+			else if ( xTemp < yTemp)
+				return -1
+			else
+				return 1
+		}//end compare estimatedPathCost
+		else if ( xTemp < yTemp)
+			return -1
+		else
+			return 1
+	}//end compare
 }
 
 case class Goal(){
@@ -152,12 +159,14 @@ trait focusedDstar {
 	var maxProcessNumber : Int = 20
 	private[this] var processNumber: Int = 0
 	
+	def openElements: List[State] = open.toList
+	
 	def setStateTransitionOperation( transitionOperation: State => Boolean){
 		//must be called before moveAgent
 		stateTransitionOperation  = transitionOperation
 	}
 	
-	private var open: TreeSet[State] = TreeSet.empty[State](State.ordering)
+	private var open: TreeSet[State] = TreeSet.empty[State]//(State.ordering)
 	var accruedBias: Double = _
 	
 	def currentState: State = agentStates.head //Rcurr
@@ -255,7 +264,7 @@ trait focusedDstar {
 	//estimated path cost from state X to state Y
 	def focussingHeuristic(x: State, y: State) = costOfTransversal(x,y)
 	
-	private def delete(x: State) = {
+	protected def delete(x: State) = {
 		//println("delete( "+x+" )")
 		x.tag = Tag.Closed
 		//remove from open
@@ -265,18 +274,20 @@ trait focusedDstar {
 		//println("closed: "+closedList)
 	}
 	
-	private def putState(x: State){
+	protected def putState(x: State){
 		//println("putState( "+x+" )")
 		x.tag = Tag.Open 
 		open = open + x
 		//println("open: "+open)
 	}
 	
-	private def insert(x: State, newH: Double){
+	/*private*/ def insert(x: State, newH: Double){
+		/*
 		if(newH == 0){
 			goal = x
 			//update(x)
 		}
+		*/
 		//hTest(x,"x")
 		//println("insert ( "+x+", "+newH+")")
 		
@@ -302,12 +313,12 @@ trait focusedDstar {
 		putState(x)
 	}//end insert
 	
-	private def minState(): State = {
+	/*private*/ def minState(): State = {
 		//println("minState")
 		var result: State = null
 		var foundResult = false
 		while(!open.isEmpty && !foundResult){
-			var x = open.min(State.ordering)
+			var x = open.min//(State.ordering)
 			//update(x)
 			//hTest(x,"x")
 			if(x.agentStateWhenModified != currentState){
@@ -325,10 +336,10 @@ trait focusedDstar {
 		return result
 	}
 	
-	private def minValue(): Option[(Double,Double)] = {
+	protected def minValue(): Option[(Double,Double)] = {
 		val result = {
 				if(!open.isEmpty){
-					var x: State = open.min(State.ordering)
+					var x: State = open.min//(State.ordering)
 					Some(x.estimatedPathCost, x.k )
 				}else
 					None
@@ -349,18 +360,18 @@ trait focusedDstar {
 		return minValue
 	}
 	
-	private def cost(x: State): (Double, Double) = {
+	protected def cost(x: State): (Double, Double) = {
 		//println("cost( "+x+" )")
-		update(x)
+		//update(x)
 		hTest(x,"x")
-		var guess= x.h
+		var guess= heuristic(x)
 		var estimatedPathCost = guess + focussingHeuristic(x, currentState)
 		x.estimatedPathCost = estimatedPathCost
 		//println("= ("+estimatedPathCost+","+guess+")")
 		return (estimatedPathCost, guess)
 	}
 	
-	private def lessThanTest(a: (Double, Double), b: (Double,Double)): Boolean = {
+	protected def lessThanTest(a: (Double, Double), b: (Double,Double)): Boolean = {
 		val (a1, a2) = a
 		val (b1, b2) = b
 		if( a1 == b1)
@@ -369,7 +380,7 @@ trait focusedDstar {
 			return a1 < b1	
 	}
 	
-	private def lessThanEqualTest(a: (Double, Double), b: (Double,Double)): Boolean = {
+	protected def lessThanEqualTest(a: (Double, Double), b: (Double,Double)): Boolean = {
 		val (a1, a2) = a
 		val (b1, b2) = b
 		if( a1 == b1)
@@ -378,9 +389,9 @@ trait focusedDstar {
 			return a1 <= b1	
 	}
 	
-	private def resetCheckedStates(){
+	protected def resetCheckedStates(){
 		//println("resetCheckedStates")
-		open = TreeSet.empty[State](State.ordering)
+		open = TreeSet.empty[State]//(State.ordering)
 		for(state <- closedList){
 			state.reset()
 			state.neighbors.foreach( neighbor => neighbor.reset())
@@ -400,6 +411,7 @@ trait focusedDstar {
 	
 	def moveAgent(start: State, goal: State): Goal = {
 		println("Executing moveAgent( "+start+" , "+goal+" )")
+		this.goal=goal
 		//println("Initialize")
 		//initialize
 		path = new Goal
@@ -445,6 +457,8 @@ trait focusedDstar {
 		var agentState = start
 		path.addStateToPath(start)
 		while(agentState != goal && stateReachable(goal) && failedToTransition < 5){
+			if(failedToTransition > 0)
+				println("FAILED TRANSITION NUMBER "+failedToTransition)
 			//println("Check for discrepancies between sensor readings and state transistion costs")
 			//check that sensor is not empty
 			val sensorReadings = sensor
@@ -470,16 +484,14 @@ trait focusedDstar {
 				}
 				//println("Update state transition costs")
 				discrepancies.foreach(element => {
-						val ((x: State, y: State), cost: Double) = element
-						temp = modifyCost(x,y,cost)
-					}
-				)//end processing discrepancies
-				//update costs and replan
-				//println("Replan")
+						val ((x: State, y: State), costValue: Double) = element
+						temp = modifyCost(x,y,costValue)
+						println("Replan")
 				processNumber = 0
 				while( temp != None /*unobstructed path exists to goal from current state*/ && {
 							var Some(doubleDouble) = temp
-							lessThanTest(doubleDouble, cost(agentState))
+							println("? "+cost(agentState)+" <= "+temp)
+							lessThanEqualTest( cost(agentState),doubleDouble)//prevents replanning, COST is probably the problem
 						}&& stateReachable(goal)
 						&& {
 							if(processNumber <= maxProcessNumber)
@@ -502,6 +514,10 @@ trait focusedDstar {
 					}else
 						true
 				}
+					}
+				)//end processing discrepancies
+				//update costs and replan
+				
 			}//end if discrepancies exist
 			else{
 				//println("No discrepancies detected")
@@ -513,7 +529,7 @@ trait focusedDstar {
 		return path
 	}
 	
-	private def stateReachable(x: State):Boolean = {
+	protected def stateReachable(x: State):Boolean = {
 		val neighborCosts = for(y <- x.neighbors )yield{
 			costOfTransversal(y,x)
 		}
@@ -526,7 +542,7 @@ trait focusedDstar {
 		}
 	}
 	
-	private def processState(): Option[(Double,Double)] = {
+	protected def processState(): Option[(Double,Double)] = {
 		//println("Executing processState")
 		//lowest pathCost removed from open
 		var x = minState()
@@ -554,7 +570,7 @@ trait focusedDstar {
 				hTest(y,"y")
 				if((y.tag  != Tag.New ) && lessThanEqualTest(cost(y),temp) && 
 						x.h > y.h + c){
-					println("Set parent to better neighbor")
+					//println("Set parent to better neighbor")
 					//println("     "+x+"->"+y )
 					x.parent = y
 					x.h = y.h + c
@@ -578,7 +594,7 @@ trait focusedDstar {
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ||
 						(y.parent != x && y.h > hValue) ){
-					println("Updated child cost")
+					//println("Updated child cost")
 					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
@@ -593,14 +609,14 @@ trait focusedDstar {
 				//update(y)
 				//println("  y: "+y)
 				var c = costOfTransversal(x,y)
-				//println("     c: "+c)
+				////println("     c: "+c)
 				hTest(x,"x")
 				var hValue = x.h + c
 				//println("     hValue: "+hValue)
 				hTest(y,"y")
 				if((y.tag  == Tag.New ) || 
 						(y.parent == x && y.h != hValue) ){
-					println("Inserted a neighbor with a new cost value")
+					//println("Inserted a neighbor with a new cost value")
 					//println("     "+y+"->"+x )
 					y.parent = x
 					insert(y,hValue)
@@ -609,7 +625,7 @@ trait focusedDstar {
 					hTest(x,"x")
 					hTest(y,"y")
 					if((y.parent != x && y.h > hValue) && (x.tag == Tag.Closed ) ){
-						println("Inserted self as a holding action")
+						//println("Inserted self as a holding action")
 						insert(x,x.h)
 					}
 					//reduce path cost using suboptimal neighbor
@@ -618,7 +634,7 @@ trait focusedDstar {
 						hTest(y,"y")
 						if( (y.parent != x && x.h > y.h + costOfTransversal(y,x)) && (y.tag == Tag.Closed ) &&
 								lessThanTest(temp,cost(y))){
-							println("Inserted neighbor as a holding action")
+							//println("Inserted neighbor as a holding action")
 							insert(y,y.h)
 						}
 					}
