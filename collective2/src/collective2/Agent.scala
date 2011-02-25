@@ -396,9 +396,6 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		//println("Getting currentState")
 		currentState match {
 			case state @ CoordinateState(x,y,_,_) => {
-				//add costs to all areas scanned, assuming empty
-				//println("Adding all costs as passable transitions")
-				//println("scannedArea: "+scannedArea.XYs)
 				var scannedStates: List[(Int,Int)] = for(xy <- scannedArea.XYs)yield {
 					val (relativeX,relativeY) = xy
 					val horiz = x + relativeX
@@ -406,6 +403,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 					(horiz,vert)
 				}
 				var scannedStatesIterator = scannedStates.toIterator
+				//add costs to all areas scanned, assuming empty
+				//println("Adding all costs as passable transitions")
+				//println("scannedArea: "+scannedArea.XYs)
 				while(scannedStatesIterator.hasNext)
 				{
 					val (horiz,vert) = scannedStatesIterator.next
@@ -514,6 +514,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  if(!testMode){
             		  val goal = stateFactory.getCoordinate(0, -goalIncrement)
             		  println("Got initial goal")
+            		  //initialScan()
             		  explore(initial,goal)
             	  }
             	  //scan
