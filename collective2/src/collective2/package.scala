@@ -111,14 +111,22 @@ case class AddCollectionObstacle(transaction: Transaction,obstacleIdentifier: In
 import collection.immutable.Map
 case class CollectiveObstacle(val obstacleType: Int,
 		private var relations: Map[Displacement,(Int,Option[CollectiveObstacle])],
-		sensorArea: List[Coordinate])
+		sensorArea: List[Coordinate]) extends TimeStampConcurrency
 {
 	def this(obstacleType: Int,sensorArea: List[Coordinate]) = this(obstacleType,null,sensorArea)
 	
 	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)
 	
-	def relationsVectors(): List[(Displacement,Int)] = {
+	def getRelationVectors(transaction: Transaction): (Boolean,List[(Displacement,Int)])={
+		if( read(transaction) ){
+			(true,relationsVectors)
+		}else{
+			(false,Nil)
+		}
+	}
+	
+	private def relationsVectors(): List[(Displacement,Int)] = {
 		var result: List[(Displacement,Int)] = Nil
 		relations.foreach( pair => {
 				val(vector,(obstacleType,collectiveObstacle))=pair
@@ -128,35 +136,44 @@ case class CollectiveObstacle(val obstacleType: Int,
 		result
 	}
 	
-	def insideSavedBoundaries(vector: Displacement): Boolean = {
+	private def insideSavedBoundaries(vector: Displacement): Boolean = {
 		insideSavedBoundaries(vector.x.value.toInt,vector.y.value.toInt  )
 	}
 	
-	def insideSavedBoundaries(x: Int, y: Int): Boolean = {
+	private def insideSavedBoundaries(x: Int, y: Int): Boolean = {
 		exploredArea.contains(x,y)
 	}
 	
-	def addExploredArea(area: Seq[Coordinate]){
+	private def addExploredArea(area: Seq[Coordinate]){
 		for(exploredSquare <- area){
 			val Coordinate(x,y) = exploredSquare
 			exploredArea.add(x, y)
 		}
 	}
 	
-	def explored(x: Int, y: Int): Boolean = {
+	private def explored(x: Int, y: Int): Boolean = {
 		exploredArea.contains(x,y)
 	}
 	
-	def addRelations(newRelations: (Displacement,(Int,Option[CollectiveObstacle])) *){
+	def updateRelations(transaction: Transaction, newRelations: (Displacement,(Int,Option[CollectiveObstacle])) *): Boolean = {
+		if ( write(transaction) ){
+			addRelations(newRelations: _*)
+			true
+		}else{
+			false
+		}
+	}
+	
+	private def addRelations(newRelations: (Displacement,(Int,Option[CollectiveObstacle])) *){
 		newRelations.foreach( relation => relations + relation)
 	}
 	
-	def update(newRelations: mutable.Map[Displacement,(Int,Option[CollectiveObstacle])], area: Seq[Coordinate]){
+	private def update(newRelations: mutable.Map[Displacement,(Int,Option[CollectiveObstacle])], area: Seq[Coordinate]){
 		addRelations(newRelations.toSeq: _*)
 		addExploredArea(area)
 	}
 	
-	def containsRelation(vector: Displacement, relationObjectType: Int): Boolean = {
+	private def containsRelation(vector: Displacement, relationObjectType: Int): Boolean = {
 		relations.get(vector) match {
 			case None => return false
 			case Some((obstacleType,_)) => {obstacleType == relationObjectType
@@ -165,7 +182,16 @@ case class CollectiveObstacle(val obstacleType: Int,
 		}
 	}
 	
-	def possibleMatchTest(scannedRelations: List[(Displacement,Int)]): Boolean = {
+	def isPossibleMatch(transaction: Transaction,
+			scannedRelations: List[(Displacement,Int)]): (Boolean,Boolean) = {
+		if( read(transaction) ){
+			return (true, possibleMatchTest(scannedRelations) )
+		}else{
+			return (false,false)
+		}
+	}
+	
+	private def possibleMatchTest(scannedRelations: List[(Displacement,Int)]): Boolean = {
 		var relationsToCheck = scannedRelations
 		var possible = true
 		while(possible){
@@ -182,7 +208,7 @@ case class CollectiveObstacle(val obstacleType: Int,
 		possible
 	}
 	
-	def possibleMatch(obstaclesToCheck: List[ScannedObstacle]): List[PotentialMatch] = {
+	private def possibleMatch(obstaclesToCheck: List[ScannedObstacle]): List[PotentialMatch] = {
 		var result: List[PotentialMatch] = Nil
 		for(scannedObstacle <-obstaclesToCheck) 
 		{
