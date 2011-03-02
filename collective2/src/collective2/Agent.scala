@@ -281,8 +281,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	private[this] var collectiveObstacles = new QuadTree[CollectiveObstacle]
 	
-	def createNewCollectiveObstacle(transaction: Transaction, obstacleType: Int,
-			scannedRelations: List[(Displacement,Int)]): Boolean = {
+	def createNewCollectiveObstacle(transaction: Transaction, scannedObstacle: ScannedObstacle): Boolean = {
+		val ScannedObstacle(scannedX,scannedY,obstacleType,scannedRelations) = scannedObstacle	
+			
 		var obstacleName  = randomGenerator.nextInt
 		var collectiveObstacle = {
 			(collectiveMap !! GetCollectiveObstacle(obstacleName))
@@ -296,7 +297,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		val sensorArea: List[Coordinate] = {
 			exploredArea.XYs.map(xy => {
 					val (x,y) = xy
-					Coordinate(x,y)
+					Coordinate(x-scannedX,y-scannedY)
 				}
 			)
 		}
@@ -365,16 +366,14 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						return false
 					}//end if scannedObstacle is the same as the PotentialMatch
 					else{
-						if(createNewCollectiveObstacle(transaction,scannedType,
-								scannedRelations))
+						if(createNewCollectiveObstacle(transaction,scannedObstacle))
 							return false
 					}//end else
 				}//end case Some(PotentialMatch)
 				case None => {
 					//create new CollectiveObstacles, except mapObstacle
 				//match them with the appropriate Displacements in Seq[(Displacement,CollectiveObstacle]
-					if(!createNewCollectiveObstacle(transaction,scannedType,
-								scannedRelations))
+					if(!createNewCollectiveObstacle(transaction,scannedObstacle))
 						return false
 				}
 				case error => throwException("Expected PotentialMatch but received"+error)
