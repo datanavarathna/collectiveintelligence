@@ -416,16 +416,31 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	def scan(): Map[(State,State),Double] = {
 		println("Scanning")
 		val scanFuture = environment !! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
-		val Scan(scannedArea,detectedObstacles,detectedAgents) = scanFuture()
+		val Scan(relativeScannedArea,detectedObstacles,detectedAgents) = scanFuture()
 		println("Updating explored area")
-		exploredArea += scannedArea
-		//println("ExploredArea: "+exploredArea)
+		var currentX,currentY=0
+		currentState match{
+					case CoordinateState(x,y,_,_) => {
+						currentX=x
+						currentY=y
+					}
+					case state => {
+						throwException(state+" is an incompatable State")
+					}
+				}//end currentState match
+		val scannedArea=relativeScannedArea.XYs.map(element => {
+				val (x,y)=element
+				(x+currentX,y+currentY)
+			}
+		)
+		exploredArea.add(scannedArea: _*)
+		println("ExploredArea: "+exploredArea)
 		import scala.collection.mutable
 		var tempMap = mutable.Map.empty[(State,State),Double]
 		//println("Getting currentState")
 		currentState match {
 			case state @ CoordinateState(x,y,_,_) => {
-				var scannedStates: List[(Int,Int)] = for(xy <- scannedArea.XYs)yield {
+				var scannedStates: List[(Int,Int)] = for(xy <- relativeScannedArea.XYs)yield {
 					val (relativeX,relativeY) = xy
 					val horiz = x + relativeX
 					val vert = y + relativeY
