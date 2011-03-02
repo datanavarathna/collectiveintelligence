@@ -115,6 +115,13 @@ case class CollectiveObstacle(val obstacleType: Int,
 {
 	def this(obstacleType: Int,sensorArea: List[Coordinate]) = this(obstacleType,null,sensorArea)
 	
+	override def toString: String = "CollectiveObstacle( type="+obstacleType+", relations="+
+		relations.map( element =>{
+				val (vector,(obstacleType,obstacle)) = element
+				(vector,obstacleType)
+			}
+		)+", sensorArea="+sensorArea
+	
 	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)
 	
@@ -253,7 +260,8 @@ case class IdentifierType(identifier: Int,objectType: Int)
 case class noType(identifier: Int)
 
 case class TestGoal(x: Int, y: Int)
-
+case class TestMapProducer()
+case class TestMapObserver()
 //case class Goal(goal:Obstacle)
 /*
 

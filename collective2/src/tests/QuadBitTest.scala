@@ -39,4 +39,19 @@ class QuadBitSetTest extends JUnitSuite{
 		assertTrue(set.contains(-33,33))
 		assertTrue(set.contains(-33,-33))
 	}
+	
+	@Test def combinationTest {
+		var set = QuadBitSet( (0,0),(1,1),(-1,-1),(-1,1) )
+		var set2 = QuadBitSet( (10,10),(11,11),(-11,-11),(-11,11) )
+		set += set2
+		assertTrue(set.contains(0, 0))
+		assertTrue(set.contains(1, 1))
+		assertTrue(set.contains(-1, 1))
+		assertTrue(set.contains(-1,-1))
+		assertTrue(set.contains(10, 10))
+		assertTrue(set.contains(11, 11))
+		assertTrue(set.contains(-11, 11))
+		assertTrue(set.contains(-11,-11))
+
+	}
 }

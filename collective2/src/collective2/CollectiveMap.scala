@@ -27,7 +27,8 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 	
     override def toString = {
     		var result = "Collective Map \n"
-    		result += "\n  identifierType\n" + identifierType
+    		//result += "\n  identifierType\n" + identifierType
+    		result += data
     		result
     }
     
@@ -112,9 +113,15 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 			 	  }
 			  }
 			  case AddCollectionObstacle(transaction,obstacleIdentifier,obstacle) => {
+			 	  println("CollectiveMap adding obstacle")
 			 	  if(write(transaction)){
 			 	 	  add(obstacleIdentifier,obstacle)
+			 	 	  reply( true )
+			 	  }else{
+			 	 	  reply( false )
 			 	  }
+			 	   
+			 	  println(this)
 			  }
 			  case PickName(identifier,obstacleType) => {
 				  if(pickName(identifier,obstacleType))

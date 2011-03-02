@@ -180,7 +180,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
 						 for( x <- (-range) to range; y <- (-range) to range; if(math.sqrt(x*x+y*y) <= sensorRange) ){
 							scannedArea.add(x,y) 
 						 }
-
+						 //println("Environment ScannedArea: "+scannedArea)
                          var detectedAgents: List[AgentReading] = Nil
                          val agentIterator = world.keysIterator
                          var counter: Int = 0

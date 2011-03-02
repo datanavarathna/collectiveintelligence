@@ -114,6 +114,9 @@ class QuadBitSet(maxX:Int = 32) {
 	}
 	
 	def += (other:QuadBitSet): QuadBitSet = {
+		add(other.XYs: _*)
+		this
+		/*
 		//adds elements from this to elements of that 
 		posXPosY.foreach(index => {
 			val (x,y) = indexToXY(sizeX,index)
@@ -132,6 +135,8 @@ class QuadBitSet(maxX:Int = 32) {
 			other.add(x,y)
 		})
 		other
+		*/
+		
 	}
 	
 	def XYs(): List[(Int,Int)] = {
@@ -153,5 +158,12 @@ class QuadBitSet(maxX:Int = 32) {
 			result = (-1*x,-1*y) :: result
 		})
 		return result
+	}
+	
+	override def toString: String = {
+		var stringbuilder = new StringBuilder("QuadBitSet( ")
+		stringbuilder=XYs.addString(stringbuilder)
+		stringbuilder=stringbuilder.append( " )" )
+		stringbuilder.toString
 	}
 }
