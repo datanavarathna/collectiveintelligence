@@ -92,7 +92,7 @@ abstract class State(factory: StateConstructor) extends Ordered[State]/*extends 
 	}//end compare
 }
 
-case class Goal(){
+case class Goal(var isUnreachable: Boolean = false){
 	private var pathList: List[State] = Nil
 	
 	def path = pathList
@@ -443,9 +443,10 @@ trait focusedDstar {
 			//println("if(start.h >= obstacleCost)")
 			if(start.h >= obstacleCost){
 				println("NO UNOBSTRUCTED PATH EXISTS from "+start+" to "+goal)
-				return new Goal
-			}else
-				true
+				val result=new Goal(true)
+				result.addStateToPath(goal)
+				return result
+			}
 		}
 		if(start.tag == Tag.New )//goal is an unreachable state
 		{
@@ -510,9 +511,10 @@ trait focusedDstar {
 					//println("if(agentState.h >= obstacleCost)")
 					if(agentState.h >= obstacleCost){
 						println("NO UNOBSTRUCTED PATH EXISTS from "+agentState+" to "+goal)
-						return new Goal
-					}else
-						true
+						val result=new Goal(true)
+						result.addStateToPath(goal)
+						return result
+					}
 				}
 			}//end if discrepancies exist
 			else{

@@ -17,6 +17,7 @@ class Transaction(val name: String,maxRetries: Int) {
 		if(retries>1)
 			println("Retrying transaction "+name)
 		successful = operations
+		println("Finished executing operation in "+name+" with result: "+successful)
 		
 	}while(!successful && retries < maxRetries)
 	if(successful)

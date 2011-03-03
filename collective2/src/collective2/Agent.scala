@@ -106,6 +106,21 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}//end currentState match
 	}
 	
+	def changeGoal(x: Int,y: Int): CoordinateState = {
+		var index = 0
+		var goal: CoordinateState = null
+		do{
+			adjustGoal
+			index += 1
+			goal = stateFactory.getCoordinate(x+goalXAdjustment, y+goalYAdjustment)
+		}while(goal == null && index <4)
+			if(exploreMode && index <4){
+				explore(currentState,goal)
+			}else
+				println("Finished Exploring Around ("+x+","+y+")")
+		goal
+	}
+	
 	def resetExplore(){
 		explorationCycle = 1
 		adjustmentCycle = 0
@@ -227,31 +242,28 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		val remainingMatches = potentialMatches.filter( potentialMatch => 
 			{
 				val PotentialMatch(x, y, mapObstacle) = potentialMatch
+				println(potentialMatch)
 				var possible = true
 				var (readSuccessful,relationVectors) = mapObstacle.getRelationVectors(transaction)
 				if(readSuccessful){
-					while(possible){
+					while(possible && !relationVectors.isEmpty){
 						var (vector,obstacleType) = relationVectors.head
 						relationVectors = relationVectors.tail
 						val relationX = x + vector.x.value.toInt
 						val relationY = y + vector.y.value.toInt
-						var firstIteration = true
 						resetExplore()
 						var isExplored = explored(relationX,relationY) 
-						if(!isExplored){
-							while(!isExplored){
-							//move until explored((relationX,relationY)==true
-							if(firstIteration)
-								firstIteration = false
-								else
-									changeGoal
-									moveAgent(currentState,stateFactory.getCoordinate(relationX, relationY))
-							isExplored = explored(relationX,relationY) 
+						var goal = stateFactory.getCoordinate(relationX, relationY)
+						if(!isExplored && goal != null){
+							val resultPath = moveAgent(currentState,goal)//will move agent within sensor range if it is possible
+							if(resultPath.isUnreachable){
+								exploredArea.add(relationX,relationY)
+								possible = false
+								successful = false
 							}
-							return(false,None)
 						}else{
 							//if relation not seen, not match
-							if(obstacles.containsElementAt(x,y))
+							if(!obstacles.containsElementAt(x,y))
 								possible = false
 							/*
 							val relation: Displacement = vector + new Displacement(x,y)
@@ -265,18 +277,23 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 					}//end while possible
 					possible
 				}else{
-					return (true,None)
+					successful = false
+					false
 				}//end else readSuccessful
 			}
 		)//end filter potentialMatches
-		if(remainingMatches.size > 1){
-			println("Several possiblilities remain")
-			(false,None)
+		if(successful){
+			if(remainingMatches.size > 1){//fix to only complain for multiple possibilities (remainingMatches contains matches for multiple objects), and adjust submitData accordingly
+				println("Several possiblilities remain: "+remainingMatches)
+				(false,None)
+			}else{
+				if(!remainingMatches.isEmpty)
+					(true,Some(remainingMatches.head))
+					else
+						(true,None)
+			}
 		}else{
-			if(!remainingMatches.isEmpty)
-				(true,Some(remainingMatches.head))
-			else
-				(true,None)
+			(false,None)
 		}
 	}
 	private[this] var collectiveObstacles = new QuadTree[CollectiveObstacle]
@@ -400,7 +417,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 									println("RemainingMatch: "+remainingMatch)
 									submitDataToCollectiveMap(transaction,remainingMatch,scannedObstacles)
 								}else
-									return false
+									false//retry transaction
 							}
 							case OperationResult(false,_) => {false}
 							case error => throwException("Transaction "+transaction.name+
