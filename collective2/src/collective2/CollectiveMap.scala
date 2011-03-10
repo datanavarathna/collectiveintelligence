@@ -109,7 +109,7 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 			  }
 			  case UpdateCollectiveObstacle(transaction,obstacle,relations) => {
 			 	  if(write(transaction)){
-			 		  obstacle.updateRelations(transaction,relations: _*)
+			 		 reply( obstacle.updateRelations(transaction,relations: _*))
 			 	  }
 			  }
 			  case AddCollectionObstacle(transaction,obstacleIdentifier,obstacle) => {
