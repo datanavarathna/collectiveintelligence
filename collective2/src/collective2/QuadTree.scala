@@ -5,6 +5,8 @@ class QuadTree[T] {
 	
 	var data = Map.empty[Int,Map[Int,T]]
 	
+	override def toString = "QuadTree: "+toList
+	
 	def toList(): List[((Int,Int),T)] = {
 		var result: List[((Int,Int),T)]=Nil
 		var yMap: Map[Int,T] = null

@@ -191,7 +191,7 @@ case class CollectiveObstacle(val obstacleType: Int,
 	
 	def isPossibleMatch(transaction: Transaction,
 			scannedRelations: List[(Displacement,Int)]): (Boolean,Boolean) = {
-		println("isPossibleMatch")
+		//println("isPossibleMatch")
 		if( read(transaction) ){
 			return (true, possibleMatchTest(scannedRelations) )
 		}else{
@@ -200,7 +200,7 @@ case class CollectiveObstacle(val obstacleType: Int,
 	}
 	
 	private def possibleMatchTest(scannedRelations: List[(Displacement,Int)]): Boolean = {
-		println("PossibleMatchTest")
+		//println("PossibleMatchTest")
 		var relationsToCheck = scannedRelations
 		var possible = true
 		while(possible && !relationsToCheck.isEmpty){

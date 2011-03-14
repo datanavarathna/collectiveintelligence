@@ -253,7 +253,13 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						val mapObstacleFuture = collectiveMap !! GetCollectiveObstacle(collectiveObstacleID)
 						mapObstacleFuture() match {
 							case Some(returnedMapObstacle @ CollectiveObstacle(_,_,_)) => {
-								returnedMapObstacle == mapObstacle
+								if(returnedMapObstacle == mapObstacle)
+									true
+								else{
+									//println("NOT EQUAL: "+returnedMapObstacle)
+									//println(" & "+mapObstacle)
+									false
+								}
 							}
 							case other => throwException("Expected collectiveObstacle from id "+collectiveObstacleID
 									+" but received: "+other)
@@ -411,7 +417,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						//create new CollectiveObstacles, except mapObstacle
 						//match them with the appropriate Displacements in Seq[(Displacement,CollectiveObstacle]
 						//val scannedVectors: List[Displacement] = scannedRelations.map( scannedRelation => scannedRelation._1 )
-						if(x == scannedX && y == scannedY){
+						if( (x == scannedX && y == scannedY) || (collectiveObstacles(x,y) == Some(mapObstacle)) ){
 							val (readSuccessful,mapObstacleRelations)=mapObstacle.getRelationVectors(transaction)
 							if(readSuccessful){
 								val newObstacleRelations = mapObstacleRelations.diff(scannedRelations)
@@ -427,7 +433,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 									println("CollectiveObstacle Update was Successful")
 								}
 							}//end if readSuccessful
-							return false
+							else
+								return false
 						}//end if scannedObstacle is the same as the PotentialMatch
 						else{
 							if(!createNewCollectiveObstacle(transaction,scannedObstacle))
@@ -475,6 +482,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 					}
 				)//end setOperations
 				newObstacles =  collection.mutable.Set.empty[(Int,Int,Int)]
+		println("collectiveObstacles: "+collectiveObstacles)
 	}
 	
 	def scan(): Map[(State,State),Double] = {
