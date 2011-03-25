@@ -22,7 +22,7 @@ object AgentMapTest extends SimpleGUIApplication{
     def top = new MainFrame{
         title = "Scala Collective"
         contents = new AgentMapTest(environmentX,environmentY,width-20,height-50,
-        		List( (6,7) ), List( (2,4),(3,7),(4,2),(6,4),(7,7) ) )
+        		List( (6,7)/*,(2,7)*/ ), List( (2,4),(3,7),(4,2),(6,4),(7,7) ) )
         preferredSize = new Dimension(width,height)
     }
 }
@@ -235,9 +235,15 @@ class AgentMapTest(val environmentX: Int, val environmentY: Int,
                 	Thread.sleep(1000)
                 }
                 ft()
+                var first = true
                 agentsWithLocations.foreach(agentWithLocation => {
                 		val AgentWithLocation(agent,x,y) = agentWithLocation
-                		agent ! TestMapProducer
+                		if(first){
+                			agent ! TestMapProducer
+                			first = false
+                		}else{
+                			agent ! TestMapObserver
+                		}
                 	}
                 )
                 

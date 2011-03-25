@@ -163,10 +163,10 @@ class ScalaGUI(val environmentX: Int, val environmentY: Int,
         contents += agentSetup
     }
 
-    
     //add world and sidebar to scalaGUI contents
     contents += worldView
     contents += sideBar
+    //contents += new Line(10,500,10,500)
     //register sidebar button listeners
     listenTo(initializeButton)
     listenTo(startButton)

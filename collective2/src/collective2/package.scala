@@ -61,6 +61,8 @@ object Displacement{
 
 case class Displacement(x: Measurement, y: Measurement) {
     
+	override def toString = "Displacement("+x.value+","+y.value+")"
+	
 	def canEqual(other: Any): Boolean = { other.isInstanceOf[Displacement] }
 	override def equals(other:Any):Boolean =
 	{
@@ -101,6 +103,8 @@ case class GetPossibleStates(transaction: Transaction,relationsToCheck: List[Sca
 case class ScannedObstacle(x: Int,y: Int,obstacleType: Int,scannedRelations: List[(Displacement,Int)])
 case class PotentialMatch(x: Int, y: Int, mapObstacle: CollectiveObstacle)
 
+case class ObstacleId(name: Int, localX: Int,LocalY: Int,sender: Actor)
+
 case class GetCollectiveObstacle(identifier: Int)
 
 case class UpdateCollectiveObstacle(transaction: Transaction,obstacle: CollectiveObstacle,
@@ -120,7 +124,7 @@ case class CollectiveObstacle(val obstacleType: Int,
 				val (vector,(obstacleType,obstacle)) = element
 				(vector,obstacleType)
 			}
-		)+", sensorArea="+sensorArea
+		)//+", sensorArea="+sensorArea
 	
 	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)

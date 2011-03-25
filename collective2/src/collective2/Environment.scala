@@ -13,6 +13,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
   import scala.collection.immutable.TreeMap
 
   private var world = Map.empty[Actor,Coordinate]//key,value
+  private var initial: collection.immutable.Map[Actor,Coordinate] = _
   //var obstacles = Nil //new List[Obstacle]
   //import agents.QuadTreeGateway
   private var obstacles = new QuadTree[Obstacle]
@@ -225,6 +226,12 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
                      else
                         throw new Exception(senderAgent+" senderAgent not recognized")
 			  }
+			  case ObstacleId(obstacleName,scannedX,scannedY,agent)=>{
+			 	  var Coordinate(agentX,agentY) = initial(agent)
+			 	  println("COLLECTIVE_OBSTACLE NAME: "+obstacleName+" AT ("
+			 	 		  +(agentX+scannedX)+","+(agentY+scannedY)+")" )
+			  }
+			   
 			  //from scalaGUI 
 			  case listOfObstacles @ List(Obstacle(_,_,_), _*) =>
 			  {
@@ -269,13 +276,7 @@ class Environment( val minX: Int, val minY: Int, val maxX: Int, val maxY: Int,va
             	   agent ! "Start" 
             	   }
                )//end foreach
-               /*
-                val agentsIterator = world.keysIterator
-                while(agentsIterator.hasNext)
-                {
-                    agentsIterator.next ! "Start"
-                }
-                */
+               initial = world.toMap
 			  }//end case agentList
 			  
 			   /*

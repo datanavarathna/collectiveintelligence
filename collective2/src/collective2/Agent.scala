@@ -244,8 +244,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			{
 				val PotentialMatch(x, y, mapObstacle) = potentialMatch
 				println(potentialMatch)
-				//if(x == -4 && y == -8)
-				//	println()
+				if(x == -4 && y == -8)
+					println()
 				var possible = true
 				
 				collectiveObstacles(x,y) match{
@@ -276,8 +276,13 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 								resetExplore()
 								var isExplored = explored(relationX,relationY) 
 								var goal = stateFactory.getCoordinate(relationX, relationY)
-								if(!isExplored && goal != null){
-									val resultPath = moveAgent(currentState,goal)//will move agent within sensor range if it is possible
+								if(!isExplored){//if goal==null, state is out of bounds
+									val resultPath = {
+										if(goal != null)
+											moveAgent(currentState,goal)//will move agent within sensor range if it is possible
+										else
+											new Goal(isUnreachable = true)
+									}
 									if(resultPath.isUnreachable){
 										exploredArea.add(relationX,relationY)
 										possible = false
@@ -285,7 +290,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 									}
 								}else{
 									//if relation not seen, not match
-									if(!obstacles.containsElementAt(x,y))
+									if(!obstacles.containsElementAt(relationX,relationY))
 										possible = false
 										/*
 							val relation: Displacement = vector + new Displacement(x,y)
@@ -369,6 +374,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							collection.immutable.Map(relationsList: _*)
 		}//end relations
 		println("Relations of new collective obstacle: "+relations)
+		environment ! ObstacleId(obstacleName,scannedX,scannedY,this)
 		val newCollectiveObstacle = new CollectiveObstacle(obstacleType,relations,sensorArea)
 		var resultFuture = (collectiveMap !! AddCollectionObstacle(transaction,obstacleName,
 			newCollectiveObstacle)//end AddCollectionObstacle
@@ -420,6 +426,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						if( (x == scannedX && y == scannedY) || (collectiveObstacles(x,y) == Some(mapObstacle)) ){
 							val (readSuccessful,mapObstacleRelations)=mapObstacle.getRelationVectors(transaction)
 							if(readSuccessful){
+								println("Updating CollectiveObstacle")
 								val newObstacleRelations = mapObstacleRelations.diff(scannedRelations)
 								var updateSuccessfulFuture = collectiveMap !! UpdateCollectiveObstacle(transaction,mapObstacle,
 										newObstacleRelations.map(
@@ -652,6 +659,15 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  //println(collectiveMap)
             	  moveAgent(currentState,stateFactory.getCoordinate(-1, -3))
             	  moveAgent(currentState,stateFactory.getCoordinate(-1, -4))
+            	  expandCollectiveMap()
+            	  //println(collectiveMap)
+              }
+              case TestMapObserver => {
+            	  moveAgent(currentState,stateFactory.getCoordinate(0, -2))
+            	  expandCollectiveMap()
+            	  //println(collectiveMap)
+            	  moveAgent(currentState,stateFactory.getCoordinate(1, -3))
+            	  moveAgent(currentState,stateFactory.getCoordinate(1, -4))
             	  expandCollectiveMap()
             	  //println(collectiveMap)
               }

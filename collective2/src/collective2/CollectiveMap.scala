@@ -27,6 +27,7 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 	
     override def toString = {
     		var result = "Collective Map \n"
+    		result += "size: "+data.size+"\n"
     		//result += "\n  identifierType\n" + identifierType
     		result += data
     		result

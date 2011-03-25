@@ -443,7 +443,7 @@ trait focusedDstar {
 			//println("if(start.h >= obstacleCost)")
 			if(start.h >= obstacleCost){
 				println("NO UNOBSTRUCTED PATH EXISTS from "+start+" to "+goal)
-				val result=new Goal(true)
+				val result=new Goal(isUnreachable = true)
 				result.addStateToPath(goal)
 				return result
 			}
@@ -511,7 +511,7 @@ trait focusedDstar {
 					//println("if(agentState.h >= obstacleCost)")
 					if(agentState.h >= obstacleCost){
 						println("NO UNOBSTRUCTED PATH EXISTS from "+agentState+" to "+goal)
-						val result=new Goal(true)
+						val result=new Goal(isUnreachable = true)
 						result.addStateToPath(goal)
 						return result
 					}
