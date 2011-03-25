@@ -13,7 +13,7 @@ import scala.swing._
 import java.awt.Dimension
 import collective2._
 
-object AgentMapTest extends SimpleGUIApplication{
+object AgentMapTest3 extends SimpleGUIApplication{
     val width = 600
     val height = 400
     val environmentX = 11
@@ -21,8 +21,8 @@ object AgentMapTest extends SimpleGUIApplication{
 
     def top = new MainFrame{
         title = "Scala Collective"
-        contents = new AgentMapTest(environmentX,environmentY,width-20,height-50,
-        		List( (6,7),(2,7) ), List( (2,4),(3,7),(4,2),(6,4),(7,7) ) )
+        contents = new AgentMapTest3(environmentX,environmentY,width-20,height-50,
+        		List( (4,1),(6,7) ), List( (2,4),(3,7),(4,2),(6,4),(7,7) ) )
         preferredSize = new Dimension(width,height)
     }
 }
@@ -31,7 +31,7 @@ object AgentMapTest extends SimpleGUIApplication{
 //environmentY - number of rows in environment
 //width - frame width in pixels
 //height - frame height in pixels
-class AgentMapTest(val environmentX: Int, val environmentY: Int,
+class AgentMapTest3(val environmentX: Int, val environmentY: Int,
                val width: Int, val height: Int,
                agentLocations: List[(Int,Int)],obstacleLocations: List[(Int,Int)]) extends AbstractScalaGUI{
      require(width > 60)
@@ -239,7 +239,7 @@ class AgentMapTest(val environmentX: Int, val environmentY: Int,
                 agentsWithLocations.foreach(agentWithLocation => {
                 		val AgentWithLocation(agent,x,y) = agentWithLocation
                 		if(first){
-                			agent ! TestMapProducer( List( (0, -2),(-1, -3),(-1, -4) ) )
+                			agent ! TestMapProducer( List( (2,2),(3,3),(3,5) ) )
                 			first = false
                 		}else{
                 			
@@ -248,7 +248,7 @@ class AgentMapTest(val environmentX: Int, val environmentY: Int,
                 			}
                 			ft()
                 			
-                			agent ! TestMapObserver( List( (0,-2),(1,-3),(1,-4) ) )
+                			agent ! TestMapObserver( List( (0, -2),(-1, -3),(-1, -4) ) )
                 		}
                 	}
                 )

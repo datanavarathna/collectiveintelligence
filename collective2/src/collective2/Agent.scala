@@ -653,24 +653,24 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  //otherwise tries to move through the obstacle as previously planned
             	  moveAgent(currentState,goal)
               }
-              case TestMapProducer => {
-            	  moveAgent(currentState,stateFactory.getCoordinate(0, -2))
-            	  expandCollectiveMap()
-            	  //println(collectiveMap)
-            	  moveAgent(currentState,stateFactory.getCoordinate(-1, -3))
-            	  moveAgent(currentState,stateFactory.getCoordinate(-1, -4))
-            	  expandCollectiveMap()
-            	  //println(collectiveMap)
-              }
-              case TestMapObserver => {
-            	  moveAgent(currentState,stateFactory.getCoordinate(0, -2))
-            	  expandCollectiveMap()
-            	  //println(collectiveMap)
-            	  moveAgent(currentState,stateFactory.getCoordinate(1, -3))
-            	  moveAgent(currentState,stateFactory.getCoordinate(1, -4))
-            	  expandCollectiveMap()
-            	  //println(collectiveMap)
-              }
+              case TestMapProducer(pathSteps) => {
+            	  for(step<-pathSteps)
+            	  {
+            		  val (targetX,targetY) = step
+            		  moveAgent( currentState,stateFactory.getCoordinate(targetX,targetY) )
+            		  expandCollectiveMap()
+            	  }
+            	  println(collectiveMap)
+              }//end case TestMapProducer
+              case TestMapObserver(pathSteps) => {
+            	  for(step<-pathSteps)
+            	  {
+            		  val (targetX,targetY) = step
+            		  moveAgent( currentState,stateFactory.getCoordinate(targetX,targetY) )
+            		  expandCollectiveMap()
+            	  }
+            	  println(collectiveMap)
+              }//end case TestMapObserver
 			}//end react
 		}//end loop
 	}

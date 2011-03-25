@@ -266,8 +266,8 @@ case class IdentifierType(identifier: Int,objectType: Int)
 case class noType(identifier: Int)
 
 case class TestGoal(x: Int, y: Int)
-case class TestMapProducer()
-case class TestMapObserver()
+case class TestMapProducer(path: List[(Int,Int)])
+case class TestMapObserver(path: List[(Int,Int)])
 //case class Goal(goal:Obstacle)
 /*
 
