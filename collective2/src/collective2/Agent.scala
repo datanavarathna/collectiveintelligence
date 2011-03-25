@@ -363,7 +363,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				}
 			)
 		}
-		println("Explored area of new collective obstacle: "+sensorArea)
+		//println("Explored area of new collective obstacle: "+sensorArea)
 		val relations: Map[Displacement,(Int,Option[CollectiveObstacle])] = {
 							val relationsList = scannedRelations.map(
 										relation => {
@@ -373,7 +373,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							)
 							collection.immutable.Map(relationsList: _*)
 		}//end relations
-		println("Relations of new collective obstacle: "+relations)
+		//println("Relations of new collective obstacle: "+relations)
 		environment ! ObstacleId(obstacleName,scannedX,scannedY,this)
 		val newCollectiveObstacle = new CollectiveObstacle(obstacleType,relations,sensorArea)
 		var resultFuture = (collectiveMap !! AddCollectionObstacle(transaction,obstacleName,
@@ -496,7 +496,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		println("Scanning")
 		val scanFuture = environment !! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
 		val Scan(relativeScannedArea,detectedObstacles,detectedAgents) = scanFuture()
-		println("Updating explored area")
+		//println("Updating explored area")
 		var currentX,currentY=0
 		currentState match{
 					case CoordinateState(x,y,_,_) => {
@@ -513,7 +513,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			}
 		)
 		exploredArea.add(scannedArea: _*)
-		println("ExploredArea: "+exploredArea)
+		//println("ExploredArea: "+exploredArea)
 		import scala.collection.mutable
 		var tempMap = mutable.Map.empty[(State,State),Double]
 		//println("Getting currentState")

@@ -27,14 +27,14 @@ trait TimeStampConcurrency {
 		val timestamp = t.timestamp
 		if(timestamp<readTimeStamp){
 			println("Attempted write of a previously needed value in "+super.toString+" by "+t)
-			false
+			return false
 		}
 		if(timestamp < writeTimeStamp){
 			println("Attempted write of an obsolete value by "+t+" to "+super.toString)
-			false
+			return false
 		}else{
 			println("Successful write to "+super.toString+" by "+t)
-			true
+			return true
 		}
 	}
 }

@@ -242,10 +242,12 @@ class AgentMapTest(val environmentX: Int, val environmentY: Int,
                 			agent ! TestMapProducer
                 			first = false
                 		}else{
+                			/*
                 			val ft = future {
                 				Thread.sleep(3000)
                 			}
                 			ft()
+                			*/
                 			agent ! TestMapObserver
                 		}
                 	}

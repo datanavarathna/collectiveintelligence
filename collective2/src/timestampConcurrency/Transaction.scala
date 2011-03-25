@@ -8,14 +8,14 @@ class Transaction(val name: String,maxRetries: Int) {
 	private[this] var retries: Int = 0
 	private[this] var successful = false
 	
-	override def toString = "Transaction( "+name+")"
+	override def toString = "Transaction( "+name+" "+timeStamp+")"
 	
 	def setOperations(operations: => Boolean){
 		do{
 		timeStamp = System.nanoTime()
 		retries += 1
 		if(retries>1)
-			println("Retrying transaction "+name)
+			println("Retrying transaction "+name+" "+timeStamp)
 		successful = operations
 		println("Finished executing operation in "+name+" with result: "+successful)
 		
