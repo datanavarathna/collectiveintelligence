@@ -230,24 +230,18 @@ class AgentMapTest(val environmentX: Int, val environmentY: Int,
                 world ! obstacles //send obstacles to world
                 world ! agentsWithLocations //send agentsWithLocations to world
                 helpActor.start
-                import scala.actors.Futures.future
-                val ft = future {
-                	Thread.sleep(1000)
-                }
-                ft()
+                msSleep(1000)
                 var first = true
                 agentsWithLocations.foreach(agentWithLocation => {
                 		val AgentWithLocation(agent,x,y) = agentWithLocation
                 		if(first){
-                			agent ! TestMapProducer( List( (0, -2),(-1, -3),(-1, -4) ) )
                 			first = false
-                		}else{
-                			
-                			val ft = future {
-                				Thread.sleep(3000)
-                			}
+                			val ft =agent !! TestMapProducer( List( (0, -2),(-1,-3),(-1,-4) ) )
                 			ft()
-                			
+                		}else{
+                			/*
+                			msSleep(3000)
+                			*/
                 			agent ! TestMapObserver( List( (0,-2),(1,-3),(1,-4) ) )
                 		}
                 	}

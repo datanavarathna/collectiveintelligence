@@ -29,6 +29,7 @@ class ScalaGUIhelperActor(gui: AbstractScalaGUI) extends Actor{
                         newLoc.status = RegionButton.Agent
                         oldLoc.update
                         newLoc.update
+                        //gui.repaint
                         //oldLoc.repaint
                         //newLoc.repaint
                 }

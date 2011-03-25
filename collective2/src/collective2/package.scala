@@ -1,5 +1,12 @@
 package collective2
 
+import scala.actors._
+import Actor._
+import uncertaintyMath.Measurement
+import uncertaintyMath.Measurement._
+import timestampConcurrency._
+import actors.Futures.future
+
 package object definitions {
 	def throwException(message: String) = {
 		println("Exception: "+message)
@@ -23,13 +30,17 @@ package object definitions {
 	def PolarToCartesian(angle: Measurement, distance: Measurement): Displacement =  {
       Displacement(distance * cos(angle), distance * sin(angle))
 	}
+	
+	def msSleep(msec: Long){
+		println("Sleeping for "+msec+" ms")
+		val ft = future {
+			Thread.sleep(msec)
+		}
+		ft()
+	}
 }
 
-import scala.actors._
-import Actor._
-import uncertaintyMath.Measurement
-import uncertaintyMath.Measurement._
-import timestampConcurrency._
+
 
 import scala.collection.mutable
 

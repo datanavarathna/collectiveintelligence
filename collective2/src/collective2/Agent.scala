@@ -15,7 +15,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             testMode: Boolean = false) 
             extends  Actor with CartesianCoordinateOneUnitDiagonalDStar
 {
-	private[this] val waitTime: Long = 100//ms
+	private[this] val waitTime: Long = 1000//ms
 	
 	setStateTransitionOperation(moveTo)//must execute before moveAgent called
 	private[this] var exploredArea = new QuadBitSet
@@ -191,7 +191,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	
 	def move(x: Int,y: Int): Boolean = {
 		//scan
-		Thread.sleep(waitTime)
+		msSleep(waitTime)
 		println("Sending move command")
 		val Displacement( deltaX, deltaY) = (environment !! MoveCommand(this,x,y))()
 		println("Moved ("+deltaX+","+deltaY+")")
@@ -654,6 +654,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  moveAgent(currentState,goal)
               }
               case TestMapProducer(pathSteps) => {
+            	  val replyDestination = sender
             	  for(step<-pathSteps)
             	  {
             		  val (targetX,targetY) = step
@@ -661,8 +662,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             		  expandCollectiveMap()
             	  }
             	  println(collectiveMap)
+            	  replyDestination ! 'Done
               }//end case TestMapProducer
               case TestMapObserver(pathSteps) => {
+            	  val replyDestination = sender
             	  for(step<-pathSteps)
             	  {
             		  val (targetX,targetY) = step
@@ -670,6 +673,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             		  expandCollectiveMap()
             	  }
             	  println(collectiveMap)
+            	  replyDestination ! 'Done
               }//end case TestMapObserver
 			}//end react
 		}//end loop
