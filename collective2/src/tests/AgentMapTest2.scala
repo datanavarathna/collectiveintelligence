@@ -232,17 +232,18 @@ class AgentMapTest2(val environmentX: Int, val environmentY: Int,
                 helpActor.start
                 msSleep(1000)
                 var first = true
+                var ft: Future[Any] = null
                 agentsWithLocations.foreach(agentWithLocation => {
                 		val AgentWithLocation(agent,x,y) = agentWithLocation
                 		if(first){
                 			first = false
-                			val ft =agent !! TestMapProducer( List( (0, -2),(-1, -3),(-1, -4) ) )
-                			ft()
+                			ft =agent !! TestMapProducer( List( (0,-3),(-1,-4),(-1,-5) ) )
                 		}else{
-                			
-                			msSleep(3000)
-                			
-                			agent ! TestMapObserver( List( (0, -3),(-1, -4),(-1, -5) ) )
+                			actors.Futures.future {
+                				ft()
+                				println("-------------------------------------------------")
+                				agent ! TestMapObserver( List( (0, -3),(-1, -4),(-1, -5) ) )
+                			}
                 		}
                 	}
                 )

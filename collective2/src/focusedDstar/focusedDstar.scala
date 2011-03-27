@@ -33,7 +33,7 @@ abstract class State(factory: StateConstructor) extends Ordered[State]/*extends 
 	
 	lazy val neighbors: Seq[State] = factory.getNeighbors(this)
 	/*
-	private var neighborsSeq: Seq[State] = initialNeighbors
+	private[this] var neighborsSeq: Seq[State] = initialNeighbors
 	
 	def neighbors = neighborsSeq
 	def neighbors_(newNeighbors: Seq[State]){
@@ -93,7 +93,7 @@ abstract class State(factory: StateConstructor) extends Ordered[State]/*extends 
 }
 
 case class Goal(var isUnreachable: Boolean = false){
-	private var pathList: List[State] = Nil
+	private[this] var pathList: List[State] = Nil
 	
 	def path = pathList
 	def addStateToPath(state: State){
@@ -143,11 +143,11 @@ trait focusedDstar {
 	val obstacleCost: Double = 1E6
 	val biasEpsilon: Double = Double.Epsilon
 	var goal: State = _
-	//private var initialAgentState: State = null
+	//private[this] var initialAgentState: State = null
 	//var biasedF: Double
-	//private var numOfAgentState: Int = 0
-	private var agentStates = new ListBuffer[State]() //zero based
-	//private var bias = new WeakHashMap[State,Double]()//key State, value = Double
+	//private[this] var numOfAgentState: Int = 0
+	private[this] var agentStates = new ListBuffer[State]() //zero based
+	//private[this] var bias = new WeakHashMap[State,Double]()//key State, value = Double
 	//val noPath = 'NoPath
 	var path: Goal = new Goal
 	private[this] var closedList: List[State] = Nil
@@ -166,7 +166,7 @@ trait focusedDstar {
 		stateTransitionOperation  = transitionOperation
 	}
 	
-	private var open: TreeSet[State] = TreeSet.empty[State]//(State.ordering)
+	private[this]  var open: TreeSet[State] = TreeSet.empty[State]//(State.ordering)
 	var accruedBias: Double = _
 	
 	def currentState: State = agentStates.head //Rcurr

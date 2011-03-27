@@ -72,7 +72,8 @@ object Displacement{
 
 case class Displacement(x: Measurement, y: Measurement) {
     
-	override def toString = "Displacement("+x.value+","+y.value+")"
+	override def toString = //"Displacement("+x.value+","+y.value+")"
+		"D("+x.value+","+y.value+")"
 	
 	def canEqual(other: Any): Boolean = { other.isInstanceOf[Displacement] }
 	override def equals(other:Any):Boolean =

@@ -15,7 +15,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             testMode: Boolean = false) 
             extends  Actor with CartesianCoordinateOneUnitDiagonalDStar
 {
-	private[this] val waitTime: Long = 1000//ms
+	private[this] val waitTime: Long = 100//ms
 	
 	setStateTransitionOperation(moveTo)//must execute before moveAgent called
 	private[this] var exploredArea = new QuadBitSet
@@ -25,6 +25,8 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	private[this] var exploreMode = true
 	private[this] var scanNumber: Int = 0
 	private[this] val mainActor = self
+	
+	private[this] var expandMapIteration: Int = 0
 	/*
 	private var relativeLocationX: Measurement = new Measurement(0.00000001,0)
 	private var relativeLocationY: Measurement = new Measurement(0.00000001,0)
@@ -191,7 +193,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	
 	def move(x: Int,y: Int): Boolean = {
 		//scan
-		msSleep(waitTime)
+		Thread.sleep(waitTime)
 		println("Sending move command")
 		val Displacement( deltaX, deltaY) = (environment !! MoveCommand(this,x,y))()
 		println("Moved ("+deltaX+","+deltaY+")")
@@ -217,25 +219,57 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		var result: List[(Int,Displacement,Int)] = Nil
 		val obstacleList = obstacles.toList
 		println("ObstacleList: "+obstacleList)
-		for(newObstacle <- newObstacles.toList)yield
-		{
-			var (newObstacleX,newObstacleY,newObstacleType) = newObstacle
-			ScannedObstacle(newObstacleX,newObstacleY,newObstacleType,
+		println("NewObstacles: "+newObstacles)
+		var tempRelations: List[(Displacement,Int)] = Nil
+		for(newObstacle <- newObstacles.toList
+			if(newObstacle._3 != 2)
+			if(
 				{
+					var (newObstacleX,newObstacleY,newObstacleType) = newObstacle
 					var relations: List[(Displacement,Int)]=Nil
 					for(obstacle <- obstacleList){
 						var ((obstacleX,obstacleY),obstacleType) = obstacle
 						//prevent relationship with self
 						if(!(obstacleX == newObstacleX && obstacleY == newObstacleY &&
-							newObstacleType == obstacleType)){
+								newObstacleType == obstacleType)){
+							if(obstacleType != 2)
 								relations = (new Displacement(obstacleX-newObstacleX,
-									obstacleY-newObstacleY),obstacleType)::relations
+										obstacleY-newObstacleY),obstacleType)::relations
 						}//end if self	
 					}//end for
-					relations
+					tempRelations =relations
+					(relations != Nil)
 				}
-			)//end ScannedObstacle	
+			)
+		)yield
+		{
+			var (newObstacleX,newObstacleY,newObstacleType) = newObstacle
+			ScannedObstacle(newObstacleX,newObstacleY,newObstacleType,tempRelations)//end ScannedObstacle	
 		}//end for newObstacles
+	}
+	
+	def inCollectiveObstacles(x: Int, y: Int, mapObstacle: CollectiveObstacle): Boolean ={
+		collectiveObstacles(x,y) match{
+					case Some(collectiveObstacleID)=>{
+						val mapObstacleFuture = collectiveMap !! GetCollectiveObstacle(collectiveObstacleID)
+						mapObstacleFuture() match {
+							case Some(returnedMapObstacle @ CollectiveObstacle(_,_,_)) => {
+								//println("returnedMapObstacle: "+returnedMapObstacle)
+								//println("== mapObstacle: "+mapObstacle)
+								if(returnedMapObstacle == mapObstacle)
+									true
+								else{
+									println("NOT EQUAL: "+returnedMapObstacle)
+									println(" & "+mapObstacle)
+									false
+								}
+							}
+							case other => throwException("Expected collectiveObstacle from id "+collectiveObstacleID
+									+" but received: "+other)
+						}
+					}
+					case _ => false
+		}//end match collectiveObstacles
 	}
 	
 	def testPotentialCollectiveMapMatches(transaction: Transaction,potentialMatches: List[PotentialMatch]): (Boolean,Option[List[PotentialMatch]]) = {
@@ -244,71 +278,48 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			{
 				val PotentialMatch(x, y, mapObstacle) = potentialMatch
 				println(potentialMatch)
-				if(x == -4 && y == -8)
+				if(x == -2 && y == -5)
 					println()
 				var possible = true
 				
-				collectiveObstacles(x,y) match{
-					case Some(collectiveObstacleID)=>{
-						val mapObstacleFuture = collectiveMap !! GetCollectiveObstacle(collectiveObstacleID)
-						mapObstacleFuture() match {
-							case Some(returnedMapObstacle @ CollectiveObstacle(_,_,_)) => {
-								if(returnedMapObstacle == mapObstacle)
-									true
-								else{
-									//println("NOT EQUAL: "+returnedMapObstacle)
-									//println(" & "+mapObstacle)
-									false
+				if( inCollectiveObstacles(x,y,mapObstacle) )
+					true
+				else{
+					var (readSuccessful,relationVectors) = mapObstacle.getRelationVectors(transaction)
+					if(readSuccessful){
+						while(possible && !relationVectors.isEmpty){
+							var (vector,obstacleType) = relationVectors.head
+							relationVectors = relationVectors.tail
+							val relationX = x + vector.x.value.toInt
+							val relationY = y + vector.y.value.toInt
+							resetExplore()
+							var isExplored = explored(relationX,relationY) 
+							var goal = stateFactory.getCoordinate(relationX, relationY)
+							if(!isExplored){
+								val resultPath = {
+									if(goal != null)//if goal==null, state is out of bounds
+										moveAgent(currentState,goal)//will move agent within sensor range if it is possible
+									else
+										new Goal(isUnreachable = true)
 								}
-							}
-							case other => throwException("Expected collectiveObstacle from id "+collectiveObstacleID
-									+" but received: "+other)
-						}
-					}
-					case None=>{
-						var (readSuccessful,relationVectors) = mapObstacle.getRelationVectors(transaction)
-						if(readSuccessful){
-							while(possible && !relationVectors.isEmpty){
-								var (vector,obstacleType) = relationVectors.head
-								relationVectors = relationVectors.tail
-								val relationX = x + vector.x.value.toInt
-								val relationY = y + vector.y.value.toInt
-								resetExplore()
-								var isExplored = explored(relationX,relationY) 
-								var goal = stateFactory.getCoordinate(relationX, relationY)
-								if(!isExplored){//if goal==null, state is out of bounds
-									val resultPath = {
-										if(goal != null)
-											moveAgent(currentState,goal)//will move agent within sensor range if it is possible
-										else
-											new Goal(isUnreachable = true)
-									}
-									if(resultPath.isUnreachable){
-										exploredArea.add(relationX,relationY)
-										possible = false
-										successful = false
-									}
-								}else{
-									//if relation not seen, not match
-									if(!obstacles.containsElementAt(relationX,relationY))
-										possible = false
-										/*
-							val relation: Displacement = vector + new Displacement(x,y)
-							if( obstacles.containsElementAt(x,y) &&
-									!mapObstacle.possibleMatchTest( List( (relation, obstacles(x,y).asInstanceOf[Int]) ) ) ){
-								possible = false
-							}
-										 */
-								}//end else !explored
+								if(resultPath.isUnreachable){
+									exploredArea.add(relationX,relationY)
+									possible = false
+									successful = false
+								}
+							}else{
+								//if relation not seen, not match
+								if(obstacles(relationX,relationY) != Some(obstacleType) )
+									possible = false
+							}//end else !explored
 
-							}//end while possible
-							possible
-						}else{
-							successful = false
-							false
-						}//end else readSuccessful
-					}//end case None
-				}//end match collectiveObstacle(x,y)	
+						}//end while possible
+						possible
+					}else{
+						successful = false
+						false
+					}//end else readSuccessful
+				}//end else to if( inCollectiveObstacles(x,y,mapObstacle) )	
 			}
 		)//end filter potentialMatches
 		if(successful){
@@ -341,7 +352,6 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			(false,None)
 		}
 	}
-	//private[this] var collectiveObstacles = new QuadTree[CollectiveObstacle]
 	
 	def createNewCollectiveObstacle(transaction: Transaction, scannedObstacle: ScannedObstacle): Boolean = {
 		val ScannedObstacle(scannedX,scannedY,obstacleType,scannedRelations) = scannedObstacle	
@@ -363,7 +373,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				}
 			)
 		}
-		//println("Explored area of new collective obstacle: "+sensorArea)
+		println("Explored area of new collective obstacle: "+sensorArea)
 		val relations: Map[Displacement,(Int,Option[CollectiveObstacle])] = {
 							val relationsList = scannedRelations.map(
 										relation => {
@@ -373,7 +383,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							)
 							collection.immutable.Map(relationsList: _*)
 		}//end relations
-		//println("Relations of new collective obstacle: "+relations)
+		println("Relations of new collective obstacle: "+relations)
 		environment ! ObstacleId(obstacleName,scannedX,scannedY,this)
 		val newCollectiveObstacle = new CollectiveObstacle(obstacleType,relations,sensorArea)
 		var resultFuture = (collectiveMap !! AddCollectionObstacle(transaction,obstacleName,
@@ -381,6 +391,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		).asInstanceOf[Future[Boolean]]
 		if( resultFuture() ){
 			collectiveObstacles.add(scannedX, scannedY, obstacleName)
+			println("collectiveObstacles: "+collectiveObstacles)
 			return true
 		}else{
 			println("Failed to add following new obstacle to CollectiveMap: "+newCollectiveObstacle)
@@ -404,6 +415,90 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 	}
 	*/
 	
+	def updateCollectiveObstacle(transaction: Transaction,
+			mapObstacle: CollectiveObstacle,scannedRelations: List[(Displacement,Int)]): Boolean = {
+		val (readSuccessful,mapObstacleRelations)=mapObstacle.getRelationVectors(transaction)
+		if(readSuccessful){
+			println("Updating CollectiveObstacle")
+			val newObstacleRelations = mapObstacleRelations.diff(scannedRelations)
+			var updateSuccessfulFuture = collectiveMap !! UpdateCollectiveObstacle(transaction,mapObstacle,
+					newObstacleRelations.map(
+							relation => {
+								val (vector,obstacleType) = relation
+								(vector,(obstacleType,None))
+							}
+					)//end map
+			)//end UpdateCollectiveOpbstacle
+			if(updateSuccessfulFuture().asInstanceOf[Boolean]){
+				println("CollectiveObstacle Update was Successful")
+				true
+			}
+			else
+				false
+		}//end if readSuccessful
+		else
+			return false
+	}
+	
+	def submitDataToCollectiveMap(transaction: Transaction, remainingMatch: Option[List[PotentialMatch]],
+		scannedObstacles: List[ScannedObstacle]): Boolean = {
+			println("Submitting data to collectiveMap")
+			import collection.mutable.Set
+			var unprocessedScannedObstacles = Set( scannedObstacles: _*)
+			var unprocessedMatches = remainingMatch
+			//scannedObstacle is really an unsubmitted object
+			//ScannedObstacle(x: Int,y: Int,obstacleType: Int,scannedRelations: List[(Displacement,Int)])
+			/*CollectiveObstacle(val obstacleType: Int,
+				private var relations: TreeMap[Displacement,CollectiveObstacle],
+				sensorArea: List[Coordinate])
+			*/
+			//Update potentialMatches
+			remainingMatch match {
+				case Some(matches @ List(PotentialMatch(_,_,_) ,_*)) =>{
+					for(potentialMatch<-matches)
+					{
+						val PotentialMatch(x, y, mapObstacle)= potentialMatch
+						//create new CollectiveObstacles, except mapObstacle
+						//match them with the appropriate Displacements in Seq[(Displacement,CollectiveObstacle]
+						//val scannedVectors: List[Displacement] = scannedRelations.map( scannedRelation => scannedRelation._1 )
+						
+						unprocessedScannedObstacles.find(scannedObstacle => {
+							val ScannedObstacle(scannedX,scannedY,scannedType,scannedRelations) = scannedObstacle
+							(x == scannedX && y == scannedY)
+							}
+						) match{
+							case Some(scannedObstacle @ ScannedObstacle(scannedX,scannedY,scannedType,scannedRelations)) => {
+								if( !updateCollectiveObstacle(transaction,mapObstacle,scannedRelations) )
+									return false
+								unprocessedScannedObstacles -= scannedObstacle
+							}
+							case _ =>{
+								println("Could not find a ScannedObstacle for "+potentialMatch)
+							}
+						}//end match
+					}//end for potentialMatch
+				}//end case Some(PotentialMatch)
+				case None => {
+					/*
+					println("scannedObstacles: "+scannedObstacles)
+					for(scannedObstacle <- scannedObstacles){
+						if(!createNewCollectiveObstacle(transaction,scannedObstacle))
+							return false
+					}
+					*/
+				}//case None
+				case error => throwException("Expected PotentialMatch but received "+error)
+			}//end match remainingMatch
+			//create and submit newCollectiveObstacles
+			println("unprocessedScannedObstacles: "+unprocessedScannedObstacles)
+			for(scannedObstacle <- unprocessedScannedObstacles){
+				if(!createNewCollectiveObstacle(transaction,scannedObstacle))
+						return false
+			}
+			true
+	}
+	
+	/*
 	def submitDataToCollectiveMap(transaction: Transaction, remainingMatch: Option[List[PotentialMatch]],
 			scannedObstacles: List[ScannedObstacle]): Boolean = {
 		
@@ -423,7 +518,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						//create new CollectiveObstacles, except mapObstacle
 						//match them with the appropriate Displacements in Seq[(Displacement,CollectiveObstacle]
 						//val scannedVectors: List[Displacement] = scannedRelations.map( scannedRelation => scannedRelation._1 )
-						if( (x == scannedX && y == scannedY) || (collectiveObstacles(x,y) == Some(mapObstacle)) ){
+						if( (x == scannedX && y == scannedY) || (inCollectiveObstacles(scannedX,scannedY,mapObstacle)) ){
 							val (readSuccessful,mapObstacleRelations)=mapObstacle.getRelationVectors(transaction)
 							if(readSuccessful){
 								println("Updating CollectiveObstacle")
@@ -460,8 +555,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		}
 		true
 	}
-	
+	*/
 	def expandCollectiveMap(){
+		expandMapIteration += 1
 		val transaction = new Transaction("Scan"+scanNumber+" Transaction",maxTransactionAttempts)
 				transaction.setOperations(
 					{
@@ -474,7 +570,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 								var potentialMatches = pMatches.asInstanceOf[List[PotentialMatch]]
 								println("PotentialMatches: "+potentialMatches)
 								val (successful,remainingMatch) =testPotentialCollectiveMapMatches(
-										transaction,potentialMatches)
+										transaction,potentialMatches.distinct)
 								if(successful){
 									println("RemainingMatch: "+remainingMatch)
 									submitDataToCollectiveMap(transaction,remainingMatch,scannedObstacles)
@@ -488,7 +584,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						}//end match possibleResultsFuture()
 					}
 				)//end setOperations
-				newObstacles =  collection.mutable.Set.empty[(Int,Int,Int)]
+		if(expandMapIteration >= 20){
+			newObstacles =  collection.mutable.Set.empty[(Int,Int,Int)]
+			expandMapIteration = 0
+		}
 		println("collectiveObstacles: "+collectiveObstacles)
 	}
 	
@@ -496,7 +595,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		println("Scanning")
 		val scanFuture = environment !! UpdateSensor(this, sensorRange, sensorDeltaAngle, sensorDeltaRange)
 		val Scan(relativeScannedArea,detectedObstacles,detectedAgents) = scanFuture()
-		//println("Updating explored area")
+		println("Updating explored area")
 		var currentX,currentY=0
 		currentState match{
 					case CoordinateState(x,y,_,_) => {
@@ -513,10 +612,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			}
 		)
 		exploredArea.add(scannedArea: _*)
-		//println("ExploredArea: "+exploredArea)
+		println("ExploredArea: "+exploredArea)
 		import scala.collection.mutable
 		var tempMap = mutable.Map.empty[(State,State),Double]
-		//println("Getting currentState")
+		println("Getting currentState")
 		currentState match {
 			case state @ CoordinateState(x,y,_,_) => {
 				var scannedStates: List[(Int,Int)] = for(xy <- relativeScannedArea.XYs)yield {
@@ -527,7 +626,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				}
 				var scannedStatesIterator = scannedStates.toIterator
 				//add costs to all areas scanned, assuming empty
-				//println("Adding all costs as passable transitions")
+				println("Adding all costs as passable transitions")
 				//println("scannedArea: "+scannedArea.XYs)
 				while(scannedStatesIterator.hasNext)
 				{
@@ -557,7 +656,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				)//end scannedArea
 				*/
 				//updating cost for areas with obstalces detected
-				//println("Updating costs for detected obstacles")
+				println("Updating costs for detected obstacles")
 				processDetectedObstacles(detectedObstacles).foreach( 
 						xy => {
 							val ((relativeX,relativeY),obstacleType) = xy
@@ -582,7 +681,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 						}
 				)//end processDetectedObstacles
 				
-				//println("processing detected agents")
+				println("processing detected agents")
 				processDetectedAgents(detectedAgents).foreach( 
 						xy => {
 							val (relativeX,relativeY) = xy
@@ -604,7 +703,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 							}
 						}
 				)//end processDetectedAgents
-				//println("Updating lastSensorReadings")
+				println("Updating lastSensorReadings")
 				lastSensorReadings = tempMap.toMap[(State,State),Double]
 				//println("lastSensorReadings = "+lastSensorReadings)
 			}//end case state
@@ -654,7 +753,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  moveAgent(currentState,goal)
               }
               case TestMapProducer(pathSteps) => {
-            	  val replyDestination = sender
+              	  val receivedFrom  = sender
             	  for(step<-pathSteps)
             	  {
             		  val (targetX,targetY) = step
@@ -662,10 +761,10 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             		  expandCollectiveMap()
             	  }
             	  println(collectiveMap)
-            	  replyDestination ! 'Done
+            	  receivedFrom ! 'Done
               }//end case TestMapProducer
               case TestMapObserver(pathSteps) => {
-            	  val replyDestination = sender
+            	  println("passabilitySize: "+passabilitySize)
             	  for(step<-pathSteps)
             	  {
             		  val (targetX,targetY) = step
@@ -673,7 +772,6 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             		  expandCollectiveMap()
             	  }
             	  println(collectiveMap)
-            	  replyDestination ! 'Done
               }//end case TestMapObserver
 			}//end react
 		}//end loop

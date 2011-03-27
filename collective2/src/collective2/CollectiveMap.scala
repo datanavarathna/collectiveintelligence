@@ -10,8 +10,6 @@ import scala.collection.mutable.ListBuffer
 
 class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 {
-	
-	private var size: Int = 0
 
     import scala.collection.mutable.Map
     //import scala.collection.mutable.HashMap
@@ -26,6 +24,8 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 	private[this] var data = Map.empty[Int,CollectiveObstacle]
 	
     override def toString = {
+			if(data.size == 3)
+				println()
     		var result = "Collective Map \n"
     		result += "size: "+data.size+"\n"
     		//result += "\n  identifierType\n" + identifierType

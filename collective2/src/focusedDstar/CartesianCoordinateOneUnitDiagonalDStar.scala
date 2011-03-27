@@ -59,7 +59,9 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstru
 
 trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 	
-	private var passabilityMap = mutable.Map.empty[(CoordinateState,CoordinateState),Double]
+	private[this] var passabilityMap = mutable.Map.empty[(CoordinateState,CoordinateState),Double]
+	
+	def passabilitySize = passabilityMap.size
 	
 	def sensor: Map[(State,State),Double] 
 	

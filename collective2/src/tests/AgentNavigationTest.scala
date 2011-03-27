@@ -236,10 +236,7 @@ class AgentNavigationTest(val environmentX: Int, val environmentY: Int,
                 world ! agentsWithLocations //send agentsWithLocations to world
                 helpActor.start
                 import scala.actors.Futures.future
-                val ft = future {
-                	Thread.sleep(1000)
-                }
-                ft()
+                msSleep(1000)
                 agentsWithLocations.foreach(agentWithLocation => {
                 		val AgentWithLocation(agent,x,y) = agentWithLocation
                 		agent ! TestGoal(relativeX,relativeY)
