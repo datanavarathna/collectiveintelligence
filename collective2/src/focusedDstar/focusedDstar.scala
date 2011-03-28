@@ -541,7 +541,7 @@ trait focusedDstar {
 	}
 	
 	protected def processState(): Option[(Double,Double)] = {
-		//println("Executing processState")
+		println("Executing processState")
 		//lowest pathCost removed from open
 		var x = minState()
 		if (x == null) return None
