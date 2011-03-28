@@ -91,6 +91,8 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 			 	 	  for(scanResult <- scanResults){
 			 	 	 	  
 			 	 		  		data.values.foreach(collectiveObstacle => {
+			 	 		  				if(scanResult.x == 0 && scanResult.y == -3)
+			 	 		  					println(this)
 			 	 		  				val (readSuccessful, possibleMatch) = 
 			 	 		  					collectiveObstacle.isPossibleMatch(transaction,
 			 	 		  					scanResult.scannedRelations)
@@ -108,9 +110,10 @@ class CollectiveMap(scalaGui: Actor) extends Actor with TimeStampConcurrency
 			 	  }else
 			 		  reply( OperationResult(false,null) )
 			  }
-			  case UpdateCollectiveObstacle(transaction,obstacle,relations) => {
+			  case UpdateCollectiveObstacle(transaction,obstacle,area,relations) => {
 			 	  if(write(transaction)){
-			 		 reply( obstacle.updateRelations(transaction,relations: _*))
+			 		// reply( obstacle.updateRelations(transaction,relations: _*))
+			 		 reply(obstacle.update(transaction, area, relations: _*) )
 			 	  }
 			  }
 			  case AddCollectionObstacle(transaction,obstacleIdentifier,obstacle) => {

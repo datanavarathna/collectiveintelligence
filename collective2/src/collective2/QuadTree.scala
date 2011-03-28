@@ -112,4 +112,26 @@ class QuadTree[T] {
 		}//end x while
 		return results
 	}
+	
+	
+	def rangeWithIndexes(radius: Double, x: Double, y: Double): List[((Int,Int),T)] = {
+		var results: List[((Int,Int),T)]=Nil
+		var xIterator = data.keysIterator
+		while(xIterator.hasNext)
+		{
+			var mapX = xIterator.next
+			var yMap = data(mapX)
+			var yIterator = yMap.keysIterator
+			while(yIterator.hasNext)
+			{
+				var mapY = yIterator.next
+				var xDiff = (x-mapX)
+				var yDiff = (y-mapY)
+				if( math.sqrt( xDiff*xDiff + yDiff*yDiff ) <= radius)
+					results = ((mapX,mapY),yMap(mapY)) :: results
+			}//end y while
+		}//end x while
+		return results
+	}
+	
 }

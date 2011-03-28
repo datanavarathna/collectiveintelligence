@@ -409,6 +409,7 @@ trait focusedDstar {
 	}
 	
 	def moveAgent(start: State, goal: State): Goal = {
+		try{
 		println("Executing moveAgent( "+start+" , "+goal+" )")
 		this.goal=goal
 		//println("Initialize")
@@ -524,6 +525,9 @@ trait focusedDstar {
 			agentState = transitionToState(agentState.parent)
 		}//end while state not goal
 		println("Goal reached")	
+		}catch{
+			case e: Exception => println("Following eception thrown: "+e)
+		}
 		return path
 	}
 	

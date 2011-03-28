@@ -120,7 +120,7 @@ case class ObstacleId(name: Int, localX: Int,LocalY: Int,sender: Actor)
 case class GetCollectiveObstacle(identifier: Int)
 
 case class UpdateCollectiveObstacle(transaction: Transaction,obstacle: CollectiveObstacle,
-		relations: Seq[(Displacement,(Int,Option[CollectiveObstacle]))])
+		area: Seq[Coordinate],relations: Seq[(Displacement,(Int,Option[CollectiveObstacle]))])
 case class AddCollectionObstacle(transaction: Transaction,obstacleIdentifier: Int,
 		obstacle: CollectiveObstacle)
 		
@@ -136,8 +136,12 @@ case class CollectiveObstacle(val obstacleType: Int,
 				val (vector,(obstacleType,obstacle)) = element
 				(vector,obstacleType)
 			}
-		)//+", sensorArea="+sensorArea
+		)+", exploredArea="+exploredArea
 	
+	override def hashCode: Int = {
+		41*(41*(41 + sensorArea.hashCode)+obstacleType.hashCode)+relations.keySet.hashCode
+	}
+		
 	private[this] var exploredArea = new QuadBitSet /*obstacle at (0,0)*/
 	addExploredArea(sensorArea)
 	
@@ -188,12 +192,23 @@ case class CollectiveObstacle(val obstacleType: Int,
 	}
 	
 	private def addRelations(newRelations: (Displacement,(Int,Option[CollectiveObstacle])) *){
-		newRelations.foreach( relation => relations + relation)
+		newRelations.foreach( relation => relations = relations + relation)
 	}
 	
-	private def update(newRelations: mutable.Map[Displacement,(Int,Option[CollectiveObstacle])], area: Seq[Coordinate]){
-		addRelations(newRelations.toSeq: _*)
-		addExploredArea(area)
+	def update(transaction: Transaction, area: Seq[Coordinate],  newRelations: (Displacement,(Int,Option[CollectiveObstacle])) * ):Boolean ={
+		if ( write(transaction) ){
+			//println("newRelations: "+newRelations)
+			//println("area: "+area)
+			//println("relations: "+relations)
+			//println("exploredArea: "+exploredArea)
+			addRelations(newRelations.toSeq: _*)
+			addExploredArea(area)
+			//println("relations: "+relations)
+			//println("exploredArea: "+exploredArea)
+			true
+		}else{
+			false
+		}
 	}
 	
 	private def containsRelation(vector: Displacement, relationObjectType: Int): Boolean = {
@@ -225,6 +240,8 @@ case class CollectiveObstacle(val obstacleType: Int,
 			relationsToCheck = relationsToCheck.tail
 			val (vector,obstacle2Type) = relation
 
+			println(exploredArea)
+			println(relations)
 			if(insideSavedBoundaries(vector)){
 				if(!containsRelation(vector,obstacle2Type))
 					possible = false
