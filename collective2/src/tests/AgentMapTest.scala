@@ -242,7 +242,7 @@ class AgentMapTest(val environmentX: Int, val environmentY: Int,
                 			actors.Futures.future {
                 				ft()
                 				println("-------------------------------------------------")
-                				agent ! TestMapObserver( List( (-1,-5) ) )
+                				agent ! TestMapObserver(  List( (0,-2),(1,-3),(1,-4) )  )
                 			}
                 		}
                 	}

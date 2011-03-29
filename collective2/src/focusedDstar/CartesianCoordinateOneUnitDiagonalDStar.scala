@@ -2,10 +2,20 @@ package focusedDstar
 import focusedDstar._
 import scala.collection.mutable
 
+object CoordinateState{
+	var numOfStates: Int = 0
+	
+	def newState(): Int = {
+		numOfStates += 1
+		numOfStates
+	}
+}
+
 case class CoordinateState(val x: Int, val y: Int, var passable: Boolean = true,
 		factory: StateConstructor) extends State(factory){
-	
-	override def toString = "CoordinateState("+x+","+y+","+"passable="+passable+","+super.toString+")"
+	val stateID = CoordinateState.newState
+	override def toString = "CoordinateState("+x+","+y+",id= "+stateID+
+		","+"passable="+passable+","+super.toString+")"
 	
 	override def hashCode: Int = {
 		val factoryHashCode = if(factory == null) 0 else factory.hashCode
@@ -16,9 +26,9 @@ case class CoordinateState(val x: Int, val y: Int, var passable: Boolean = true,
 }
 
 class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstructor{
-	val (minX,minY)= minXY
-	val (maxX,maxY)= maxXY
-	var coordinates = mutable.WeakHashMap.empty[(Int,Int),CoordinateState]
+	private[this] val (minX,minY)= minXY
+	private[this] val (maxX,maxY)= maxXY
+	private[this] var coordinates = mutable.HashMap.empty[(Int,Int),CoordinateState]
 	
 	println("CoordinateCreator( ("+minX+","+minY+"), ("+maxX+","+maxY+") )")
 	
@@ -51,10 +61,10 @@ class CoordinateCreator(minXY: (Int,Int), maxXY: (Int,Int)) extends StateConstru
 	}
 	
 	def getCoordinate(x: Int, y: Int): CoordinateState = {
-		if(withinBounds(x,y))
+		if(withinBounds(x,y)){
 			coordinates.getOrElseUpdate((x,y),		
 			createCoordinate(x,y) )
-		else
+		}else
 			null
 	}
 		
