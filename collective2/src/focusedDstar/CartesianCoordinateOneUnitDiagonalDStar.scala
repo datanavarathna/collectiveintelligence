@@ -7,6 +7,11 @@ case class CoordinateState(val x: Int, val y: Int, var passable: Boolean = true,
 	
 	override def toString = "CoordinateState("+x+","+y+","+"passable="+passable+","+super.toString+")"
 	
+	override def hashCode: Int = {
+		val factoryHashCode = if(factory == null) 0 else factory.hashCode
+		41*(41*(41+factoryHashCode)+x.hashCode)+y.hashCode
+	}
+	
 	//override def compare (x: State) : Int = super.compare(x)
 }
 
@@ -66,8 +71,9 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 	def sensor: Map[(State,State),Double] 
 	
 	def costOfTransversal(x: State, y: State): Double = {
+		try{
 		(x,y) match {
-			case (a: CoordinateState, b: CoordinateState) => {
+			case (a: CoordinateState, b: CoordinateState) => {//problems occur because of changing hash values
 				val result = passabilityMap.getOrElse((a,b),
 						if(a.passable && b.passable ){
 							val aX = a.x 
@@ -93,6 +99,12 @@ trait CartesianCoordinateOneUnitDiagonalDStar extends focusedDstar {
 			
 			case _ => throw new Exception(x+" and "+y+" are not CoordinateState")
 		}//end match
+		}catch{
+			case e: Exception => {
+				println("Exception: "+e)
+				Double.PositiveInfinity
+			}
+		}
 	}
 	
 	def updateCostOfTransversal(x: State, y: State, costValue: Double) = {

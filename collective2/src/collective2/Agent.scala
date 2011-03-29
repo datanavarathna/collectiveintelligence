@@ -42,9 +42,9 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
       return randomGenerator.nextInt(3) - 1
 	}
 	
-	private var lastSensorReadings: Map[(State,State),Double] = _
+	private[this] var lastSensorReadings: Map[(State,State),Double] = _
 	
-	private var stateFactory: CoordinateCreator = _
+	private[this] var stateFactory: CoordinateCreator = _
 	
 	def worldDimensions {
     	  println("Getting world dimensions")
@@ -52,6 +52,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
     	  println("Got worldDimensionsFuture")
     	  val (x: Int,y: Int) = worldDimensionsFuture()
     	  stateFactory = new CoordinateCreator((-1*x,-1*y),(x,y))
+    	  println("stateFactory: "+stateFactory)
     	  println("Created stateFactory")
 	}
 	
@@ -430,13 +431,13 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 		println("Updating CollectiveMap")
 		var readSuccessful = true
 		val radius: Double = 10
-		val areaUpdate = exploredArea.XYs.map( element => {
-			var (x,y) = element
-			Coordinate(x,y)
-			}
-		)
 		for(element <- collectiveObstacles.toList){
 			val ((x,y),obstacleId) = element
+			val areaUpdate = exploredArea.XYs.map(xy => {
+					val (scannedX,scannedY) = xy
+					Coordinate(x-scannedX,y-scannedY)
+				}
+			)
 			val mapObstacleFuture = collectiveMap !! GetCollectiveObstacle(obstacleId)
 			mapObstacleFuture() match {
 					case Some(returnedMapObstacle @ CollectiveObstacle(_,_,_)) => {
@@ -572,20 +573,27 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 				transaction.setOperations(
 					{
 						val scannedObstacles = createCollectiveMapSensorReadings
-						println(collectiveMap)
 						println("ScannedObstacles: "+scannedObstacles)
 						var possibleResultsFuture = (collectiveMap !! 
 							GetPossibleStates(transaction,scannedObstacles) )
 						possibleResultsFuture() match {
 							case OperationResult(true,pMatches) => {
-								println(collectiveMap)
 								var potentialMatches = pMatches.asInstanceOf[List[PotentialMatch]]
 								println("PotentialMatches: "+potentialMatches.distinct)
 								val (successful,remainingMatch) =testPotentialCollectiveMapMatches(
 										transaction,potentialMatches.distinct)
 								if(successful){
 									println("RemainingMatch: "+remainingMatch)
-									if( submitDataToCollectiveMap(transaction,remainingMatch,scannedObstacles) ){
+									//submitDataToCollectiveMap(transaction,remainingMatch,scannedObstacles)
+									/*
+									val submitResult = submitDataToCollectiveMap(transaction,remainingMatch,scannedObstacles)//second agent pathfinding works
+									
+									submitResult
+									*/
+									//causes second agent pathfinding to break after first movement
+									
+									if( submitDataToCollectiveMap(transaction,remainingMatch,scannedObstacles) ){	
+										
 										if(collectiveObstacles.sizeIncreased){
 											if( updateCollectiveMap(transaction) ){
 												collectiveObstacles.resetSizeIncreased()
@@ -595,8 +603,11 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 										}//end if collectiveObstacles.sizeIncreased
 										else
 											true
+										
+										//true
 									}else// from submitDataToCollectiveMap
 										false//retry transaction
+									
 								}else// from testPotentialCollectiveMapMatches
 									false//retry transaction
 							}
@@ -749,6 +760,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
 			{
               case "Start" => {
             	  worldDimensions 
+            	  
             	  println("Creating initial state")
             	  val initial = stateFactory.getCoordinate(0, 0)
             	  currentState = initial
@@ -759,6 +771,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             		  //initialScan()
             		  explore(initial,goal)
             	  }
+            	  
             	  //scan
             	  //initialScan
             	  

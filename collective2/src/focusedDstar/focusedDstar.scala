@@ -197,8 +197,8 @@ trait focusedDstar {
 			path.addStateToPath(currentState)
 			failedToTransition = 0  
 		}else{
-			println("FAILED to move to transition to "+next)
-			println("path= "+path)
+			//println("FAILED to move to transition to "+next)
+			//println("path= "+path)
 			failedToTransition += 1 
 			//throw new Exception("Failed to move to transition state")
 		}
@@ -274,7 +274,7 @@ trait focusedDstar {
 		x.tag = Tag.Closed
 		//remove from open
 		open = open - x
-		//println("open: "+open)
+		//println("open: size="+open.size+" "+open)
 		closedList = x :: closedList
 		//println("closed: "+closedList)
 	}
@@ -283,6 +283,7 @@ trait focusedDstar {
 		//println("putState( "+x+" )")
 		x.tag = Tag.Open 
 		open = open + x
+		//println("x.tag: "+(x.tag))
 		//println("open: "+open)
 	}
 	
@@ -308,10 +309,10 @@ trait focusedDstar {
 		x.estimatedPathCost = x.k + focussingHeuristic(x,currentState)
 		x.biasedEstimatedPathCost = x.estimatedPathCost + accruedBias//accruedBias(currentState)
 		/*
-		println("x.h= "+x.h)
-		println("x.agentStateWhenModified= "+x.agentStateWhenModified)
-		println("x.estimatedPathCost= "+x.estimatedPathCost)
-		println("x.biasedEstimatedPathCost= "+x.biasedEstimatedPathCost)
+		//println("x.h= "+x.h)
+		//println("x.agentStateWhenModified= "+x.agentStateWhenModified)
+		//println("x.estimatedPathCost= "+x.estimatedPathCost)
+		//println("x.biasedEstimatedPathCost= "+x.biasedEstimatedPathCost)
 		*/
 		putState(x)
 	}//end insert
@@ -410,6 +411,7 @@ trait focusedDstar {
 	
 	def moveAgent(start: State, goal: State): Goal = {
 		try{
+			
 		println("Executing moveAgent( "+start+" , "+goal+" )")
 		this.goal=goal
 		//println("Initialize")
@@ -438,7 +440,21 @@ trait focusedDstar {
 					}
 		){
 			processNumber += 1
+			/*
+			println("open: "+open)
+			println("start: "+start)
+			println("PROCESS STATE NUMBER "+processNumber)
+			*/
 			temp = processState()
+			/*
+			println("open: "+(open) )
+			println("start: "+start)
+			println("start.tag: "+(start.tag) )
+			println("start.tag != Tag.Closed: "+(start.tag != Tag.Closed) )
+			println("temp: "+temp)
+			println("temp != None: "+(temp != None))
+			println("stateReachable(goal): "+stateReachable(goal))
+			*/
 		}
 		{
 			//println("if(start.h >= obstacleCost)")
@@ -457,13 +473,14 @@ trait focusedDstar {
 		var agentState = start
 		path.addStateToPath(start)
 		while(agentState != goal && stateReachable(goal) && failedToTransition < 5){
-			if(failedToTransition > 1)
+			if(failedToTransition > 1){
 				println("FAILED TRANSITION NUMBER "+failedToTransition)
+			}
 			//println("Check for discrepancies between sensor readings and state transistion costs")
 			//check that sensor is not empty
 			val sensorReadings = sensor
 			if(sensorReadings == null){
-				println("Sensor was empty")
+				//println("Sensor was empty")
 				throw new Exception("Sensor was empty")
 			}
 			//println("SensorReadings: "+sensorReadings)
@@ -489,7 +506,7 @@ trait focusedDstar {
 					}
 				)//end processing discrepancies
 				//update costs and replan
-				println("Replan")
+				//println("Replan")
 				processNumber = 0
 				while( temp != None /*unobstructed path exists to goal from current state*/ && {
 					var Some(doubleDouble) = temp
@@ -506,6 +523,8 @@ trait focusedDstar {
 				}
 				){
 					processNumber += 1
+					//println("open: "+open)
+					//println("PROCESS STATE NUMBER "+processNumber)
 					temp = processState() 
 				}
 				{
@@ -524,9 +543,9 @@ trait focusedDstar {
 			//println("AgentState before transitionToState "+agentState)	
 			agentState = transitionToState(agentState.parent)
 		}//end while state not goal
-		println("Goal reached")	
+		//println("Goal reached")	
 		}catch{
-			case e: Exception => println("Following eception thrown: "+e)
+			case e: Exception => //println("Following eception thrown: "+e)
 		}
 		return path
 	}
@@ -537,7 +556,7 @@ trait focusedDstar {
 		}
 		neighborCosts.find(element => element < obstacleCost) match {
 			case None => {
-				println(goal+" is UNREACHABLE")
+				//println(goal+" is UNREACHABLE")
 				false
 			}
 			case _ => true
@@ -545,7 +564,7 @@ trait focusedDstar {
 	}
 	
 	protected def processState(): Option[(Double,Double)] = {
-		println("Executing processState")
+		//println("Executing processState")
 		//lowest pathCost removed from open
 		var x = minState()
 		if (x == null) return None
