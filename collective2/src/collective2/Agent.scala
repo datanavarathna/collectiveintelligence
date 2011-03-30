@@ -797,7 +797,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             	  replyDestination ! 'Done
               }//end case TestMapProducer
               case TestMapObserver(pathSteps) => {
-            	  println("passabilitySize: "+passabilitySize)
+            	   val replyDestination = sender
             	  for(step<-pathSteps)
             	  {
             		  val (targetX,targetY) = step
@@ -805,6 +805,7 @@ class Agent(val environment: Actor, val collectiveMap: Actor,
             		  expandCollectiveMap()
             	  }
             	  println(collectiveMap)
+            	  replyDestination ! 'Done
               }//end case TestMapObserver
 			}//end react
 		}//end loop
